@@ -19,6 +19,7 @@ import { boundsToBboxParam } from '../lib/mapBounds'
 import { buildIdUrl, buildJosmLoadObject, buildOsmBrowseUrl } from '../lib/editorLinks'
 import { fetchLandSchoolsBundle } from '../lib/fetchLandSchoolsBundle'
 import { formatDeInteger } from '../lib/formatNumber'
+import { miniMarkdownNodes } from '../lib/miniMarkdown'
 import { DETAIL_MAP_OFFICIAL, DETAIL_MAP_OSM, paintMatchCatCore, paintMatchCatHalo } from '../lib/matchCategoryTheme'
 import { MATCH_RADIUS_KM, MATCH_RADIUS_M } from '../lib/matchRadius'
 import {
@@ -824,7 +825,7 @@ export function SchuleDetail() {
                 {de.detail.ambiguousNameNoGeoAlertTitle}
               </h3>
               <div className="mt-2 text-sm text-amber-800 dark:text-amber-100/85">
-                <p className="leading-relaxed">{de.detail.ambiguousNameNoGeoAlertText}</p>
+                <p className="leading-relaxed">{miniMarkdownNodes(de.detail.ambiguousNameNoGeoAlertText)}</p>
               </div>
             </div>
           </div>
@@ -851,7 +852,7 @@ export function SchuleDetail() {
                 {de.detail.ambiguousNoLocalGeoTitle}
               </h3>
               <div className="mt-2 text-sm text-amber-800 dark:text-amber-100/85">
-                <p className="leading-relaxed">{de.detail.ambiguousNoLocalGeoText}</p>
+                <p className="leading-relaxed">{miniMarkdownNodes(de.detail.ambiguousNoLocalGeoText)}</p>
               </div>
             </div>
           </div>
@@ -878,7 +879,7 @@ export function SchuleDetail() {
                 {de.detail.ambiguousAlertTitle}
               </h3>
               <div className="mt-2 text-sm text-violet-800 dark:text-violet-100/80">
-                <p className="leading-relaxed">{de.detail.ambiguousIntro}</p>
+                <p className="leading-relaxed">{miniMarkdownNodes(de.detail.ambiguousIntro)}</p>
               </div>
             </div>
           </div>
