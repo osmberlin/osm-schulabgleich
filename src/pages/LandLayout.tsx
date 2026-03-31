@@ -1,0 +1,102 @@
+import { useQuery } from '@tanstack/react-query'
+import { Outlet, useParams, useRouterState } from '@tanstack/react-router'
+import { useMemo } from 'react'
+import { CategoryLegendSwatch } from '../components/CategoryLegendSwatch'
+import { PageBreadcrumb } from '../components/PageBreadcrumb'
+import { de } from '../i18n/de'
+import { fetchLandSchoolsBundle } from '../lib/fetchLandSchoolsBundle'
+import { formatDeInteger } from '../lib/formatNumber'
+import { formatSchoolWhereSubtitle } from '../lib/schoolWhere'
+import { type LandCode, STATE_LABEL_DE } from '../lib/stateConfig'
+import type { LandMatchCategory } from '../lib/useLandCategoryFilter'
+
+export function LandLayout() {
+  const { code } = useParams({ strict: false }) as { code: string }
+  const label = STATE_LABEL_DE[code as LandCode] ?? code
+
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const schuleKeyDecoded = useMemo(() => {
+    const m = pathname.match(/^\/bundesland\/[^/]+\/schule\/(.+)$/)
+    if (!m?.[1]) return null
+    try {
+      return decodeURIComponent(m[1])
+    } catch {
+      return m[1]
+    }
+  }, [pathname])
+
+  const schuleQ = useQuery({
+    queryKey: ['schule-detail', code, schuleKeyDecoded],
+    queryFn: () => fetchLandSchoolsBundle(code),
+    enabled: !!code && !!schuleKeyDecoded,
+  })
+
+  const schuleRow = useMemo(() => {
+    if (!schuleKeyDecoded || !schuleQ.data) return null
+    return schuleQ.data.matches.find((r) => r.key === schuleKeyDecoded) ?? null
+  }, [schuleQ.data, schuleKeyDecoded])
+
+  const titleBlock =
+    schuleKeyDecoded != null ? (
+      schuleQ.isLoading ? (
+        <>
+          <h1 className="mb-2 text-2xl font-semibold text-zinc-400 dark:text-zinc-500">…</h1>
+          <p className="mb-6 text-sm text-zinc-500">{de.land.loading}</p>
+        </>
+      ) : schuleQ.isError ? (
+        <>
+          <h1 className="mb-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{label}</h1>
+          <p className="mb-6 text-sm text-red-600 dark:text-red-400">{de.land.error}</p>
+        </>
+      ) : schuleRow ? (
+        <>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <h1 className="min-w-0 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+              {schuleRow.officialName ?? schuleRow.osmName ?? '—'}
+            </h1>
+            <div className="flex shrink-0 items-center gap-2">
+              <CategoryLegendSwatch category={schuleRow.category as LandMatchCategory} />
+              <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+                {de.land.categoryLabel[schuleRow.category as LandMatchCategory] ??
+                  schuleRow.category}
+              </span>
+            </div>
+          </div>
+          <p className="mb-6 text-sm leading-snug text-zinc-600 dark:text-zinc-400">
+            {formatSchoolWhereSubtitle(
+              label,
+              code,
+              schuleRow.officialProperties ?? null,
+              schuleRow.osmTags ?? null,
+            )}
+            {schuleRow.distanceMeters != null && (
+              <>
+                {' \u00B7 '}
+                {de.detail.abstand}: {formatDeInteger(schuleRow.distanceMeters)} m
+              </>
+            )}
+          </p>
+        </>
+      ) : (
+        <>
+          <h1 className="mb-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{label}</h1>
+          <p className="mb-6 text-sm text-zinc-600 dark:text-zinc-400">{de.detail.notFound}</p>
+        </>
+      )
+    ) : (
+      <>
+        <h1 className="mb-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{label}</h1>
+        <p className="mb-6 text-sm text-zinc-600 dark:text-zinc-400">{code}</p>
+      </>
+    )
+
+  return (
+    <div className="mx-auto max-w-5xl p-4 pb-10">
+      <div className="mb-4">
+        <PageBreadcrumb />
+      </div>
+      {titleBlock}
+      <Outlet />
+    </div>
+  )
+}

@@ -1,0 +1,16 @@
+# Downloaded / pipeline-generated artifacts (keep jedeschule_stats.json tracked for history).
+jedeschule-latest.csv
+schools_official_de.geojson
+schools_official_de.meta.json
+schools_osm_de.geojson
+schools_osm_de.meta.json
+schools_matches_de.json
+.pipeline_skip_split
+summary.json
+
+status/
+
+**/schools_official.geojson
+**/schools_osm.geojson
+**/schools_matches.json
+**/schools_osm.meta.json
