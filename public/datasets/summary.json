@@ -1,5 +1,199 @@
 {
-  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generatedAt": "2026-03-31T20:35:05.415Z",
   "pipelineVersion": 1,
-  "lands": []
+  "jedeschuleCsvSource": "schools_official_de.geojson",
+  "lands": [
+    {
+      "code": "BW",
+      "osmSource": "missing",
+      "counts": {
+        "matched": 2461,
+        "official_only": 11226,
+        "osm_only": 1136,
+        "ambiguous": 1663,
+        "official_no_coord": 620
+      },
+      "jedeschuleLastUpdated": "2026-03-28"
+    },
+    {
+      "code": "BY",
+      "osmSource": "missing",
+      "counts": {
+        "matched": 2125,
+        "official_only": 261,
+        "osm_only": 2061,
+        "ambiguous": 1509,
+        "official_no_coord": 0
+      },
+      "jedeschuleLastUpdated": "2026-03-28"
+    },
+    {
+      "code": "BE",
+      "osmSource": "missing",
+      "counts": {
+        "matched": 732,
+        "official_only": 128,
+        "osm_only": 268,
+        "ambiguous": 66,
+        "official_no_coord": 1
+      },
+      "jedeschuleLastUpdated": "2026-03-28"
+    },
+    {
+      "code": "BB",
+      "osmSource": "missing",
+      "counts": {
+        "matched": 679,
+        "official_only": 104,
+        "osm_only": 258,
+        "ambiguous": 129,
+        "official_no_coord": 6
+      },
+      "jedeschuleLastUpdated": "2026-03-28"
+    },
+    {
+      "code": "HB",
+      "osmSource": "missing",
+      "counts": {
+        "matched": 102,
+        "official_only": 0,
+        "osm_only": 150,
+        "ambiguous": 0,
+        "official_no_coord": 105
+      },
+      "jedeschuleLastUpdated": "2026-02-14"
+    },
+    {
+      "code": "HH",
+      "osmSource": "missing",
+      "counts": {
+        "matched": 406,
+        "official_only": 68,
+        "osm_only": 90,
+        "ambiguous": 60,
+        "official_no_coord": 5
+      },
+      "jedeschuleLastUpdated": "2026-03-28"
+    },
+    {
+      "code": "HE",
+      "osmSource": "missing",
+      "counts": {
+        "matched": 1440,
+        "official_only": 347,
+        "osm_only": 874,
+        "ambiguous": 110,
+        "official_no_coord": 189
+      },
+      "jedeschuleLastUpdated": "2026-03-28"
+    },
+    {
+      "code": "MV",
+      "osmSource": "missing",
+      "counts": {
+        "matched": 381,
+        "official_only": 69,
+        "osm_only": 216,
+        "ambiguous": 105,
+        "official_no_coord": 2
+      },
+      "jedeschuleLastUpdated": "2026-03-28"
+    },
+    {
+      "code": "NI",
+      "osmSource": "missing",
+      "counts": {
+        "matched": 1085,
+        "official_only": 0,
+        "osm_only": 2837,
+        "ambiguous": 14,
+        "official_no_coord": 2043
+      },
+      "jedeschuleLastUpdated": "2026-03-28"
+    },
+    {
+      "code": "NW",
+      "osmSource": "missing",
+      "counts": {
+        "matched": 3860,
+        "official_only": 455,
+        "osm_only": 2278,
+        "ambiguous": 1309,
+        "official_no_coord": 0
+      },
+      "jedeschuleLastUpdated": "2026-03-28"
+    },
+    {
+      "code": "RP",
+      "osmSource": "missing",
+      "counts": {
+        "matched": 852,
+        "official_only": 522,
+        "osm_only": 667,
+        "ambiguous": 223,
+        "official_no_coord": 0
+      },
+      "jedeschuleLastUpdated": "2026-03-28"
+    },
+    {
+      "code": "SL",
+      "osmSource": "missing",
+      "counts": {
+        "matched": 273,
+        "official_only": 38,
+        "osm_only": 90,
+        "ambiguous": 51,
+        "official_no_coord": 354
+      },
+      "jedeschuleLastUpdated": "2026-03-28"
+    },
+    {
+      "code": "SN",
+      "osmSource": "missing",
+      "counts": {
+        "matched": 1154,
+        "official_only": 285,
+        "osm_only": 398,
+        "ambiguous": 407,
+        "official_no_coord": 2
+      },
+      "jedeschuleLastUpdated": "2026-03-28"
+    },
+    {
+      "code": "ST",
+      "osmSource": "missing",
+      "counts": {
+        "matched": 613,
+        "official_only": 93,
+        "osm_only": 307,
+        "ambiguous": 171,
+        "official_no_coord": 899
+      },
+      "jedeschuleLastUpdated": "2026-03-28"
+    },
+    {
+      "code": "SH",
+      "osmSource": "missing",
+      "counts": {
+        "matched": 702,
+        "official_only": 150,
+        "osm_only": 265,
+        "ambiguous": 178,
+        "official_no_coord": 978
+      },
+      "jedeschuleLastUpdated": "2026-03-28"
+    },
+    {
+      "code": "TH",
+      "osmSource": "missing",
+      "counts": {
+        "matched": 609,
+        "official_only": 118,
+        "osm_only": 458,
+        "ambiguous": 232,
+        "official_no_coord": 105
+      },
+      "jedeschuleLastUpdated": "2026-03-28"
+    }
+  ]
 }

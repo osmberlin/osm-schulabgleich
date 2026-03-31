@@ -155,6 +155,57 @@ describe('matchSchools', () => {
     expect(rows.some((r) => r.category === 'official_only' && r.officialId === 'BE-y')).toBe(true)
   })
 
+  it('distance+name phase claims officials globally so named buildings match on shared campus', () => {
+    const campus: OfficialInput[] = [
+      {
+        id: 'BE-w',
+        name: 'Wilhelm-Röpke-Schule',
+        lon: 13.3999,
+        lat: 52.5199,
+        properties: { id: 'BE-w' },
+      },
+      {
+        id: 'BE-e',
+        name: 'Albert-Einstein-Schule',
+        lon: 13.4001,
+        lat: 52.5201,
+        properties: { id: 'BE-e' },
+      },
+    ]
+    const osmBbz: OsmSchoolInput = {
+      ...osmNear,
+      osmId: 'bbz',
+      centroid: [13.39995, 52.51995],
+      name: 'Berufliches Bildungszentrum',
+      tags: { amenity: 'school', name: 'Berufliches Bildungszentrum' },
+    }
+    const osmWrs: OsmSchoolInput = {
+      ...osmNear,
+      osmId: 'wrs',
+      centroid: [13.39992, 52.51992],
+      name: 'Wilhelm-Röpke-Schule',
+      tags: { amenity: 'school', name: 'Wilhelm-Röpke-Schule' },
+    }
+    const osmAes: OsmSchoolInput = {
+      ...osmNear,
+      osmId: 'aes',
+      centroid: [13.40008, 52.52008],
+      name: 'Albert-Einstein-Schule',
+      tags: { amenity: 'school', name: 'Albert-Einstein-Schule' },
+    }
+    const osmLandByKey = new Map<string, LandCode>([
+      ['way/bbz', 'BE'],
+      ['way/wrs', 'BE'],
+      ['way/aes', 'BE'],
+    ])
+    const { rows } = matchSchools(campus, [osmBbz, osmWrs, osmAes], { osmLandByKey })
+    const matched = rows.filter((r) => r.category === 'matched' && r.matchMode === 'distance_and_name')
+    expect(matched).toHaveLength(2)
+    expect(new Set(matched.map((r) => r.officialId))).toEqual(new Set(['BE-w', 'BE-e']))
+    expect(rows.some((r) => r.osmId === 'bbz' && r.category === 'osm_only')).toBe(true)
+    expect(rows.some((r) => r.category === 'match_ambiguous' && r.osmId === 'wrs')).toBe(false)
+  })
+
   it('stays ambiguous when normalized names collide', () => {
     const twoSameName: OfficialInput[] = [
       {

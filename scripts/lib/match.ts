@@ -71,6 +71,36 @@ function officialsInSameLandAsOsm(officials: OfficialInput[], osmLand: LandCode)
   return officials.filter((off) => landCodeFromSchoolId(off.id) === osmLand)
 }
 
+function osmLandKey(o: OsmSchoolInput): string {
+  return `${o.osmType}/${o.osmId}`
+}
+
+/** Officials within match radius (same land); `excludeReserved` optional filter. */
+function officialsNearOsm(
+  o: OsmSchoolInput,
+  withCoord: OfficialInput[],
+  osmLand: LandCode,
+  excludeReserved?: Set<string>,
+): OfficialInput[] {
+  const [lon, lat] = o.centroid
+  return withCoord.filter((off) => {
+    if (excludeReserved?.has(off.id)) return false
+    const offLand = landCodeFromSchoolId(off.id)
+    if (offLand != null && offLand !== osmLand) return false
+    const d = distance(point([off.lon, off.lat]), point([lon, lat]), { units: 'kilometers' })
+    return d <= MATCH_RADIUS_KM
+  })
+}
+
+/** Exactly one official in `officials` matches normalized OSM name; otherwise null. */
+function uniqueNameOfficialIn(officials: OfficialInput[], o: OsmSchoolInput): OfficialInput | null {
+  const nameKey = normalizeSchoolNameForMatch(o.name)
+  if (!nameKey) return null
+  const matches = officials.filter((x) => normalizeSchoolNameForMatch(x.name) === nameKey)
+  if (matches.length !== 1) return null
+  return matches[0]
+}
+
 function isPolyGeom(g: Geometry | null): g is Polygon | MultiPolygon {
   if (!g) return false
   return g.type === 'Polygon' || g.type === 'MultiPolygon'
@@ -155,25 +185,94 @@ export function matchSchools(
 ) {
   const withCoord = officials.filter((o) => Number.isFinite(o.lon) && Number.isFinite(o.lat))
   const withoutCoord = officials.filter((o) => !Number.isFinite(o.lon) || !Number.isFinite(o.lat))
+  /** Officials already paired with an OSM school — an official id appears on at most one `matched` row. */
   const reserved = new Set<string>()
-  /** Officials listed on any ambiguous row — not reserved, so other OSM features may still reference them. */
+  /** Officials listed on any ambiguous row — excluded from `official_only` when still unresolved. */
   const ambiguousAllIds = new Set<string>()
   const rows: MatchRowOut[] = []
 
+  const fullCandsByOsm = new Map<string, OfficialInput[]>()
   for (const o of osmSchools) {
-    const [lon, lat] = o.centroid
-    const landKey = `${o.osmType}/${o.osmId}`
+    const landKey = osmLandKey(o)
     const osmLand = opts.osmLandByKey.get(landKey)
     if (osmLand === undefined) {
       throw new Error(`matchSchools: osmLandByKey missing entry "${landKey}"`)
     }
-    const cands = withCoord.filter((off) => {
-      if (reserved.has(off.id)) return false
-      const offLand = landCodeFromSchoolId(off.id)
-      if (offLand != null && offLand !== osmLand) return false
-      const d = distance(point([off.lon, off.lat]), point([lon, lat]), { units: 'kilometers' })
-      return d <= MATCH_RADIUS_KM
+    fullCandsByOsm.set(landKey, officialsNearOsm(o, withCoord, osmLand))
+  }
+
+  /** Global pass: unique distance+name among ≥2 nearby officials — closest matches claim officials first. */
+  type Phase1Proposal = {
+    landKey: string
+    o: OsmSchoolInput
+    winner: OfficialInput
+    distKm: number
+    nameKey: string
+  }
+  const phase1Proposals: Phase1Proposal[] = []
+  for (const o of osmSchools) {
+    const landKey = osmLandKey(o)
+    const full = fullCandsByOsm.get(landKey) ?? []
+    if (full.length < 2) continue
+    const winner = uniqueNameOfficialIn(full, o)
+    if (!winner) continue
+    const [lon, lat] = o.centroid
+    const distKm = distance(point([winner.lon, winner.lat]), point([lon, lat]), {
+      units: 'kilometers',
     })
+    phase1Proposals.push({
+      landKey,
+      o,
+      winner,
+      distKm,
+      nameKey: normalizeSchoolNameForMatch(o.name)!,
+    })
+  }
+  phase1Proposals.sort(
+    (a, b) => a.distKm - b.distKm || a.landKey.localeCompare(b.landKey, 'en'),
+  )
+  const phase1RowByLandKey = new Map<string, MatchRowOut>()
+  const consumedOsmInPhase1 = new Set<string>()
+  for (const p of phase1Proposals) {
+    if (consumedOsmInPhase1.has(p.landKey)) continue
+    if (reserved.has(p.winner.id)) continue
+    reserved.add(p.winner.id)
+    consumedOsmInPhase1.add(p.landKey)
+    const [lon, lat] = p.o.centroid
+    const dM = p.distKm * 1000
+    phase1RowByLandKey.set(p.landKey, {
+      key: `match-${p.winner.id}`,
+      category: 'matched',
+      matchMode: 'distance_and_name',
+      officialId: p.winner.id,
+      officialName: p.winner.name,
+      officialProperties: p.winner.properties,
+      osmId: p.o.osmId,
+      osmType: p.o.osmType,
+      osmCentroidLon: lon,
+      osmCentroidLat: lat,
+      distanceMeters: Math.round(dM),
+      osmName: p.o.name,
+      osmTags: p.o.tags,
+      matchedByNameNormalized: p.nameKey,
+    })
+  }
+
+  for (const o of osmSchools) {
+    const [lon, lat] = o.centroid
+    const landKey = osmLandKey(o)
+    const osmLand = opts.osmLandByKey.get(landKey)
+    if (osmLand === undefined) {
+      throw new Error(`matchSchools: osmLandByKey missing entry "${landKey}"`)
+    }
+    const phase1Row = phase1RowByLandKey.get(landKey)
+    if (phase1Row) {
+      rows.push(phase1Row)
+      continue
+    }
+
+    const fullAtStart = fullCandsByOsm.get(landKey) ?? []
+    const cands = officialsNearOsm(o, withCoord, osmLand, reserved)
 
     if (cands.length === 0) {
       rows.push({
@@ -197,6 +296,71 @@ export function matchSchools(
       const off = cands[0]
       const dM =
         distance(point([off.lon, off.lat]), point([lon, lat]), { units: 'kilometers' }) * 1000
+      if (fullAtStart.length >= 2) {
+        const nameWin = uniqueNameOfficialIn(fullAtStart, o)
+        if (nameWin == null) {
+          for (const x of cands) {
+            ambiguousAllIds.add(x.id)
+          }
+          rows.push({
+            key: `ambig-${o.osmType}-${o.osmId}`,
+            category: 'match_ambiguous',
+            officialId: null,
+            officialName: null,
+            officialProperties: null,
+            osmId: o.osmId,
+            osmType: o.osmType,
+            osmCentroidLon: lon,
+            osmCentroidLat: lat,
+            distanceMeters: Math.round(dM),
+            osmName: o.name,
+            osmTags: o.tags,
+            ambiguousOfficialIds: cands.map((x) => x.id),
+            ambiguousOfficialSnapshots: snapshotsFromOfficials(cands),
+          })
+          continue
+        }
+        if (nameWin.id !== off.id) {
+          for (const x of cands) {
+            ambiguousAllIds.add(x.id)
+          }
+          rows.push({
+            key: `ambig-${o.osmType}-${o.osmId}`,
+            category: 'match_ambiguous',
+            officialId: null,
+            officialName: null,
+            officialProperties: null,
+            osmId: o.osmId,
+            osmType: o.osmType,
+            osmCentroidLon: lon,
+            osmCentroidLat: lat,
+            distanceMeters: Math.round(dM),
+            osmName: o.name,
+            osmTags: o.tags,
+            ambiguousOfficialIds: cands.map((x) => x.id),
+            ambiguousOfficialSnapshots: snapshotsFromOfficials(cands),
+          })
+          continue
+        }
+        reserved.add(off.id)
+        rows.push({
+          key: `match-${off.id}`,
+          category: 'matched',
+          matchMode: 'distance_and_name',
+          officialId: off.id,
+          officialName: off.name,
+          officialProperties: off.properties,
+          osmId: o.osmId,
+          osmType: o.osmType,
+          osmCentroidLon: lon,
+          osmCentroidLat: lat,
+          distanceMeters: Math.round(dM),
+          osmName: o.name,
+          osmTags: o.tags,
+          matchedByNameNormalized: normalizeSchoolNameForMatch(o.name),
+        })
+        continue
+      }
       if (ambiguousAllIds.has(off.id)) {
         rows.push({
           key: `osm-${o.osmType}-${o.osmId}`,
@@ -248,27 +412,25 @@ export function matchSchools(
       if (nameMatches.length === 1) {
         const win = nameMatches[0]
         const winner = win.off
-        if (!ambiguousAllIds.has(winner.id)) {
-          reserved.add(winner.id)
-          const dM = win.distKm * 1000
-          rows.push({
-            key: `match-${winner.id}`,
-            category: 'matched',
-            matchMode: 'distance_and_name',
-            officialId: winner.id,
-            officialName: winner.name,
-            officialProperties: winner.properties,
-            osmId: o.osmId,
-            osmType: o.osmType,
-            osmCentroidLon: lon,
-            osmCentroidLat: lat,
-            distanceMeters: Math.round(dM),
-            osmName: o.name,
-            osmTags: o.tags,
-            matchedByNameNormalized: nameKey,
-          })
-          continue
-        }
+        reserved.add(winner.id)
+        const dM = win.distKm * 1000
+        rows.push({
+          key: `match-${winner.id}`,
+          category: 'matched',
+          matchMode: 'distance_and_name',
+          officialId: winner.id,
+          officialName: winner.name,
+          officialProperties: winner.properties,
+          osmId: o.osmId,
+          osmType: o.osmType,
+          osmCentroidLon: lon,
+          osmCentroidLat: lat,
+          distanceMeters: Math.round(dM),
+          osmName: o.name,
+          osmTags: o.tags,
+          matchedByNameNormalized: nameKey,
+        })
+        continue
       }
     }
 
