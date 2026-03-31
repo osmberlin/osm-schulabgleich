@@ -93,9 +93,10 @@ export const de = {
     ambiguousOfficialHeading: 'Amtliche Kandidaten',
     ambiguousJedeschule: 'JedeSchule',
     mapLegendOfficial: 'Offizieller Punkt (Vergleichsdaten)',
-    mapLegendOsmArea: 'OSM-Fläche',
-    mapLegendOsmCentroid: 'OSM-Schwerpunkt (für Abstand zum offiziellen Punkt)',
+    mapLegendOsmArea: 'OSM Fläche',
+    mapLegendOsmCentroid: 'OSM Punkt',
     mapLegendCompareRadius: 'Vergleichsradius ({m} m)',
+    showOtherData: 'Alle Schulen',
     matchExplanationDistance:
       'Zuordnung über Distanz: ein einziger amtlicher Schuldatensatz lag im Vergleichsradius um den OSM-Schwerpunkt.',
     matchExplanationName:
