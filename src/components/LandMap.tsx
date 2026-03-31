@@ -150,31 +150,23 @@ export function LandMap({
     return ['all', geom, catFilter] as FilterSpecification
   }, [catFilter])
 
+  const handleIdle = useCallback(() => {
+    if (!pendingBaselineRef.current) return
+    const m = mapRef.current?.getMap()
+    if (!m) return
+    pendingBaselineRef.current = false
+    const b = boundsToBboxParam(m.getBounds())
+    setBaselineBbox(b)
+    setCurrentBbox(b)
+  }, [])
+
   const handleMove = useCallback(() => {
     const m = mapRef.current?.getMap()
     if (!m) return
     setCurrentBbox(boundsToBboxParam(m.getBounds()))
   }, [])
 
-  useEffect(() => {
-    const m = mapRef.current?.getMap()
-    if (!m) return
-
-    const onIdle = () => {
-      if (!pendingBaselineRef.current) return
-      pendingBaselineRef.current = false
-      const b = boundsToBboxParam(m.getBounds())
-      setBaselineBbox(b)
-      setCurrentBbox(b)
-    }
-
-    m.on('idle', onIdle)
-    return () => {
-      m.off('idle', onIdle)
-    }
-  }, [])
-
-  useEffect(() => {
+  useEffect(function initializeMapStateFromExistingInstance() {
     if (mapReady) return
     const m = mapRef.current?.getMap()
     if (!m) return
@@ -182,9 +174,9 @@ export function LandMap({
     setMapReady(true)
     setCurrentBbox(b)
     setBaselineBbox((prev) => prev ?? b)
-  }, [mapReady, fitTargetBounds, landCode])
+  }, [mapReady])
 
-  useEffect(() => {
+  useEffect(function fitMapToTargetBounds() {
     const m = mapRef.current?.getMap()
     if (!m || !fitTargetBounds) return
 
@@ -230,6 +222,7 @@ export function LandMap({
           setBaselineBbox((prev) => prev ?? b)
           setMapReady(true)
         }}
+        onIdle={handleIdle}
         onMove={handleMove}
       >
         {landBoundary && (

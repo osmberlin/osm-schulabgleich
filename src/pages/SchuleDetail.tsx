@@ -348,7 +348,7 @@ export function SchuleDetail() {
   }, [detailMapBounds])
 
   const mapRef = useRef<MapRef>(null)
-  useEffect(() => {
+  useEffect(function fitDetailMapToComputedBounds() {
     const m = mapRef.current?.getMap()
     if (!m || !detailMapBounds) return
     const run = () => {
