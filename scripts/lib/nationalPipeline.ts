@@ -3,7 +3,12 @@ import { mkdir, unlink } from 'node:fs/promises'
 import path from 'node:path'
 import type { Feature, FeatureCollection } from 'geojson'
 import { schoolsMatchesFileSchema } from '../../src/lib/schemas'
-import { type LandCode, STATE_MAP_CENTER, STATE_ORDER } from '../../src/lib/stateConfig'
+import {
+  type LandCode,
+  landCodeFromSchoolId,
+  STATE_MAP_CENTER,
+  STATE_ORDER,
+} from '../../src/lib/stateConfig'
 import { initBundeslandBoundaries, landCodeForPoint } from './bundeslandBoundaries'
 import {
   buildJedeschuleStatsFromDump,
@@ -24,7 +29,6 @@ import { NATIONAL, nationalPath } from './nationalDatasetPaths'
 import { fetchSchoolsOsmOverpassGermanyWithRetries } from './overpassFetch'
 import {
   datasetsDir,
-  landCodeFromSchoolId,
   officialGeojsonNational,
   PIPELINE_VERSION,
   readJsonFile,
@@ -150,6 +154,7 @@ function rowsToJson(rows: MatchRowOut[]) {
   return rows.map((r) => ({
     key: r.key,
     category: r.category,
+    matchMode: r.matchMode,
     officialId: r.officialId,
     officialName: r.officialName,
     officialProperties: r.officialProperties,
@@ -161,6 +166,7 @@ function rowsToJson(rows: MatchRowOut[]) {
     osmName: r.osmName,
     osmTags: r.osmTags,
     ambiguousOfficialIds: r.ambiguousOfficialIds,
+    ambiguousOfficialSnapshots: r.ambiguousOfficialSnapshots,
     matchedByNameNormalized: r.matchedByNameNormalized,
     pipelineLand: r.pipelineLand,
   }))
@@ -174,9 +180,15 @@ function officialsFromNationalOfficialFc(fc: FeatureCollection): OfficialInput[]
     const p = (f.properties ?? {}) as Record<string, unknown>
     const name = String(p.name ?? '')
     const g = f.geometry
-    if (!g || g.type !== 'Point' || !Array.isArray(g.coordinates)) continue
-    const [lon, lat] = g.coordinates as [number, number]
-    if (!Number.isFinite(lon + lat)) continue
+    let lon = Number.NaN
+    let lat = Number.NaN
+    if (g && g.type === 'Point' && Array.isArray(g.coordinates)) {
+      const [x, y] = g.coordinates as [number, number]
+      if (Number.isFinite(x + y)) {
+        lon = x
+        lat = y
+      }
+    }
     out.push({
       id,
       name,
@@ -306,7 +318,10 @@ export async function runMatchNational(projectRoot: string): Promise<MatchNation
   const startedAt = new Date().toISOString()
   const t0 = performance.now()
 
-  const pathOfficialMeta = nationalPath(projectRoot, envScopedJsonFileName(NATIONAL.schoolsOfficialMeta))
+  const pathOfficialMeta = nationalPath(
+    projectRoot,
+    envScopedJsonFileName(NATIONAL.schoolsOfficialMeta),
+  )
   const pathOsmMeta = nationalPath(projectRoot, envScopedJsonFileName(NATIONAL.schoolsOsmMeta))
   const pathOfficial = nationalPath(projectRoot, NATIONAL.schoolsOfficialGeojson)
   const pathOsm = nationalPath(projectRoot, NATIONAL.schoolsOsmGeojson)
@@ -390,7 +405,7 @@ export async function runMatchNational(projectRoot: string): Promise<MatchNation
   const officials = officialsFromNationalOfficialFc(officialFc)
   const osmSchools = buildOsmSchoolsFromGeoJson(osmFc)
   const osmLandByKey = buildOsmLandMap(osmFc)
-  const { rows } = matchSchools(officials, osmSchools)
+  const { rows } = matchSchools(officials, osmSchools, { osmLandByKey })
   const enriched = enrichRowsWithPipelineLand(rows, osmLandByKey)
 
   await writeJson(pathMatches, rowsToJson(enriched))
@@ -398,7 +413,7 @@ export async function runMatchNational(projectRoot: string): Promise<MatchNation
   const finishedAt = new Date().toISOString()
   const durationMs = Math.round(performance.now() - t0)
 
-  const noCoordByLand = officialNoCoordByLand(officialFc)
+  const noCoordByLand = officialNoCoordUnmatchedByLand(officialFc, enriched)
   const osmHasData = (osmFc.features.length ?? 0) > 0
   const osmSrc: 'live' | 'cached' | 'missing' = osmMeta?.ok && osmHasData ? 'live' : 'missing'
 
@@ -435,8 +450,11 @@ export async function runMatchNational(projectRoot: string): Promise<MatchNation
   return { errors, matchSkipped: false }
 }
 
-/** Distribute national official_no_coord by land using school list from official FC. */
-function officialNoCoordByLand(officialFc: FeatureCollection): Map<LandCode, number> {
+/** Distribute national official_no_coord by land (remaining unmatched after fallback). */
+function officialNoCoordUnmatchedByLand(
+  officialFc: FeatureCollection,
+  rows: Pick<MatchRowOut, 'officialId' | 'matchMode'>[],
+): Map<LandCode, number> {
   const m = new Map<LandCode, number>()
   for (const code of STATE_ORDER) m.set(code, 0)
   for (const f of officialFc.features) {
@@ -449,6 +467,12 @@ function officialNoCoordByLand(officialFc: FeatureCollection): Map<LandCode, num
       Array.isArray(g.coordinates) &&
       Number.isFinite((g.coordinates as number[])[0] + (g.coordinates as number[])[1])
     if (!has) m.set(land, (m.get(land) ?? 0) + 1)
+  }
+  for (const row of rows) {
+    if (row.matchMode !== 'name' || !row.officialId) continue
+    const land = landCodeFromSchoolId(row.officialId)
+    if (!land) continue
+    m.set(land, Math.max(0, (m.get(land) ?? 0) - 1))
   }
   return m
 }
@@ -471,7 +495,15 @@ async function appendRunRecord(
   await writeJson(runsPath, prev)
 }
 
-export async function runSplitLands(projectRoot: string): Promise<{ errors: string[] }> {
+export type RunSplitLandsOptions = {
+  /** Only rewrite `datasets/{code}/` and patch that land in `summary.json`. Needs a complete existing `summary.json` (falls back to full split). */
+  onlyLands?: LandCode[]
+}
+
+export async function runSplitLands(
+  projectRoot: string,
+  opts?: RunSplitLandsOptions,
+): Promise<{ errors: string[] }> {
   const errors: string[] = []
   const marker = nationalPath(projectRoot, NATIONAL.skipSplitMarker)
   if (await Bun.file(marker).exists()) {
@@ -483,6 +515,7 @@ export async function runSplitLands(projectRoot: string): Promise<{ errors: stri
   const pathOsm = nationalPath(projectRoot, NATIONAL.schoolsOsmGeojson)
   const pathMatches = nationalPath(projectRoot, NATIONAL.schoolsMatchesJson)
   const pathStats = nationalPath(projectRoot, NATIONAL.jedeschuleStats)
+  const summaryPath = path.join(datasetsDir(projectRoot), 'summary.json')
 
   const officialFc = await readJsonFile<FeatureCollection>(pathOfficial)
   const osmFc = await readJsonFile<FeatureCollection>(pathOsm)
@@ -504,15 +537,37 @@ export async function runSplitLands(projectRoot: string): Promise<{ errors: stri
 
   initBundeslandBoundaries(projectRoot)
 
+  let codesToProcess: LandCode[] = [...STATE_ORDER]
+  const requested = opts?.onlyLands?.filter((c): c is LandCode =>
+    STATE_ORDER.includes(c as LandCode),
+  )
+  if (requested?.length) {
+    const uniq = [...new Set(requested)]
+    if (uniq.length < STATE_ORDER.length) {
+      const prev = await readJsonFile<SummaryFileOut>(summaryPath)
+      const prevCodes = new Set((prev?.lands ?? []).map((l) => l.code))
+      const complete = STATE_ORDER.every((c) => prevCodes.has(c))
+      if (complete) {
+        codesToProcess = uniq
+      } else {
+        console.info(
+          '[pipeline:split-lands] summary.json fehlt oder unvollständig – Split für alle Bundesländer.',
+        )
+      }
+    } else {
+      codesToProcess = uniq
+    }
+  }
+
   const statByState = new Map(statRows.map((s) => [s.state, s.last_updated] as const))
-  const noCoordByLand = officialNoCoordByLand(officialFc)
+  const noCoordByLand = officialNoCoordUnmatchedByLand(officialFc, matchRows)
 
   const summaryUpdates = new Map<string, LandSummaryOut>()
   const osmMeta = await readJsonFile<PipelineSourceMeta>(
     nationalPath(projectRoot, envScopedJsonFileName(NATIONAL.schoolsOsmMeta)),
   )
 
-  for (const code of STATE_ORDER) {
+  for (const code of codesToProcess) {
     await mkdir(path.join(datasetsDir(projectRoot), code), { recursive: true })
     const officialLand: FeatureCollection = {
       type: 'FeatureCollection',
@@ -563,17 +618,43 @@ export async function runSplitLands(projectRoot: string): Promise<{ errors: stri
     })
   }
 
-  const merged: SummaryFileOut = {
-    generatedAt: new Date().toISOString(),
-    pipelineVersion: PIPELINE_VERSION,
-    jedeschuleCsvSource: NATIONAL.schoolsOfficialGeojson,
-    lands: STATE_ORDER.flatMap((c) => {
+  let merged: SummaryFileOut
+  if (codesToProcess.length === STATE_ORDER.length) {
+    merged = {
+      generatedAt: new Date().toISOString(),
+      pipelineVersion: PIPELINE_VERSION,
+      jedeschuleCsvSource: NATIONAL.schoolsOfficialGeojson,
+      lands: STATE_ORDER.flatMap((c) => {
+        const row = summaryUpdates.get(c)
+        return row ? [row] : []
+      }),
+    }
+  } else {
+    const prev = await readJsonFile<SummaryFileOut>(summaryPath)
+    const byCode = new Map((prev?.lands ?? []).map((l) => [l.code, l] as const))
+    for (const c of codesToProcess) {
       const row = summaryUpdates.get(c)
-      return row ? [row] : []
-    }),
+      if (row) byCode.set(c, row)
+    }
+    const lands = STATE_ORDER.map((c) => byCode.get(c)).filter(
+      (row): row is LandSummaryOut => row != null,
+    )
+    if (lands.length !== STATE_ORDER.length) {
+      errors.push('split-lands: summary-Zusammenführung unvollständig')
+    }
+    merged = {
+      generatedAt: new Date().toISOString(),
+      pipelineVersion: PIPELINE_VERSION,
+      jedeschuleCsvSource: NATIONAL.schoolsOfficialGeojson,
+      lands,
+    }
   }
-  await writeJson(path.join(datasetsDir(projectRoot), 'summary.json'), merged)
-  console.info('[pipeline:split-lands] ok')
+  await writeJson(summaryPath, merged)
+  if (codesToProcess.length < STATE_ORDER.length) {
+    console.info(`[pipeline:split-lands] ok (nur ${codesToProcess.join(', ')})`)
+  } else {
+    console.info('[pipeline:split-lands] ok')
+  }
   return { errors }
 }
 

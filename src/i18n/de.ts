@@ -65,6 +65,9 @@ export const de = {
     },
     /** Summary-Zähler `official_no_coord` — kein Legendenfilter (keine Treffer-Zeilen). */
     officialNoCoordKpi: 'Amtlich ohne Koordinaten',
+    officialNoCoordKpiInfoButton: 'Info zu amtlich ohne Koordinaten',
+    officialNoCoordKpiInfoAlert:
+      'Dies sind amtliche Schulen ohne Geokoordinaten, die auch nach Distanz- und Namensabgleich keiner OSM-Schule eindeutig zugeordnet wurden.',
     osmCachedBanner:
       'Hinweis: OSM-Daten stammen von einem früheren Lauf (Overpass war nicht erreichbar). Datenstand siehe unten.',
     historyHeading: 'Entwicklung der Treffer über Zeit',
@@ -87,9 +90,16 @@ export const de = {
     jedeschuleApi: 'Auf JedeSchule öffnen (JSON)',
     openOsmBrowse: 'Auf OSM öffnen',
     abstand: 'Abstand',
+    officialCoordsMissing: 'Koordinaten fehlen',
     ambiguousAlertTitle: 'Uneindeutig',
     ambiguousIntro:
-      'Mehrere amtliche Schuldatensätze liegen im Abgleichsradius um dieses OSM-Objekt. Es gibt keine automatische Eindeutigkeit — bitte in OSM oder den offiziellen Daten präzisieren (z. B. Kennung, Adresse), damit sich die Zuordnung klärt.',
+      'Mehrere amtliche Schuldatensätze liegen im Abgleichsradius um dieses OSM-Objekt und ein Vergleich der Namen führte nicht zu einem eindeutigen Treffer. Prüfe den `name` in OSM und ob alle Daten das Attribut `amenity=school` tragen sollten. Manchmal kann auch ein `official_name` eingetragen werden.',
+    ambiguousNameNoGeoAlertTitle: 'Uneindeutig (Namensabgleich ohne Koordinaten)',
+    ambiguousNameNoGeoAlertText:
+      'Diese Uneindeutigkeit kommt aus einem reinen Namensabgleich mit amtlichen Datensätzen ohne Koordinaten. Die Karte hilft hier kaum; nutze die Kandidatenliste unten. Bei gleichen Schulnamen kann das ein Fehlalarm sein.',
+    ambiguousNoLocalGeoTitle: 'Hinweis zur Karte',
+    ambiguousNoLocalGeoText:
+      'Bei mindestens einem amtlichen Kandidaten fehlen nutzbare Koordinaten in den Rohdaten — dann gibt es keinen Punkt für diese Schule auf der Karte. Name, Adresse und die übrigen Felder stehen trotzdem in den Vergleichstabellen unten (inkl. Abstand zum OSM-Schwerpunkt, sofern im Datensatz hinterlegt). Der Abgleich für Uneindeutigkeiten erfolgt nur innerhalb desselben Bundeslandes wie die OSM-Schule.',
     ambiguousOfficialHeading: 'Amtliche Kandidaten',
     ambiguousJedeschule: 'JedeSchule',
     mapLegendOfficial: 'Offizieller Punkt (Vergleichsdaten)',
@@ -99,8 +109,15 @@ export const de = {
     showOtherData: 'Alle Schulen',
     matchExplanationDistance:
       'Zuordnung über Distanz: ein einziger amtlicher Schuldatensatz lag im Vergleichsradius um den OSM-Schwerpunkt.',
+    matchExplanationDistanceAndName:
+      'Zuordnung über Distanz und Namensgleichheit (normalisierter Vergleichsstring, siehe Pipeline):',
     matchExplanationName:
-      'Zuordnung über Namensgleichheit (normalisierter Vergleichsstring, siehe Pipeline):',
+      'Zuordnung nur über Namensgleichheit (amtlicher Datensatz ohne Koordinaten, normalisierter Vergleichsstring):',
+    matchModeLabel: {
+      distance: 'Distanz',
+      distance_and_name: 'Distanz + Name',
+      name: 'Name',
+    },
   },
   status: {
     heading: 'Pipeline-Status',

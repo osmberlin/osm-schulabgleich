@@ -19,6 +19,14 @@ export const STATE_ORDER = [
 
 export type LandCode = (typeof STATE_ORDER)[number]
 
+/** JedeSchule id prefix before the first hyphen, e.g. `HB-352` → `HB`. */
+export function landCodeFromSchoolId(id: string): LandCode | null {
+  const dash = id.indexOf('-')
+  const state = dash > 0 ? id.slice(0, dash) : ''
+  if (state.length === 2 && STATE_ORDER.includes(state as LandCode)) return state as LandCode
+  return null
+}
+
 export const STATE_LABEL_DE: Record<LandCode, string> = {
   BW: 'Baden-Württemberg',
   BY: 'Bayern',

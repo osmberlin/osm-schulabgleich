@@ -1,4 +1,4 @@
-import { ChevronRightIcon } from '@heroicons/react/20/solid'
+import { ChevronRightIcon, InformationCircleIcon } from '@heroicons/react/20/solid'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from '@tanstack/react-router'
 import type { Feature, MultiPolygon, Polygon } from 'geojson'
@@ -38,6 +38,9 @@ export function LandOverview() {
   const { enabledSet, enabledCategories, setCategoryEnabled, isCategoryEnabled } =
     useLandCategoryFilter()
   const { bbox: listBbox, setBbox: setListBbox, clearBbox: clearListBbox } = useLandMapBbox()
+  const showNoCoordInfo = () => {
+    window.alert(de.land.officialNoCoordKpiInfoAlert)
+  }
 
   const summaryQ = useQuery({
     queryKey: ['summary'],
@@ -181,6 +184,16 @@ export function LandOverview() {
         <ReadOnlyStatBlock
           swatch={<OfficialNoCoordLegendSwatch />}
           label={de.land.officialNoCoordKpi}
+          labelAddon={
+            <button
+              type="button"
+              className="inline-flex rounded text-zinc-500 hover:text-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+              aria-label={de.land.officialNoCoordKpiInfoButton}
+              onClick={showNoCoordInfo}
+            >
+              <InformationCircleIcon className="size-4" aria-hidden />
+            </button>
+          }
           value={formatDeInteger(landSummary?.counts.official_no_coord ?? 0)}
         />
       </StatBlocksRow>
@@ -255,6 +268,11 @@ export function LandOverview() {
                         <span className="min-w-0 text-xs font-medium text-zinc-700 dark:text-zinc-300">
                           {de.land.categoryLabel[row.category]}
                         </span>
+                        {row.category === 'matched' && row.matchMode && (
+                          <span className="min-w-0 text-xs text-zinc-500 dark:text-zinc-400">
+                            · {de.detail.matchModeLabel[row.matchMode]}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-x-3">

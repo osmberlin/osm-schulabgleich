@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { LandCode } from '../../src/lib/stateConfig'
 import {
   MATCH_RADIUS_KM,
   matchSchools,
@@ -6,6 +7,10 @@ import {
   type OfficialInput,
   type OsmSchoolInput,
 } from './match'
+
+function landOpts(osm: OsmSchoolInput, land: LandCode): { osmLandByKey: Map<string, LandCode> } {
+  return { osmLandByKey: new Map([[`${osm.osmType}/${osm.osmId}`, land]]) }
+}
 
 describe('matchSchools', () => {
   const officials: OfficialInput[] = [
@@ -46,14 +51,16 @@ describe('matchSchools', () => {
   }
 
   it('matches within radius', () => {
-    const { rows } = matchSchools(officials, [osmNear])
+    const { rows, officialNoCoordCount } = matchSchools(officials, [osmNear], landOpts(osmNear, 'BE'))
     const m = rows.filter((r) => r.category === 'matched')
     expect(m).toHaveLength(1)
     expect(m[0].officialId).toBe('BE-a')
+    expect(m[0].matchMode).toBe('distance')
     expect(m[0].matchedByNameNormalized).toBeUndefined()
     expect(m[0].osmCentroidLon).toBe(13.4)
     expect(m[0].osmCentroidLat).toBe(52.52)
     expect(rows.some((r) => r.category === 'official_only' && r.officialId === 'BE-b')).toBe(true)
+    expect(officialNoCoordCount).toBe(0)
   })
 
   it('respects MATCH_RADIUS_KM notionally', () => {
@@ -62,9 +69,22 @@ describe('matchSchools', () => {
       osmId: '2',
       centroid: [osmNear.centroid[0] + 0.5, osmNear.centroid[1]],
     }
-    const { rows } = matchSchools(officials, [far])
+    const { rows } = matchSchools(officials, [far], landOpts(far, 'BE'))
     expect(rows.some((r) => r.category === 'osm_only')).toBe(true)
     expect(MATCH_RADIUS_KM).toBe(0.15)
+  })
+
+  it('ignores officials from other Bundesland id prefix', () => {
+    const mixed: OfficialInput[] = [
+      { id: 'BE-x', name: 'S', lon: 13.4, lat: 52.52, properties: { id: 'BE-x' } },
+      { id: 'RP-x', name: 'S', lon: 13.4, lat: 52.52, properties: { id: 'RP-x' } },
+    ]
+    const osmLandByKey = new Map<string, LandCode>([['way/1', 'BE']])
+    const { rows } = matchSchools(mixed, [osmNear], { osmLandByKey })
+    const m = rows.filter((r) => r.category === 'matched')
+    expect(m).toHaveLength(1)
+    expect(m[0].officialId).toBe('BE-x')
+    expect(rows.some((r) => r.category === 'match_ambiguous')).toBe(false)
   })
 
   it('marks ambiguous when several officials fall within radius (no name-based winner)', () => {
@@ -85,11 +105,14 @@ describe('matchSchools', () => {
       },
       ...officials.filter((o) => o.id === 'BE-b'),
     ]
-    const { rows } = matchSchools(twoNear, [osmNear])
+    const { rows } = matchSchools(twoNear, [osmNear], landOpts(osmNear, 'BE'))
     const amb = rows.filter((r) => r.category === 'match_ambiguous')
     expect(amb).toHaveLength(1)
     expect(amb[0].officialId).toBeNull()
     expect(amb[0].ambiguousOfficialIds?.sort()).toEqual(['BE-x', 'BE-y'].sort())
+    const snaps = amb[0].ambiguousOfficialSnapshots
+    expect(snaps?.map((s) => s.id).sort()).toEqual(['BE-x', 'BE-y'].sort())
+    expect(snaps?.find((s) => s.id === 'BE-x')?.name).toBe('Alpha Schule')
     expect(amb[0].osmId).toBe('1')
   })
 
@@ -122,11 +145,12 @@ describe('matchSchools', () => {
       name: 'Alpha Schule',
       tags: { amenity: 'school', name: 'Alpha Schule' },
     }
-    const { rows } = matchSchools(twoNear, [osm])
+    const { rows } = matchSchools(twoNear, [osm], landOpts(osm, 'BE'))
     expect(rows.filter((r) => r.category === 'match_ambiguous')).toHaveLength(0)
     const m = rows.filter((r) => r.category === 'matched')
     expect(m).toHaveLength(1)
     expect(m[0].officialId).toBe('BE-x')
+    expect(m[0].matchMode).toBe('distance_and_name')
     expect(m[0].matchedByNameNormalized).toBe('alpha schule')
     expect(rows.some((r) => r.category === 'official_only' && r.officialId === 'BE-y')).toBe(true)
   })
@@ -160,10 +184,11 @@ describe('matchSchools', () => {
       name: 'Alpha Schule',
       tags: { amenity: 'school', name: 'Alpha Schule' },
     }
-    const { rows } = matchSchools(twoSameName, [osm])
+    const { rows } = matchSchools(twoSameName, [osm], landOpts(osm, 'BE'))
     const amb = rows.filter((r) => r.category === 'match_ambiguous')
     expect(amb).toHaveLength(1)
     expect(amb[0].ambiguousOfficialIds?.sort()).toEqual(['BE-x', 'BE-y'].sort())
+    expect(amb[0].ambiguousOfficialSnapshots?.map((s) => s.id).sort()).toEqual(['BE-x', 'BE-y'].sort())
   })
 
   it('matches by name with parentheses and umlauts stripped/normalized', () => {
@@ -189,14 +214,146 @@ describe('matchSchools', () => {
       name: 'Grundschule Gruen',
       tags: { amenity: 'school', name: 'Grundschule Gruen' },
     }
-    const { rows } = matchSchools(twoNear, [osm])
+    const { rows } = matchSchools(twoNear, [osm], landOpts(osm, 'BE'))
     const m = rows.filter((r) => r.category === 'matched')
     expect(m).toHaveLength(1)
     expect(m[0].officialId).toBe('DE-x')
+    expect(m[0].matchMode).toBe('distance_and_name')
     expect(m[0].matchedByNameNormalized).toBe(
       normalizeSchoolNameForMatch('Grundschule Grün (Standort Nord)'),
     )
     expect(rows.some((r) => r.category === 'official_only' && r.officialId === 'DE-y')).toBe(true)
+  })
+
+  it('matches no-coord official by unique normalized name against osm_only', () => {
+    const officialsNoCoord: OfficialInput[] = [
+      {
+        id: 'NI-no-1',
+        name: 'Neue Schule Mitte',
+        lon: Number.NaN,
+        lat: Number.NaN,
+        properties: { id: 'NI-no-1', name: 'Neue Schule Mitte' },
+      },
+    ]
+    const osmOnly: OsmSchoolInput = {
+      ...osmNear,
+      osmId: '200',
+      name: 'Neue Schule Mitte',
+      tags: { amenity: 'school', name: 'Neue Schule Mitte' },
+      centroid: [8.7, 52.1],
+    }
+    const { rows, officialNoCoordCount } = matchSchools(
+      officialsNoCoord,
+      [osmOnly],
+      landOpts(osmOnly, 'NI'),
+    )
+    const m = rows.filter((r) => r.category === 'matched')
+    expect(m).toHaveLength(1)
+    expect(m[0].officialId).toBe('NI-no-1')
+    expect(m[0].matchMode).toBe('name')
+    expect(m[0].distanceMeters).toBeNull()
+    expect(m[0].matchedByNameNormalized).toBe(normalizeSchoolNameForMatch('Neue Schule Mitte'))
+    expect(rows.some((r) => r.category === 'osm_only')).toBe(false)
+    expect(officialNoCoordCount).toBe(0)
+  })
+
+  it('no-coord name fallback only uses same Bundesland as OSM', () => {
+    const officialsNoCoord: OfficialInput[] = [
+      {
+        id: 'BE-no-1',
+        name: 'Gemeinsamer Name X',
+        lon: Number.NaN,
+        lat: Number.NaN,
+        properties: { id: 'BE-no-1' },
+      },
+      {
+        id: 'NI-no-x',
+        name: 'Gemeinsamer Name X',
+        lon: Number.NaN,
+        lat: Number.NaN,
+        properties: { id: 'NI-no-x' },
+      },
+    ]
+    const osmOnly: OsmSchoolInput = {
+      ...osmNear,
+      osmId: '555',
+      name: 'Gemeinsamer Name X',
+      tags: { amenity: 'school', name: 'Gemeinsamer Name X' },
+      centroid: [8.7, 52.1],
+    }
+    const osmLandByKey = new Map<string, LandCode>([['way/555', 'BE']])
+    const { rows, officialNoCoordCount } = matchSchools(officialsNoCoord, [osmOnly], {
+      osmLandByKey,
+    })
+    const m = rows.filter((r) => r.category === 'matched')
+    expect(m).toHaveLength(1)
+    expect(m[0].officialId).toBe('BE-no-1')
+    expect(officialNoCoordCount).toBe(1)
+  })
+
+  it('no-coord name fallback leaves osm_only when only other land has that name', () => {
+    const officialsNoCoord: OfficialInput[] = [
+      {
+        id: 'NI-only',
+        name: 'Solo Name Y',
+        lon: Number.NaN,
+        lat: Number.NaN,
+        properties: { id: 'NI-only' },
+      },
+    ]
+    const osmOnly: OsmSchoolInput = {
+      ...osmNear,
+      osmId: '556',
+      name: 'Solo Name Y',
+      tags: { amenity: 'school', name: 'Solo Name Y' },
+      centroid: [8.7, 52.1],
+    }
+    const osmLandByKey = new Map<string, LandCode>([['way/556', 'BE']])
+    const { rows } = matchSchools(officialsNoCoord, [osmOnly], { osmLandByKey })
+    expect(rows.some((r) => r.category === 'matched')).toBe(false)
+    expect(rows.find((r) => r.osmId === '556')?.category).toBe('osm_only')
+  })
+
+  it('keeps no-coord officials unmatched when normalized-name fallback is ambiguous', () => {
+    const officialsNoCoord: OfficialInput[] = [
+      {
+        id: 'NI-no-a',
+        name: 'Campus Schule',
+        lon: Number.NaN,
+        lat: Number.NaN,
+        properties: { id: 'NI-no-a' },
+      },
+      {
+        id: 'NI-no-b',
+        name: 'Campus Schule',
+        lon: Number.NaN,
+        lat: Number.NaN,
+        properties: { id: 'NI-no-b' },
+      },
+    ]
+    const osmOnly: OsmSchoolInput = {
+      ...osmNear,
+      osmId: '201',
+      name: 'Campus Schule',
+      tags: { amenity: 'school', name: 'Campus Schule' },
+      centroid: [8.71, 52.11],
+    }
+    const { rows, officialNoCoordCount } = matchSchools(
+      officialsNoCoord,
+      [osmOnly],
+      landOpts(osmOnly, 'NI'),
+    )
+    expect(rows.some((r) => r.category === 'matched')).toBe(false)
+    const amb = rows.find((r) => r.category === 'match_ambiguous')
+    expect(amb).toBeTruthy()
+    expect(amb?.matchMode).toBe('name')
+    expect(amb?.matchedByNameNormalized).toBe(normalizeSchoolNameForMatch('Campus Schule'))
+    expect((amb?.ambiguousOfficialIds ?? []).sort()).toEqual(['NI-no-a', 'NI-no-b'])
+    expect((amb?.ambiguousOfficialSnapshots ?? []).map((s) => s.id).sort()).toEqual([
+      'NI-no-a',
+      'NI-no-b',
+    ])
+    expect(officialNoCoordCount).toBe(2)
   })
 })
 

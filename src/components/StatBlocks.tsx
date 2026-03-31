@@ -98,15 +98,25 @@ export function ReadOnlyStatBlock({
   swatch,
   label,
   value,
+  labelAddon,
 }: {
   swatch: ReactNode
   label: string
   value: ReactNode
+  labelAddon?: ReactNode
 }) {
   return (
     <div className="flex flex-col-reverse gap-y-2">
       <dt className="min-w-0 text-base/7 text-zinc-600 dark:text-zinc-400">
-        <span className="block min-w-0 text-sm leading-snug">{label}</span>
+        <span className="flex min-w-0 flex-nowrap items-center gap-1 text-sm leading-snug">
+          <span
+            className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap"
+            title={label}
+          >
+            {label}
+          </span>
+          {labelAddon ? <span className="shrink-0">{labelAddon}</span> : null}
+        </span>
       </dt>
       <dd className="flex min-w-0 items-center gap-2 text-pretty font-semibold text-2xl tracking-tight text-zinc-900 tabular-nums dark:text-zinc-100 sm:text-3xl">
         <span className="inline-flex shrink-0 items-center">{swatch}</span>

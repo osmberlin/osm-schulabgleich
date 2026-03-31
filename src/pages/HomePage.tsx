@@ -1,4 +1,4 @@
-import { ChevronRightIcon } from '@heroicons/react/20/solid'
+import { ChevronRightIcon, InformationCircleIcon } from '@heroicons/react/20/solid'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { type ReactNode, useMemo } from 'react'
@@ -123,6 +123,10 @@ function MiniPie({
 }
 
 export function HomePage() {
+  const showNoCoordInfo = () => {
+    window.alert(de.land.officialNoCoordKpiInfoAlert)
+  }
+
   const q = useQuery({
     queryKey: ['summary'],
     queryFn: async () => {
@@ -221,6 +225,16 @@ export function HomePage() {
           <ReadOnlyStatBlock
             swatch={<OfficialNoCoordLegendSwatch />}
             label={de.land.officialNoCoordKpi}
+            labelAddon={
+              <button
+                type="button"
+                className="inline-flex rounded text-zinc-500 hover:text-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+                aria-label={de.land.officialNoCoordKpiInfoButton}
+                onClick={showNoCoordInfo}
+              >
+                <InformationCircleIcon className="size-4" aria-hidden />
+              </button>
+            }
             value={formatDeInteger(germanyTotals.official_no_coord)}
           />
         </StatBlocksRow>

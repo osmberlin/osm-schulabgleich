@@ -1,5 +1,5 @@
 import path from 'node:path'
-import { type LandCode, STATE_ORDER } from '../../src/lib/stateConfig'
+import { landCodeFromSchoolId, type LandCode, STATE_ORDER } from '../../src/lib/stateConfig'
 import type { JedeschuleSchool } from './jedeschuleCsv'
 
 export const PIPELINE_VERSION = 1 as const
@@ -21,13 +21,6 @@ export function schoolToOfficialProps(s: Record<string, unknown>): Record<string
     out[k] = v
   }
   return out
-}
-
-export function landCodeFromSchoolId(id: string): LandCode | null {
-  const dash = id.indexOf('-')
-  const state = dash > 0 ? id.slice(0, dash) : ''
-  if (state.length === 2 && STATE_ORDER.includes(state as LandCode)) return state as LandCode
-  return null
 }
 
 /** Nationwide FeatureCollection; `properties.land` from school id prefix when valid. */

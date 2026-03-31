@@ -1,4 +1,8 @@
-import { ChevronRightIcon, InformationCircleIcon } from '@heroicons/react/20/solid'
+import {
+  ChevronRightIcon,
+  InformationCircleIcon,
+  MapPinIcon,
+} from '@heroicons/react/20/solid'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import bbox from '@turf/bbox'
@@ -269,25 +273,53 @@ export function SchuleDetail() {
   }, [q.data, row])
 
   const ambiguousCandidates = useMemo(() => {
-    if (!q.data || !row?.ambiguousOfficialIds?.length || row.category !== 'match_ambiguous') {
+    if (!q.data || !row || !row.ambiguousOfficialIds?.length || row.category !== 'match_ambiguous') {
       return []
     }
+    const snapById = new Map(
+      (row.ambiguousOfficialSnapshots ?? []).map((s) => [s.id, s] as const),
+    )
     return row.ambiguousOfficialIds.map((oid) => {
-      const f = findOfficialSchoolFeature(q.data.official, oid)
-      const props = (f?.properties ?? {}) as Record<string, unknown>
+      const fLocal = findOfficialSchoolFeature(q.data.official, oid)
+      const snap = snapById.get(oid)
+      const props = (fLocal?.properties ?? snap?.properties ?? {}) as Record<string, unknown>
+      const officialLonLat: readonly [number, number] | null =
+        fLocal?.geometry?.type === 'Point'
+          ? ([fLocal.geometry.coordinates[0], fLocal.geometry.coordinates[1]] as const)
+          : parseJedeschuleLonLatFromRecord(props)
+      /** Namens-Uneindeutigkeit nutzt keine Distanz. */
+      const showDistance =
+        row.matchMode !== 'name' && mapOsmCentroid && officialLonLat
       let distM: number | null = null
-      if (mapOsmCentroid && f?.geometry?.type === 'Point') {
+      if (showDistance) {
         const [clon, clat] = mapOsmCentroid
-        const [plon, plat] = f.geometry.coordinates
+        const [plon, plat] = officialLonLat
         distM = Math.round(
           distance(point([plon, plat]), point([clon, clat]), { units: 'kilometers' }) * 1000,
         )
       }
       const name =
-        typeof props.name === 'string' ? props.name : typeof props.id === 'string' ? props.id : oid
-      return { id: oid, name, properties: props, distM }
+        typeof props.name === 'string'
+          ? props.name
+          : typeof props.id === 'string'
+            ? props.id
+            : snap?.name ?? oid
+      return {
+        id: oid,
+        name,
+        properties: props,
+        distM,
+        hasOfficialFeature: fLocal != null,
+        officialLonLat,
+        showOfficialCoordsMissing: officialLonLat == null,
+      }
     })
   }, [q.data, row, mapOsmCentroid])
+
+  const ambiguousNoLocalGeoFeature = useMemo(
+    () => ambiguousCandidates.some((c) => !c.hasOfficialFeature),
+    [ambiguousCandidates],
+  )
 
   const detailFc: FeatureCollection | null = useMemo(() => {
     if (!q.data || !row) return null
@@ -444,7 +476,11 @@ export function SchuleDetail() {
     const feature = e.features?.find((f) => f.layer.id === OTHER_SCHOOLS_LAYER_CORE)
     const nextKey = feature?.properties?.matchKey
     if (typeof nextKey !== 'string' || nextKey.length === 0) return
-    void navigate({ to: '/bundesland/$code/schule/$matchKey', params: { code, matchKey: nextKey } })
+    void navigate({
+      to: '/bundesland/$code/schule/$matchKey',
+      params: { code, matchKey: nextKey },
+      search: true,
+    })
   }
 
   if (q.isLoading) return <p className="text-zinc-500">{de.land.loading}</p>
@@ -621,13 +657,16 @@ export function SchuleDetail() {
               )}
               {showOtherData && hoveredOtherSchool && (
                 <Popup
+                  className="schule-detail-map-popup"
                   longitude={hoveredOtherSchool.lon}
                   latitude={hoveredOtherSchool.lat}
                   closeButton={false}
                   closeOnClick={false}
                   offset={14}
                 >
-                  <p className="text-sm font-medium">{hoveredOtherSchool.name}</p>
+                  <div className="max-w-[min(16rem,calc(100vw-2rem))] rounded-md border border-zinc-200 bg-white px-2.5 py-1.5 font-sans text-sm font-medium text-zinc-900 shadow-md dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50">
+                    {hoveredOtherSchool.name}
+                  </div>
                 </Popup>
               )}
             </MapGL>
@@ -748,9 +787,13 @@ export function SchuleDetail() {
 
       {row.category === 'matched' && (
         <p className="mb-6 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-          {row.matchedByNameNormalized ? (
+          {row.matchMode === 'distance' ? (
+            de.detail.matchExplanationDistance
+          ) : row.matchedByNameNormalized ? (
             <>
-              {de.detail.matchExplanationName}{' '}
+              {row.matchMode === 'distance_and_name'
+                ? de.detail.matchExplanationDistanceAndName
+                : de.detail.matchExplanationName}{' '}
               <code className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-[0.9em] text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
                 {row.matchedByNameNormalized}
               </code>
@@ -759,6 +802,60 @@ export function SchuleDetail() {
             de.detail.matchExplanationDistance
           )}
         </p>
+      )}
+
+      {row.category === 'match_ambiguous' && row.matchMode === 'name' && ambiguousCandidates.length > 0 && (
+        <section
+          className="mb-6 rounded-md bg-amber-50 p-4 dark:bg-amber-500/10 dark:outline dark:outline-amber-500/20"
+          aria-labelledby="schule-detail-ambiguous-name-alert-title"
+        >
+          <div className="flex">
+            <div className="shrink-0">
+              <InformationCircleIcon
+                aria-hidden
+                className="size-5 text-amber-500 dark:text-amber-400"
+              />
+            </div>
+            <div className="ml-3 min-w-0">
+              <h3
+                id="schule-detail-ambiguous-name-alert-title"
+                className="text-sm font-medium text-amber-900 dark:text-amber-100"
+              >
+                {de.detail.ambiguousNameNoGeoAlertTitle}
+              </h3>
+              <div className="mt-2 text-sm text-amber-800 dark:text-amber-100/85">
+                <p className="leading-relaxed">{de.detail.ambiguousNameNoGeoAlertText}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {row.category === 'match_ambiguous' && ambiguousNoLocalGeoFeature && (
+        <section
+          className="mb-6 rounded-md bg-amber-50 p-4 dark:bg-amber-500/10 dark:outline dark:outline-amber-500/20"
+          aria-labelledby="schule-detail-ambiguous-no-local-geo-title"
+        >
+          <div className="flex">
+            <div className="shrink-0">
+              <InformationCircleIcon
+                aria-hidden
+                className="size-5 text-amber-500 dark:text-amber-400"
+              />
+            </div>
+            <div className="ml-3 min-w-0">
+              <h3
+                id="schule-detail-ambiguous-no-local-geo-title"
+                className="text-sm font-medium text-amber-900 dark:text-amber-100"
+              >
+                {de.detail.ambiguousNoLocalGeoTitle}
+              </h3>
+              <div className="mt-2 text-sm text-amber-800 dark:text-amber-100/85">
+                <p className="leading-relaxed">{de.detail.ambiguousNoLocalGeoText}</p>
+              </div>
+            </div>
+          </div>
+        </section>
       )}
 
       {ambiguousCandidates.length > 0 && (
@@ -790,54 +887,92 @@ export function SchuleDetail() {
 
       {ambiguousCandidates.length > 0 ? (
         <div className="space-y-6">
-          <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-            {de.detail.ambiguousOfficialHeading}
+          <h2 className="flex flex-wrap items-center gap-2 text-base font-semibold text-zinc-900 dark:text-zinc-100">
+            <span>{de.detail.ambiguousOfficialHeading}</span>
+            <span className="inline-flex min-h-6 items-center rounded-full bg-zinc-900 px-2.5 text-xs font-semibold tabular-nums text-white dark:bg-zinc-100 dark:text-zinc-900">
+              {formatDeInteger(ambiguousCandidates.length)}
+            </span>
           </h2>
-          {ambiguousCandidates.map((c, idx) => (
-            <DetailsOpenByDefault
-              key={c.id}
-              className="group rounded-lg border border-zinc-200/90 bg-zinc-50/40 transition-[border-color,background-color] open:border-transparent open:bg-transparent dark:border-zinc-600/70 dark:bg-zinc-900/25 dark:open:border-transparent dark:open:bg-transparent"
-            >
-              <summary className="flex w-full cursor-pointer list-none items-start gap-2 rounded-lg px-3 py-3 text-left transition-colors hover:bg-zinc-100/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/70 dark:hover:bg-zinc-800/50 dark:focus-visible:ring-zinc-500/60 [&::-webkit-details-marker]:hidden">
-                <ChevronRightIcon
-                  aria-hidden
-                  className="mt-0.5 size-5 shrink-0 text-zinc-400 transition-transform group-open:rotate-90 dark:text-zinc-500"
-                />
-                <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
-                  <h3 className="min-w-0 flex-1 break-words text-lg font-semibold leading-snug text-zinc-900 dark:text-zinc-100">
-                    <span className="text-zinc-500 dark:text-zinc-400">{idx + 1}. </span>
-                    {c.name}
-                  </h3>
-                  <div className="flex shrink-0 flex-row flex-wrap items-baseline justify-end gap-x-3 gap-y-1 text-right text-sm text-zinc-600 dark:text-zinc-400">
-                    <span className="font-mono">{c.id}</span>
-                    {c.distM != null && (
-                      <span className="whitespace-nowrap">
-                        {de.detail.abstand}: {formatDeInteger(c.distM)} m
+          {ambiguousCandidates.map((c, idx) => {
+            const latLngTitle =
+              c.officialLonLat != null
+                ? `${c.officialLonLat[1].toFixed(6)} / ${c.officialLonLat[0].toFixed(6)}`
+                : null
+            const summaryMiddle =
+              c.distM != null ? (
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  {latLngTitle != null && (
+                    <MapPinIcon
+                      title={latLngTitle}
+                      aria-label={latLngTitle}
+                      className="size-4 shrink-0 text-zinc-500 dark:text-zinc-400"
+                    />
+                  )}
+                  {de.detail.abstand}: {formatDeInteger(c.distM)} m
+                </span>
+              ) : c.showOfficialCoordsMissing ? (
+                <span className="whitespace-nowrap font-medium text-orange-800 dark:text-orange-300">
+                  {de.detail.officialCoordsMissing}
+                </span>
+              ) : null
+            return (
+              <DetailsOpenByDefault
+                key={c.id}
+                className="group rounded-lg border border-zinc-200/90 bg-zinc-50/40 transition-[border-color,background-color] open:border-transparent open:bg-transparent dark:border-zinc-600/70 dark:bg-zinc-900/25 dark:open:border-transparent dark:open:bg-transparent"
+              >
+                <summary className="flex w-full cursor-pointer list-none items-start gap-2 rounded-lg px-3 py-3 text-left transition-colors hover:bg-zinc-100/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/70 dark:hover:bg-zinc-800/50 dark:focus-visible:ring-zinc-500/60 [&::-webkit-details-marker]:hidden">
+                  <ChevronRightIcon
+                    aria-hidden
+                    className="mt-0.5 size-5 shrink-0 text-zinc-400 transition-transform group-open:rotate-90 dark:text-zinc-500"
+                  />
+                  <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
+                    <h3 className="min-w-0 flex-1 break-words text-lg font-semibold leading-snug text-zinc-900 dark:text-zinc-100">
+                      <span className="text-zinc-500 dark:text-zinc-400">{idx + 1}. </span>
+                      {c.name}
+                    </h3>
+                    <div className="flex shrink-0 flex-row flex-wrap items-center justify-end gap-x-2 gap-y-1 text-right text-sm text-zinc-600 dark:text-zinc-400">
+                      <span className="font-mono">{c.id}</span>
+                      {summaryMiddle != null && (
+                        <>
+                          <span
+                            aria-hidden
+                            className="select-none text-zinc-400 dark:text-zinc-500"
+                          >
+                            {'\u00B7'}
+                          </span>
+                          {summaryMiddle}
+                        </>
+                      )}
+                      <span
+                        aria-hidden
+                        className="select-none text-zinc-400 dark:text-zinc-500"
+                      >
+                        {'\u00B7'}
                       </span>
-                    )}
-                    <a
-                      href={`https://jedeschule.codefor.de/schools/${encodeURIComponent(c.id)}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-emerald-800 underline dark:text-emerald-300"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {de.detail.ambiguousJedeschule}
-                    </a>
+                      <a
+                        href={`https://jedeschule.codefor.de/schools/${encodeURIComponent(c.id)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-emerald-800 underline dark:text-emerald-300"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {de.detail.ambiguousJedeschule}
+                      </a>
+                    </div>
                   </div>
+                </summary>
+                <div className="border-t border-zinc-200/80 px-3 pb-4 pt-4 dark:border-zinc-700/80">
+                  <MatchCompareBody
+                    official={c.properties}
+                    osm={row.osmTags ?? null}
+                    officialIdForHeader={c.id}
+                    osmTypeForHeader={row.osmType}
+                    osmIdForHeader={row.osmId}
+                  />
                 </div>
-              </summary>
-              <div className="border-t border-zinc-200/80 px-3 pb-4 pt-4 dark:border-zinc-700/80">
-                <MatchCompareBody
-                  official={c.properties}
-                  osm={row.osmTags ?? null}
-                  officialIdForHeader={c.id}
-                  osmTypeForHeader={row.osmType}
-                  osmIdForHeader={row.osmId}
-                />
-              </div>
-            </DetailsOpenByDefault>
-          ))}
+              </DetailsOpenByDefault>
+            )
+          })}
         </div>
       ) : (
         <MatchCompareBody

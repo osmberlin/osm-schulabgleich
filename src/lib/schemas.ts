@@ -25,9 +25,16 @@ export const jedeschuleStatSchema = z.object({
 
 const matchCategorySchema = z.enum(['matched', 'official_only', 'osm_only', 'match_ambiguous'])
 
+const ambiguousOfficialSnapshotSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  properties: z.record(z.string(), z.unknown()),
+})
+
 export const schoolsMatchRowSchema = z.object({
   key: z.string(),
   category: matchCategorySchema,
+  matchMode: z.enum(['distance', 'distance_and_name', 'name']).optional(),
   officialId: z.string().nullable(),
   officialName: z.string().nullable(),
   officialProperties: z.record(z.string(), z.unknown()).nullable().optional(),
@@ -40,6 +47,8 @@ export const schoolsMatchRowSchema = z.object({
   osmName: z.string().nullable(),
   osmTags: z.record(z.string(), z.string()).nullable().optional(),
   ambiguousOfficialIds: z.array(z.string()).optional(),
+  /** Amtliche Stammdaten der Kandidaten zum Match-Zeitpunkt (für Detailseite ohne Bundesland-GeoJSON). */
+  ambiguousOfficialSnapshots: z.array(ambiguousOfficialSnapshotSchema).optional(),
   /** Normalisierter Namensvergleich, nur bei Mehrfach-Treffer im Radius eindeutig gelöst. */
   matchedByNameNormalized: z.string().optional(),
   pipelineLand: z.string().optional(),
