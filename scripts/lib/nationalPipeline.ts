@@ -40,6 +40,11 @@ import {
 } from './pipelineFreshness'
 import type { PipelineSourceMeta } from './pipelineMeta'
 
+function envScopedJsonFileName(fileName: string): string {
+  if (process.env.GITHUB_ACTIONS === 'true') return fileName
+  return fileName.replace(/\.json$/, '.dev.json')
+}
+
 type LandSummaryOut = {
   code: string
   osmSource: 'live' | 'cached' | 'missing'
@@ -198,7 +203,7 @@ function rowLandCode(r: {
 export async function runDownloadJedeschuleNational(projectRoot: string): Promise<void> {
   const outCsv = jedeschuleDumpAbsolutePath(projectRoot)
   const pathOfficial = nationalPath(projectRoot, NATIONAL.schoolsOfficialGeojson)
-  const pathMeta = nationalPath(projectRoot, NATIONAL.schoolsOfficialMeta)
+  const pathMeta = nationalPath(projectRoot, envScopedJsonFileName(NATIONAL.schoolsOfficialMeta))
   const pathStats = nationalPath(projectRoot, NATIONAL.jedeschuleStats)
   const generatedAt = new Date().toISOString()
   await mkdir(path.dirname(outCsv), { recursive: true })
@@ -257,7 +262,7 @@ export async function runDownloadJedeschuleNational(projectRoot: string): Promis
 export async function runDownloadOsmNational(projectRoot: string): Promise<void> {
   initBundeslandBoundaries(projectRoot)
   const pathGeo = nationalPath(projectRoot, NATIONAL.schoolsOsmGeojson)
-  const pathMeta = nationalPath(projectRoot, NATIONAL.schoolsOsmMeta)
+  const pathMeta = nationalPath(projectRoot, envScopedJsonFileName(NATIONAL.schoolsOsmMeta))
   const generatedAt = new Date().toISOString()
   await mkdir(datasetsDir(projectRoot), { recursive: true })
 
@@ -301,8 +306,8 @@ export async function runMatchNational(projectRoot: string): Promise<MatchNation
   const startedAt = new Date().toISOString()
   const t0 = performance.now()
 
-  const pathOfficialMeta = nationalPath(projectRoot, NATIONAL.schoolsOfficialMeta)
-  const pathOsmMeta = nationalPath(projectRoot, NATIONAL.schoolsOsmMeta)
+  const pathOfficialMeta = nationalPath(projectRoot, envScopedJsonFileName(NATIONAL.schoolsOfficialMeta))
+  const pathOsmMeta = nationalPath(projectRoot, envScopedJsonFileName(NATIONAL.schoolsOsmMeta))
   const pathOfficial = nationalPath(projectRoot, NATIONAL.schoolsOfficialGeojson)
   const pathOsm = nationalPath(projectRoot, NATIONAL.schoolsOsmGeojson)
   const pathMatches = nationalPath(projectRoot, NATIONAL.schoolsMatchesJson)
@@ -459,7 +464,8 @@ async function appendRunRecord(
   record: Record<string, unknown>,
 ): Promise<void> {
   await mkdir(statusDir(projectRoot), { recursive: true })
-  const runsPath = path.join(statusDir(projectRoot), 'runs.json')
+  const runsFileName = envScopedJsonFileName('runs.json')
+  const runsPath = path.join(statusDir(projectRoot), runsFileName)
   const prev = (await readJsonFile<{ runs: unknown[] }>(runsPath)) ?? { runs: [] }
   prev.runs = [...prev.runs, { ...record, gitSha: process.env.GITHUB_SHA ?? 'local' }].slice(-90)
   await writeJson(runsPath, prev)
@@ -503,7 +509,7 @@ export async function runSplitLands(projectRoot: string): Promise<{ errors: stri
 
   const summaryUpdates = new Map<string, LandSummaryOut>()
   const osmMeta = await readJsonFile<PipelineSourceMeta>(
-    nationalPath(projectRoot, NATIONAL.schoolsOsmMeta),
+    nationalPath(projectRoot, envScopedJsonFileName(NATIONAL.schoolsOsmMeta)),
   )
 
   for (const code of STATE_ORDER) {
