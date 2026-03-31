@@ -96,6 +96,10 @@ export const de = {
     mapLegendOsmArea: 'OSM-Fläche',
     mapLegendOsmCentroid: 'OSM-Schwerpunkt (für Abstand zum offiziellen Punkt)',
     mapLegendCompareRadius: 'Vergleichsradius ({m} m)',
+    matchExplanationDistance:
+      'Zuordnung über Distanz: ein einziger amtlicher Schuldatensatz lag im Vergleichsradius um den OSM-Schwerpunkt.',
+    matchExplanationName:
+      'Zuordnung über Namensgleichheit (normalisierter Vergleichsstring, siehe Pipeline):',
   },
   status: {
     heading: 'Pipeline-Status',

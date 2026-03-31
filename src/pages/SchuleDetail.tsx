@@ -595,6 +595,21 @@ export function SchuleDetail() {
         )}
       </div>
 
+      {row.category === 'matched' && (
+        <p className="mb-6 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+          {row.matchedByNameNormalized ? (
+            <>
+              {de.detail.matchExplanationName}{' '}
+              <code className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-[0.9em] text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
+                {row.matchedByNameNormalized}
+              </code>
+            </>
+          ) : (
+            de.detail.matchExplanationDistance
+          )}
+        </p>
+      )}
+
       {ambiguousCandidates.length > 0 && (
         <section
           className="mb-6 rounded-md bg-violet-50 p-4 dark:bg-violet-500/10 dark:outline dark:outline-violet-500/20"

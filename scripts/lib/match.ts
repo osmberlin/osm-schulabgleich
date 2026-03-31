@@ -4,8 +4,10 @@ import { point } from '@turf/helpers'
 import type { Feature, FeatureCollection, Geometry, MultiPolygon, Polygon } from 'geojson'
 
 import { MATCH_RADIUS_KM } from '../../src/lib/matchRadius'
+import { normalizeSchoolNameForMatch } from './schoolNameNormalize'
 
 export { MATCH_RADIUS_KM }
+export { normalizeSchoolNameForMatch } from './schoolNameNormalize'
 
 export type OfficialInput = {
   id: string
@@ -39,6 +41,8 @@ export type MatchRowOut = {
   osmName: string | null
   osmTags: Record<string, string> | null
   ambiguousOfficialIds?: string[]
+  /** Set when `matched` was chosen by multi-candidate name equality (normalized key). */
+  matchedByNameNormalized?: string
   /** Bundesland code for national pipeline split (optional). */
   pipelineLand?: string
 }
@@ -189,6 +193,37 @@ export function matchSchools(officials: OfficialInput[], osmSchools: OsmSchoolIn
     }))
     withDist.sort((a, b) => a.distKm - b.distKm)
     const closestKm = withDist[0].distKm
+
+    const nameKey = normalizeSchoolNameForMatch(o.name)
+    if (nameKey) {
+      const nameMatches = withDist.filter(
+        (x) => normalizeSchoolNameForMatch(x.off.name) === nameKey,
+      )
+      if (nameMatches.length === 1) {
+        const win = nameMatches[0]
+        const winner = win.off
+        if (!ambiguousAllIds.has(winner.id)) {
+          reserved.add(winner.id)
+          const dM = win.distKm * 1000
+          rows.push({
+            key: `match-${winner.id}`,
+            category: 'matched',
+            officialId: winner.id,
+            officialName: winner.name,
+            officialProperties: winner.properties,
+            osmId: o.osmId,
+            osmType: o.osmType,
+            osmCentroidLon: lon,
+            osmCentroidLat: lat,
+            distanceMeters: Math.round(dM),
+            osmName: o.name,
+            osmTags: o.tags,
+            matchedByNameNormalized: nameKey,
+          })
+          continue
+        }
+      }
+    }
 
     for (const x of withDist) {
       ambiguousAllIds.add(x.off.id)

@@ -156,6 +156,7 @@ function rowsToJson(rows: MatchRowOut[]) {
     osmName: r.osmName,
     osmTags: r.osmTags,
     ambiguousOfficialIds: r.ambiguousOfficialIds,
+    matchedByNameNormalized: r.matchedByNameNormalized,
     pipelineLand: r.pipelineLand,
   }))
 }

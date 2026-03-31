@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { MATCH_RADIUS_KM, matchSchools, type OfficialInput, type OsmSchoolInput } from './match'
+import {
+  MATCH_RADIUS_KM,
+  matchSchools,
+  normalizeSchoolNameForMatch,
+  type OfficialInput,
+  type OsmSchoolInput,
+} from './match'
 
 describe('matchSchools', () => {
   const officials: OfficialInput[] = [
@@ -44,6 +50,7 @@ describe('matchSchools', () => {
     const m = rows.filter((r) => r.category === 'matched')
     expect(m).toHaveLength(1)
     expect(m[0].officialId).toBe('BE-a')
+    expect(m[0].matchedByNameNormalized).toBeUndefined()
     expect(m[0].osmCentroidLon).toBe(13.4)
     expect(m[0].osmCentroidLat).toBe(52.52)
     expect(rows.some((r) => r.category === 'official_only' && r.officialId === 'BE-b')).toBe(true)
@@ -84,5 +91,125 @@ describe('matchSchools', () => {
     expect(amb[0].officialId).toBeNull()
     expect(amb[0].ambiguousOfficialIds?.sort()).toEqual(['BE-x', 'BE-y'].sort())
     expect(amb[0].osmId).toBe('1')
+  })
+
+  it('resolves by unique normalized name when several officials are in radius', () => {
+    const twoNear: OfficialInput[] = [
+      {
+        id: 'BE-x',
+        name: 'Alpha Schule',
+        lon: 13.3999,
+        lat: 52.5199,
+        properties: { id: 'BE-x' },
+      },
+      {
+        id: 'BE-y',
+        name: 'Beta Schule',
+        lon: 13.4001,
+        lat: 52.5201,
+        properties: { id: 'BE-y' },
+      },
+      {
+        id: 'BE-b',
+        name: 'Far Away',
+        lon: 14,
+        lat: 52.52,
+        properties: { id: 'BE-b' },
+      },
+    ]
+    const osm: OsmSchoolInput = {
+      ...osmNear,
+      name: 'Alpha Schule',
+      tags: { amenity: 'school', name: 'Alpha Schule' },
+    }
+    const { rows } = matchSchools(twoNear, [osm])
+    expect(rows.filter((r) => r.category === 'match_ambiguous')).toHaveLength(0)
+    const m = rows.filter((r) => r.category === 'matched')
+    expect(m).toHaveLength(1)
+    expect(m[0].officialId).toBe('BE-x')
+    expect(m[0].matchedByNameNormalized).toBe('alpha schule')
+    expect(rows.some((r) => r.category === 'official_only' && r.officialId === 'BE-y')).toBe(true)
+  })
+
+  it('stays ambiguous when normalized names collide', () => {
+    const twoSameName: OfficialInput[] = [
+      {
+        id: 'BE-x',
+        name: 'Alpha Schule (A)',
+        lon: 13.3999,
+        lat: 52.5199,
+        properties: { id: 'BE-x' },
+      },
+      {
+        id: 'BE-y',
+        name: 'Alpha Schule (B)',
+        lon: 13.4001,
+        lat: 52.5201,
+        properties: { id: 'BE-y' },
+      },
+      {
+        id: 'BE-b',
+        name: 'Far Away',
+        lon: 14,
+        lat: 52.52,
+        properties: { id: 'BE-b' },
+      },
+    ]
+    const osm: OsmSchoolInput = {
+      ...osmNear,
+      name: 'Alpha Schule',
+      tags: { amenity: 'school', name: 'Alpha Schule' },
+    }
+    const { rows } = matchSchools(twoSameName, [osm])
+    const amb = rows.filter((r) => r.category === 'match_ambiguous')
+    expect(amb).toHaveLength(1)
+    expect(amb[0].ambiguousOfficialIds?.sort()).toEqual(['BE-x', 'BE-y'].sort())
+  })
+
+  it('matches by name with parentheses and umlauts stripped/normalized', () => {
+    const twoNear: OfficialInput[] = [
+      {
+        id: 'DE-x',
+        name: 'Grundschule Grün (Standort Nord)',
+        lon: 13.3999,
+        lat: 52.5199,
+        properties: { id: 'DE-x' },
+      },
+      {
+        id: 'DE-y',
+        name: 'Andere Schule',
+        lon: 13.4001,
+        lat: 52.5201,
+        properties: { id: 'DE-y' },
+      },
+    ]
+    const osm: OsmSchoolInput = {
+      ...osmNear,
+      osmId: '99',
+      name: 'Grundschule Gruen',
+      tags: { amenity: 'school', name: 'Grundschule Gruen' },
+    }
+    const { rows } = matchSchools(twoNear, [osm])
+    const m = rows.filter((r) => r.category === 'matched')
+    expect(m).toHaveLength(1)
+    expect(m[0].officialId).toBe('DE-x')
+    expect(m[0].matchedByNameNormalized).toBe(
+      normalizeSchoolNameForMatch('Grundschule Grün (Standort Nord)'),
+    )
+    expect(rows.some((r) => r.category === 'official_only' && r.officialId === 'DE-y')).toBe(true)
+  })
+})
+
+describe('normalizeSchoolNameForMatch', () => {
+  it('strips parenthetical segments and folds umlauts', () => {
+    expect(normalizeSchoolNameForMatch('Foo (Bar)')).toBe('foo')
+    expect(normalizeSchoolNameForMatch('Schule Grün')).toBe('schule gruen')
+    expect(normalizeSchoolNameForMatch('Straße')).toBe('strasse')
+    expect(normalizeSchoolNameForMatch('café résumé')).toBe('cafe resume')
+  })
+
+  it('returns empty for nullish', () => {
+    expect(normalizeSchoolNameForMatch(null)).toBe('')
+    expect(normalizeSchoolNameForMatch(undefined)).toBe('')
   })
 })

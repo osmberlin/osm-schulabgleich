@@ -40,6 +40,8 @@ export const schoolsMatchRowSchema = z.object({
   osmName: z.string().nullable(),
   osmTags: z.record(z.string(), z.string()).nullable().optional(),
   ambiguousOfficialIds: z.array(z.string()).optional(),
+  /** Normalisierter Namensvergleich, nur bei Mehrfach-Treffer im Radius eindeutig gelöst. */
+  matchedByNameNormalized: z.string().optional(),
   pipelineLand: z.string().optional(),
 })
 
