@@ -18,3 +18,16 @@ html {
 body {
   @apply m-0 min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100;
 }
+
+button,
+select,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="checkbox"],
+input[type="radio"],
+input[type="file"],
+input[type="image"],
+[role="button"] {
+  cursor: pointer;
+}
