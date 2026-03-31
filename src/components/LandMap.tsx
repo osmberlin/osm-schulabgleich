@@ -210,7 +210,7 @@ export function LandMap({
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700"
+      className="relative w-full overflow-hidden rounded-lg border border-zinc-700"
       style={{ height }}
     >
       <MapGL

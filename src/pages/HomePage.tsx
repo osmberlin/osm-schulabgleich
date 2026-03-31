@@ -82,7 +82,7 @@ function MiniPie({
           cy={PIE_CY}
           r={PIE_R}
           fill={s.fill}
-          className="stroke-zinc-100 dark:stroke-zinc-800"
+          className="stroke-zinc-800"
           strokeWidth={1}
           vectorEffect="non-scaling-stroke"
         />,
@@ -99,7 +99,7 @@ function MiniPie({
         key={s.key}
         d={d}
         fill={s.fill}
-        className="stroke-zinc-100 dark:stroke-zinc-800"
+        className="stroke-zinc-800"
         strokeWidth={1}
         vectorEffect="non-scaling-stroke"
       />,
@@ -180,16 +180,14 @@ export function HomePage() {
       <div className="mb-6">
         <PageBreadcrumb />
       </div>
-      <header className="mb-8 border-b border-zinc-200 pb-6 dark:border-zinc-800">
-        <h1 className="text-3xl font-semibold tracking-tight text-brand-900 dark:text-brand-100">
-          {de.appTitle}
-        </h1>
-        <p className="mt-3 text-lg text-zinc-700 dark:text-zinc-300">{de.home.heading}</p>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+      <header className="mb-8 border-b border-zinc-700 pb-6">
+        <h1 className="text-3xl font-semibold tracking-tight text-brand-100">{de.appTitle}</h1>
+        <p className="mt-3 text-lg text-zinc-300">{de.home.heading}</p>
+        <p className="mt-2 text-sm text-zinc-400">
           {de.home.leadIntro}
           <a
             href={de.home.links.jedeschule.href}
-            className="font-medium text-emerald-800 underline decoration-emerald-800/30 underline-offset-2 hover:decoration-emerald-800 dark:text-emerald-300 dark:decoration-emerald-300/30"
+            className="font-medium text-emerald-300 underline decoration-emerald-300/30 underline-offset-2 hover:decoration-emerald-400"
             target="_blank"
             rel="noreferrer"
           >
@@ -198,7 +196,7 @@ export function HomePage() {
           {de.home.leadBetween}
           <a
             href={de.home.links.osmSchoolTag.href}
-            className="font-medium text-emerald-800 underline decoration-emerald-800/30 underline-offset-2 hover:decoration-emerald-800 dark:text-emerald-300 dark:decoration-emerald-300/30"
+            className="font-medium text-emerald-300 underline decoration-emerald-300/30 underline-offset-2 hover:decoration-emerald-400"
             target="_blank"
             rel="noreferrer"
           >
@@ -208,9 +206,9 @@ export function HomePage() {
         </p>
       </header>
 
-      {q.isLoading && <p className="text-zinc-500">{de.home.loading}</p>}
-      {q.isError && <p className="text-amber-800 dark:text-amber-200">{de.home.error}</p>}
-      {q.isSuccess && q.data.lands.length === 0 && <p className="text-zinc-500">{de.home.empty}</p>}
+      {q.isLoading && <p className="text-zinc-400">{de.home.loading}</p>}
+      {q.isError && <p className="text-amber-200">{de.home.error}</p>}
+      {q.isSuccess && q.data.lands.length === 0 && <p className="text-zinc-400">{de.home.empty}</p>}
 
       {q.isSuccess && q.data.lands.length > 0 && germanyTotals && (
         <StatBlocksRow aria-label={de.home.globalKpiAria} className="mb-6">
@@ -228,7 +226,7 @@ export function HomePage() {
             labelAddon={
               <button
                 type="button"
-                className="inline-flex rounded text-zinc-500 hover:text-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+                className="inline-flex rounded text-zinc-400 hover:text-zinc-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
                 aria-label={de.land.officialNoCoordKpiInfoButton}
                 onClick={showNoCoordInfo}
               >
@@ -241,8 +239,8 @@ export function HomePage() {
       )}
 
       {q.isSuccess && q.data.lands.length > 0 && (
-        <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm outline outline-zinc-900/5 dark:border-zinc-700 dark:bg-zinc-900/40 dark:shadow-none dark:outline-zinc-100/10">
-          <ul className="divide-y divide-zinc-200 dark:divide-zinc-700">
+        <div className="overflow-hidden rounded-lg border border-zinc-700 bg-zinc-900/40 shadow-none outline outline-zinc-100/10">
+          <ul className="divide-y divide-zinc-700">
             {STATE_ORDER.map((code) => {
               const land = byCode.get(code) ?? null
               const label = STATE_LABEL_DE[code as LandCode]
@@ -251,7 +249,7 @@ export function HomePage() {
                   <Link
                     to="/bundesland/$code"
                     params={{ code }}
-                    className="relative flex items-center justify-between gap-x-4 px-4 py-4 hover:bg-zinc-50 sm:gap-x-6 sm:px-6 dark:hover:bg-zinc-800/50"
+                    className="relative flex items-center justify-between gap-x-3 px-3 py-2.5 hover:bg-zinc-800/50 sm:gap-x-6 sm:px-5 sm:py-3.5"
                     aria-label={`${de.home.toLand}: ${label}`}
                   >
                     <div className="flex min-w-0 flex-1 items-center gap-4">
@@ -263,11 +261,9 @@ export function HomePage() {
                         officialNoCoord={land?.counts.official_no_coord ?? 0}
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm/5 font-semibold text-zinc-900 dark:text-zinc-100">
-                          {label}
-                        </p>
+                        <p className="text-sm/5 font-semibold text-zinc-100">{label}</p>
                         {land && (
-                          <div className="mt-1 text-xs text-zinc-500">
+                          <div className="mt-1 text-xs text-zinc-400">
                             {de.land.categoryLabel.matched} {formatDeInteger(land.counts.matched)} ·{' '}
                             {de.land.categoryLabel.official_only}{' '}
                             {formatDeInteger(land.counts.official_only)} ·{' '}
@@ -279,14 +275,11 @@ export function HomePage() {
                           </div>
                         )}
                         {!land && (
-                          <div className="mt-1 text-xs text-zinc-500">Keine Zusammenfassung</div>
+                          <div className="mt-1 text-xs text-zinc-400">Keine Zusammenfassung</div>
                         )}
                       </div>
                     </div>
-                    <ChevronRightIcon
-                      aria-hidden
-                      className="size-5 shrink-0 text-zinc-400 dark:text-zinc-500"
-                    />
+                    <ChevronRightIcon aria-hidden className="size-5 shrink-0 text-zinc-500" />
                   </Link>
                 </li>
               )
@@ -297,11 +290,9 @@ export function HomePage() {
 
       {runsQ.isSuccess && germanyHistoryPoints.length > 0 && (
         <section className="mt-10" aria-label={de.home.historyHeading}>
-          <h2 className="mb-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-            {de.home.historyHeading}
-          </h2>
-          <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">{de.home.historyLead}</p>
-          <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm outline outline-zinc-900/5 dark:border-zinc-700 dark:bg-zinc-900/40 dark:shadow-none dark:outline-zinc-100/10">
+          <h2 className="mb-2 text-lg font-semibold text-zinc-100">{de.home.historyHeading}</h2>
+          <p className="mb-4 text-sm text-zinc-400">{de.home.historyLead}</p>
+          <div className="rounded-lg border border-zinc-700 bg-zinc-900/40 p-4 shadow-none outline outline-zinc-100/10">
             <MatchCountsHistoryChart
               points={germanyHistoryPoints}
               categoryLabels={MATCH_CHART_LABELS}

@@ -7,8 +7,7 @@ export type MiniSegment =
   | { type: 'bold'; value: string }
 
 /** Same styling as inline OSM tag hints in SchuleDetail match explanation. */
-const inlineCodeClassName =
-  'rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-[0.9em] text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200'
+const inlineCodeClassName = 'rounded bg-zinc-900 px-1.5 py-0.5 font-mono text-[0.9em] text-zinc-200'
 
 function mergeAdjacentText(segments: MiniSegment[]): MiniSegment[] {
   const merged: MiniSegment[] = []

@@ -12,7 +12,15 @@ export function StatBlocksRow({
   return (
     <dl
       aria-label={ariaLabel}
-      className={`flex min-w-0 flex-row flex-nowrap gap-x-0 [&>*]:min-w-0 [&>*]:flex-1 [&>*]:basis-0 [&>*]:border-l [&>*]:border-zinc-200 [&>*]:pl-3 [&>*]:first:border-l-0 [&>*]:first:pl-0 dark:[&>*]:border-white/15 ${className}`}
+      className={
+        `flex min-w-0 flex-col gap-y-4 sm:flex-row sm:flex-nowrap sm:gap-x-0 sm:gap-y-0 ` +
+        `[&>*]:min-w-0 ` +
+        `max-sm:[&>*]:border-l-0 max-sm:[&>*]:border-t max-sm:[&>*]:border-white/15 max-sm:[&>*]:pl-0 max-sm:[&>*]:pt-4 ` +
+        `max-sm:[&>*]:first:border-t-0 max-sm:[&>*]:first:pt-0 ` +
+        `sm:[&>*]:flex-1 sm:[&>*]:basis-0 sm:[&>*]:border-l sm:[&>*]:border-t-0 sm:[&>*]:border-white/15 sm:[&>*]:pl-3 sm:[&>*]:pt-0 ` +
+        `sm:[&>*]:first:border-l-0 sm:[&>*]:first:pl-0 ` +
+        className
+      }
     >
       {children}
     </dl>
@@ -38,15 +46,15 @@ export function LayerToggleStatBlock({
   disabled?: boolean
 }) {
   const interactive =
-    'group flex flex-col-reverse gap-y-2 transition-colors hover:bg-zinc-200/50 focus-within:bg-zinc-200/50 dark:hover:bg-zinc-800/60 dark:focus-within:bg-zinc-800/60'
+    'group flex flex-col-reverse gap-y-2 transition-colors hover:bg-zinc-800/60 focus-within:bg-zinc-800/60'
   const inert = 'flex flex-col-reverse gap-y-2 opacity-55'
 
   return (
     <div className={disabled ? inert : interactive} aria-disabled={disabled || undefined}>
       <dt
         className={
-          `min-w-0 text-base/7 text-zinc-600 transition-colors dark:text-zinc-400 ` +
-          (disabled ? '' : 'group-hover:text-zinc-800 dark:group-hover:text-zinc-200')
+          `min-w-0 text-base/7 text-zinc-400 transition-colors ` +
+          (disabled ? '' : 'group-hover:text-zinc-200')
         }
       >
         <label
@@ -61,7 +69,7 @@ export function LayerToggleStatBlock({
             type="checkbox"
             disabled={disabled}
             className={
-              `col-start-1 row-start-1 mt-0.5 size-4 shrink-0 rounded border-zinc-400 text-emerald-700 focus:ring-emerald-600 dark:border-zinc-500 dark:bg-zinc-800 dark:text-emerald-500 ` +
+              `col-start-1 row-start-1 mt-0.5 size-4 shrink-0 rounded border-zinc-500 bg-zinc-800 text-emerald-500 focus:ring-emerald-600 ` +
               (disabled ? 'cursor-not-allowed opacity-60' : '')
             }
             checked={checked}
@@ -75,10 +83,8 @@ export function LayerToggleStatBlock({
       </dt>
       <dd
         className={
-          `text-pretty font-semibold text-2xl tracking-tight text-zinc-900 tabular-nums dark:text-zinc-100 sm:text-3xl ` +
-          (disabled
-            ? ''
-            : 'transition-colors group-hover:text-zinc-950 dark:group-hover:text-white')
+          `text-pretty font-semibold text-2xl tracking-tight text-zinc-100 tabular-nums sm:text-3xl ` +
+          (disabled ? '' : 'transition-colors group-hover:text-white')
         }
       >
         <label
@@ -107,7 +113,7 @@ export function ReadOnlyStatBlock({
 }) {
   return (
     <div className="flex flex-col-reverse gap-y-2">
-      <dt className="min-w-0 text-base/7 text-zinc-600 dark:text-zinc-400">
+      <dt className="min-w-0 text-base/7 text-zinc-400">
         <span className="flex min-w-0 flex-nowrap items-center gap-1 text-sm leading-snug">
           <span className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap" title={label}>
             {label}
@@ -115,7 +121,7 @@ export function ReadOnlyStatBlock({
           {labelAddon ? <span className="shrink-0">{labelAddon}</span> : null}
         </span>
       </dt>
-      <dd className="flex min-w-0 items-center gap-2 text-pretty font-semibold text-2xl tracking-tight text-zinc-900 tabular-nums dark:text-zinc-100 sm:text-3xl">
+      <dd className="flex min-w-0 items-center gap-2 text-pretty font-semibold text-2xl tracking-tight text-zinc-100 tabular-nums sm:text-3xl">
         <span className="inline-flex shrink-0 items-center">{swatch}</span>
         <span className="min-w-0">{value}</span>
       </dd>

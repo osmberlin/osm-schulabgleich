@@ -15,15 +15,13 @@ const rootRoute = createRootRoute({
       <div className="min-h-screen">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:p-2"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-zinc-800 focus:p-2 focus:text-zinc-100"
         >
           Zum Inhalt
         </a>
-        <header className="border-b border-zinc-200 bg-brand-50 dark:border-zinc-800 dark:bg-brand-950/60">
+        <header className="border-b border-zinc-800 bg-brand-950/60">
           <div className="mx-auto max-w-5xl px-4 py-3">
-            <p className="text-sm font-semibold text-brand-900 dark:text-brand-100">
-              {de.appTitle}
-            </p>
+            <p className="text-sm font-semibold text-brand-100">{de.appTitle}</p>
           </div>
         </header>
         <main id="main" className="min-h-[70vh]">

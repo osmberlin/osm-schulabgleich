@@ -13,7 +13,7 @@ const theme = {
     haloRgba: 'rgba(16, 185, 129, 0.2)',
     polygonFillRgba: 'rgba(16, 185, 129, 0.35)',
     polygonOutlineHex: '#047857',
-    twOuter: 'bg-emerald-500/20 dark:bg-emerald-500/30',
+    twOuter: 'bg-emerald-500/30',
     twInner: 'bg-emerald-500',
     /** OSM-Fläche in der Legende (LandMap) */
     twPolygonSwatch: 'inline-block h-2 w-4 shrink-0 rounded-sm bg-emerald-500/80',
@@ -23,7 +23,7 @@ const theme = {
     haloRgba: 'rgba(245, 158, 11, 0.2)',
     polygonFillRgba: 'rgba(245, 158, 11, 0.35)',
     polygonOutlineHex: '#b45309',
-    twOuter: 'bg-amber-500/20 dark:bg-amber-500/30',
+    twOuter: 'bg-amber-500/30',
     twInner: 'bg-amber-500',
     twPolygonSwatch: 'inline-block h-2 w-4 shrink-0 rounded-sm bg-amber-500/80',
   },
@@ -32,7 +32,7 @@ const theme = {
     haloRgba: 'rgba(59, 130, 246, 0.2)',
     polygonFillRgba: 'rgba(59, 130, 246, 0.4)',
     polygonOutlineHex: '#1d4ed8',
-    twOuter: 'bg-blue-500/20 dark:bg-blue-500/30',
+    twOuter: 'bg-blue-500/30',
     twInner: 'bg-blue-500',
     twPolygonSwatch: 'inline-block h-2 w-4 shrink-0 rounded-sm bg-blue-500/80',
   },
@@ -41,7 +41,7 @@ const theme = {
     haloRgba: 'rgba(139, 92, 246, 0.2)',
     polygonFillRgba: 'rgba(139, 92, 246, 0.35)',
     polygonOutlineHex: '#6d28d9',
-    twOuter: 'bg-violet-500/20 dark:bg-violet-500/30',
+    twOuter: 'bg-violet-500/30',
     twInner: 'bg-violet-500',
     twPolygonSwatch: 'inline-block h-2 w-4 shrink-0 rounded-sm bg-violet-500/80',
   },
@@ -54,7 +54,7 @@ const theme = {
 export const OFFICIAL_NO_COORD_INNER_HEX = '#882255'
 
 export const OFFICIAL_NO_COORD_SWATCH_CLASSES = {
-  outer: 'bg-rose-900/20 dark:bg-[#882255]/25',
+  outer: 'bg-[#882255]/25',
   inner: 'bg-[#882255]',
 } as const
 

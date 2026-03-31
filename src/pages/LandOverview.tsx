@@ -142,17 +142,17 @@ export function LandOverview() {
   const mapMatchPoints = useMemo(() => matchesToOverviewMapPoints(listMatches), [listMatches])
 
   if (dataQ.isLoading || summaryQ.isLoading) {
-    return <p className="text-zinc-500">{de.land.loading}</p>
+    return <p className="text-zinc-400">{de.land.loading}</p>
   }
   if (dataQ.isError || !dataQ.data) {
-    return <p className="text-red-600 dark:text-red-400">{de.land.error}</p>
+    return <p className="text-red-400">{de.land.error}</p>
   }
 
   return (
     <div>
       {landSummary?.osmSource === 'cached' && (
         <div
-          className="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
+          className="mb-4 rounded-md border border-amber-800 bg-amber-950/40 p-3 text-sm text-amber-100"
           role="status"
         >
           {de.land.osmCachedBanner}
@@ -187,7 +187,7 @@ export function LandOverview() {
           labelAddon={
             <button
               type="button"
-              className="inline-flex rounded text-zinc-500 hover:text-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+              className="inline-flex rounded text-zinc-400 hover:text-zinc-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
               aria-label={de.land.officialNoCoordKpiInfoButton}
               onClick={showNoCoordInfo}
             >
@@ -200,12 +200,10 @@ export function LandOverview() {
 
       {enabledCategories.length === 0 ? (
         <div
-          className="flex h-[440px] items-center justify-center rounded-lg border border-zinc-200 px-4 text-center dark:border-zinc-700"
+          className="flex h-[440px] items-center justify-center rounded-lg border border-zinc-700 px-4 text-center"
           role="status"
         >
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {de.land.mapNoVisibleCategories}
-          </p>
+          <p className="text-sm text-zinc-400">{de.land.mapNoVisibleCategories}</p>
         </div>
       ) : (
         <MapProvider>
@@ -221,23 +219,21 @@ export function LandOverview() {
               onClearUrlBbox={clearListBbox}
             />
             {mapMatchPoints.features.length > 0 && (
-              <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
-                {de.land.mapLegendPoints}
-              </p>
+              <p className="mt-2 text-xs text-zinc-400">{de.land.mapLegendPoints}</p>
             )}
           </div>
         </MapProvider>
       )}
 
-      <h2 className="mt-10 mb-3 flex flex-wrap items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+      <h2 className="mt-10 mb-2 flex flex-row flex-wrap items-baseline gap-x-2 text-lg font-semibold text-zinc-100">
         <span>{de.land.table}</span>
-        <span className="inline-flex min-h-6 items-center rounded-full bg-zinc-900 px-2.5 text-xs font-semibold tabular-nums text-white dark:bg-zinc-100 dark:text-zinc-900">
-          {formatDeInteger(listMatches.length)}
+        <span className="font-semibold tabular-nums text-zinc-400">
+          ({formatDeInteger(listMatches.length)})
         </span>
       </h2>
-      <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm outline outline-zinc-900/5 dark:border-zinc-700 dark:bg-zinc-900/40 dark:shadow-none dark:outline-zinc-100/10">
+      <div className="overflow-hidden border-y border-zinc-700 bg-zinc-900/40 shadow-none outline outline-zinc-100/10 max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 sm:rounded-lg sm:border sm:border-zinc-700">
         {listMatches.length === 0 ? (
-          <p className="p-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="px-3 py-3 text-center text-sm text-zinc-400 sm:p-4">
             {matches.length === 0
               ? '—'
               : enabledCategories.length === 0
@@ -247,7 +243,7 @@ export function LandOverview() {
                   : de.land.tableBboxEmpty}
           </p>
         ) : (
-          <ul className="divide-y divide-zinc-200 dark:divide-zinc-700">
+          <ul className="divide-y divide-zinc-700">
             {listMatches.slice(0, 500).map((row) => {
               const title = row.officialName ?? row.osmName ?? '—'
               const subId = formatMatchRowListId(row)
@@ -256,20 +252,18 @@ export function LandOverview() {
                   <Link
                     to="/bundesland/$code/schule/$matchKey"
                     params={{ code, matchKey: row.key }}
-                    className="relative flex justify-between gap-x-4 px-4 py-4 hover:bg-zinc-50 sm:gap-x-6 sm:px-6 dark:hover:bg-zinc-800/50"
+                    className="relative flex justify-between gap-x-3 px-3 py-2.5 hover:bg-zinc-800/50 sm:gap-x-6 sm:px-5 sm:py-3.5"
                     aria-label={`${de.land.detail}: ${title}`}
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm/5 font-semibold text-zinc-900 dark:text-zinc-100">
-                        {title}
-                      </p>
+                      <p className="text-sm/5 font-semibold text-zinc-100">{title}</p>
                       <div className="mt-1 flex min-w-0 items-center gap-2">
                         <CategoryLegendSwatch category={row.category} />
-                        <span className="min-w-0 text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                        <span className="min-w-0 text-xs font-medium text-zinc-300">
                           {de.land.categoryLabel[row.category]}
                         </span>
                         {row.category === 'matched' && row.matchMode && (
-                          <span className="min-w-0 text-xs text-zinc-500 dark:text-zinc-400">
+                          <span className="min-w-0 text-xs text-zinc-400">
                             · {de.detail.matchModeLabel[row.matchMode]}
                           </span>
                         )}
@@ -279,12 +273,10 @@ export function LandOverview() {
                       {(subId !== '' || row.distanceMeters != null) && (
                         <div className="flex max-w-[min(100%,12rem)] flex-col items-end gap-y-0.5">
                           {subId !== '' && (
-                            <p className="text-right font-mono text-xs/5 text-zinc-500 dark:text-zinc-400">
-                              {subId}
-                            </p>
+                            <p className="text-right font-mono text-xs/5 text-zinc-400">{subId}</p>
                           )}
                           {row.distanceMeters != null && (
-                            <p className="text-xs/5 text-right text-zinc-500 tabular-nums dark:text-zinc-400">
+                            <p className="text-xs/5 text-right text-zinc-400 tabular-nums">
                               {de.land.tableDistanceAway.replace(
                                 '{meters}',
                                 formatDeInteger(row.distanceMeters),
@@ -293,10 +285,7 @@ export function LandOverview() {
                           )}
                         </div>
                       )}
-                      <ChevronRightIcon
-                        aria-hidden
-                        className="size-5 flex-none text-zinc-400 dark:text-zinc-500"
-                      />
+                      <ChevronRightIcon aria-hidden className="size-5 flex-none text-zinc-500" />
                     </div>
                   </Link>
                 </li>
@@ -305,31 +294,24 @@ export function LandOverview() {
           </ul>
         )}
         {listMatches.length > 500 && (
-          <p className="border-t border-zinc-200 px-4 py-2 text-xs text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+          <p className="border-t border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 sm:px-4">
             … erste 500 von {formatDeInteger(listMatches.length)}
           </p>
         )}
       </div>
 
       <section className="mt-10" aria-labelledby={historyHeadingId}>
-        <h2
-          id={historyHeadingId}
-          className="mb-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100"
-        >
+        <h2 id={historyHeadingId} className="mb-2 text-lg font-semibold text-zinc-100">
           {de.land.historyHeading}
         </h2>
-        <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">{de.land.historyLead}</p>
-        {runsQ.isLoading && (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">{de.land.historyLoading}</p>
-        )}
-        {runsQ.isError && (
-          <p className="text-sm text-amber-800 dark:text-amber-200">{de.land.historyError}</p>
-        )}
+        <p className="mb-4 text-sm text-zinc-400">{de.land.historyLead}</p>
+        {runsQ.isLoading && <p className="text-sm text-zinc-400">{de.land.historyLoading}</p>}
+        {runsQ.isError && <p className="text-sm text-amber-200">{de.land.historyError}</p>}
         {runsQ.isSuccess && landHistoryPoints.length === 0 && (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">{de.land.historyEmpty}</p>
+          <p className="text-sm text-zinc-400">{de.land.historyEmpty}</p>
         )}
         {runsQ.isSuccess && landHistoryPoints.length > 0 && (
-          <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm outline outline-zinc-900/5 dark:border-zinc-700 dark:bg-zinc-900/40 dark:shadow-none dark:outline-zinc-100/10">
+          <div className="rounded-lg border border-zinc-700 bg-zinc-900/40 p-4 shadow-none outline outline-zinc-100/10">
             <MatchCountsHistoryChart
               points={landHistoryPoints}
               categoryLabels={MATCH_CHART_LABELS}

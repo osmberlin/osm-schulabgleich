@@ -98,7 +98,7 @@ export function MatchCountsHistoryChart({ points, categoryLabels, chartDescripti
           width={barW}
           height={h}
           fill={stackSegmentFill(cat)}
-          className="stroke-zinc-100 dark:stroke-zinc-800"
+          className="stroke-zinc-800"
           strokeWidth={0.5}
         />,
       )
@@ -113,7 +113,7 @@ export function MatchCountsHistoryChart({ points, categoryLabels, chartDescripti
           x={lx}
           y={VB_H - 12}
           textAnchor="middle"
-          className="fill-zinc-500 text-[11px] dark:fill-zinc-400"
+          className="fill-zinc-400 text-[11px]"
         >
           {formatXLabel(p.finishedAt)}
         </text>,
@@ -128,7 +128,7 @@ export function MatchCountsHistoryChart({ points, categoryLabels, chartDescripti
         height={VB_H}
         viewBox={`0 0 ${VB_W} ${VB_H}`}
         role="img"
-        className="min-h-[232px] min-w-[280px] text-zinc-900 dark:text-zinc-100"
+        className="min-h-[232px] min-w-[280px] text-zinc-100"
         aria-label={chartDescription}
       >
         <title>{chartDescription}</title>
@@ -139,26 +139,23 @@ export function MatchCountsHistoryChart({ points, categoryLabels, chartDescripti
           y1={yBase}
           x2={VB_W - PAD_R}
           y2={yBase}
-          className="stroke-zinc-300 dark:stroke-zinc-600"
+          className="stroke-zinc-600"
           strokeWidth={1}
         />
         <text
           x={PAD_L - 4}
           y={PAD_T + 10}
           textAnchor="end"
-          className="fill-zinc-400 text-[10px] tabular-nums dark:fill-zinc-500"
+          className="fill-zinc-500 text-[10px] tabular-nums"
         >
           {formatDeInteger(maxY)}
         </text>
         {bars}
         {labels}
       </svg>
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 border-t border-zinc-200 pt-3 dark:border-zinc-700">
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 border-t border-zinc-700 pt-3">
         {MATCH_HISTORY_STACK_KEYS.map((cat) => (
-          <div
-            key={cat}
-            className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400"
-          >
+          <div key={cat} className="flex items-center gap-2 text-xs text-zinc-400">
             <span
               className="size-2.5 shrink-0 rounded-sm"
               style={{ backgroundColor: stackSegmentFill(cat) }}

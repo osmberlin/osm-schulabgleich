@@ -40,29 +40,29 @@ export function LandLayout() {
     schuleKeyDecoded != null ? (
       schuleQ.isLoading ? (
         <>
-          <h1 className="mb-2 text-2xl font-semibold text-zinc-400 dark:text-zinc-500">…</h1>
-          <p className="mb-6 text-sm text-zinc-500">{de.land.loading}</p>
+          <h1 className="mb-2 text-2xl font-semibold text-zinc-500">…</h1>
+          <p className="mb-6 text-sm text-zinc-400">{de.land.loading}</p>
         </>
       ) : schuleQ.isError ? (
         <>
-          <h1 className="mb-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{label}</h1>
-          <p className="mb-6 text-sm text-red-600 dark:text-red-400">{de.land.error}</p>
+          <h1 className="mb-2 text-2xl font-semibold text-zinc-100">{label}</h1>
+          <p className="mb-6 text-sm text-red-400">{de.land.error}</p>
         </>
       ) : schuleRow ? (
         <>
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-            <h1 className="min-w-0 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+          <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-4">
+            <h1 className="min-w-0 text-2xl font-semibold text-zinc-100">
               {schuleRow.officialName ?? schuleRow.osmName ?? '—'}
             </h1>
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2 sm:justify-end">
               <CategoryLegendSwatch category={schuleRow.category as LandMatchCategory} />
-              <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+              <span className="text-sm font-medium text-zinc-200">
                 {de.land.categoryLabel[schuleRow.category as LandMatchCategory] ??
                   schuleRow.category}
               </span>
             </div>
           </div>
-          <p className="mb-6 text-sm leading-snug text-zinc-600 dark:text-zinc-400">
+          <p className="mb-6 text-sm leading-snug text-zinc-400">
             {formatSchoolWhereSubtitle(
               label,
               code,
@@ -79,14 +79,14 @@ export function LandLayout() {
         </>
       ) : (
         <>
-          <h1 className="mb-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{label}</h1>
-          <p className="mb-6 text-sm text-zinc-600 dark:text-zinc-400">{de.detail.notFound}</p>
+          <h1 className="mb-2 text-2xl font-semibold text-zinc-100">{label}</h1>
+          <p className="mb-6 text-sm text-zinc-400">{de.detail.notFound}</p>
         </>
       )
     ) : (
       <>
-        <h1 className="mb-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{label}</h1>
-        <p className="mb-6 text-sm text-zinc-600 dark:text-zinc-400">{code}</p>
+        <h1 className="mb-2 text-2xl font-semibold text-zinc-100">{label}</h1>
+        <p className="mb-6 text-sm text-zinc-400">{code}</p>
       </>
     )
 

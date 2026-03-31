@@ -112,13 +112,11 @@ function MatchCompareBody({
   return (
     <div className="space-y-10">
       <section>
-        <h2 className="mb-3 font-semibold text-zinc-900 dark:text-zinc-100">
-          {de.detail.keysBoth}
-        </h2>
-        <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
-          <div className="border-b border-zinc-200 bg-zinc-50/80 px-3 py-2 text-xs dark:border-zinc-700 dark:bg-zinc-900/50 md:hidden">
+        <h2 className="mb-3 font-semibold text-zinc-100">{de.detail.keysBoth}</h2>
+        <div className="overflow-hidden rounded-lg border border-zinc-700">
+          <div className="border-b border-zinc-700 bg-zinc-900/50 px-2.5 py-1.5 text-xs md:hidden">
             <p className="font-semibold leading-snug tracking-wide">
-              <span className="text-amber-950 dark:text-amber-100">
+              <span className="text-amber-100">
                 {de.detail.official}
                 {officialIdForHeader ? (
                   <>
@@ -128,12 +126,12 @@ function MatchCompareBody({
                 ) : null}
               </span>
               {officialIdForHeader && osmRefLabel ? (
-                <span aria-hidden className="text-zinc-500 dark:text-zinc-400">
+                <span aria-hidden className="text-zinc-400">
                   {' '}
                   {'\u00B7'}{' '}
                 </span>
               ) : null}
-              <span className="text-blue-950 dark:text-blue-100">
+              <span className="text-blue-100">
                 {de.detail.osm}
                 {osmRefLabel ? (
                   <>
@@ -144,8 +142,8 @@ function MatchCompareBody({
               </span>
             </p>
           </div>
-          <div className="hidden grid-cols-2 gap-0 border-b border-zinc-200 bg-zinc-50/80 dark:border-zinc-700 dark:bg-zinc-900/50 md:grid">
-            <div className="border-r border-zinc-200 bg-amber-50/90 px-3 py-2 text-xs font-semibold tracking-wide text-amber-950 dark:border-zinc-700 dark:bg-amber-950/35 dark:text-amber-100">
+          <div className="hidden grid-cols-2 gap-0 border-b border-zinc-700 bg-zinc-900/50 md:grid">
+            <div className="border-r border-zinc-700 bg-amber-950/35 px-3 py-2 text-xs font-semibold tracking-wide text-amber-100">
               {de.detail.official}
               {officialIdForHeader ? (
                 <>
@@ -154,7 +152,7 @@ function MatchCompareBody({
                 </>
               ) : null}
             </div>
-            <div className="bg-blue-50/90 px-3 py-2 text-xs font-semibold tracking-wide text-blue-950 dark:bg-blue-950/35 dark:text-blue-100">
+            <div className="bg-blue-950/35 px-3 py-2 text-xs font-semibold tracking-wide text-blue-100">
               {de.detail.osm}
               {osmRefLabel ? (
                 <>
@@ -165,35 +163,31 @@ function MatchCompareBody({
             </div>
           </div>
           {bothRows.length === 0 ? (
-            <p className="p-3 text-sm text-zinc-500">—</p>
+            <p className="p-2 text-sm text-zinc-400 sm:p-3">—</p>
           ) : (
-            <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+            <div className="divide-y divide-zinc-800">
               {bothRows.map(([k, o, s]) => (
-                <div key={k} className="grid gap-4 p-3 md:grid-cols-2 md:gap-0 md:p-0">
-                  <div className="space-y-1 md:border-r md:border-zinc-100 md:bg-amber-50/40 md:p-3 dark:md:border-zinc-800 dark:md:bg-amber-950/15">
-                    <p className="text-[0.65rem] font-medium uppercase tracking-wide text-amber-800 dark:text-amber-200 md:hidden">
+                <div key={k} className="grid gap-3 p-2 md:grid-cols-2 md:gap-0 md:p-0">
+                  <div className="space-y-1 md:border-r md:border-zinc-800 md:bg-amber-950/15 md:p-3">
+                    <p className="text-[0.65rem] font-medium uppercase tracking-wide text-amber-200 md:hidden">
                       {de.detail.official}
                     </p>
                     <dl className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
-                      <dt className="shrink-0 font-mono text-xs leading-normal text-amber-800 dark:text-amber-200">
+                      <dt className="shrink-0 font-mono text-xs leading-normal text-amber-200">
                         {k}
                       </dt>
-                      <dd className="min-w-0 text-sm leading-normal text-zinc-800 dark:text-zinc-200">
-                        {o}
-                      </dd>
+                      <dd className="min-w-0 text-sm leading-normal text-zinc-200">{o}</dd>
                     </dl>
                   </div>
-                  <div className="space-y-1 md:bg-blue-50/40 md:p-3 dark:md:bg-blue-950/15">
-                    <p className="text-[0.65rem] font-medium uppercase tracking-wide text-blue-800 dark:text-blue-300 md:hidden">
+                  <div className="space-y-1 md:bg-blue-950/15 md:p-3">
+                    <p className="text-[0.65rem] font-medium uppercase tracking-wide text-blue-300 md:hidden">
                       {de.detail.osm}
                     </p>
                     <dl className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
-                      <dt className="shrink-0 font-mono text-xs leading-normal text-blue-800 dark:text-blue-300">
+                      <dt className="shrink-0 font-mono text-xs leading-normal text-blue-300">
                         {k}
                       </dt>
-                      <dd className="min-w-0 text-sm leading-normal text-zinc-800 dark:text-zinc-200">
-                        {s}
-                      </dd>
+                      <dd className="min-w-0 text-sm leading-normal text-zinc-200">{s}</dd>
                     </dl>
                   </div>
                 </div>
@@ -205,45 +199,33 @@ function MatchCompareBody({
 
       <div className="grid gap-8 md:grid-cols-2 md:gap-10">
         <section>
-          <h2 className="mb-3 font-semibold text-zinc-900 dark:text-zinc-100">
-            {de.detail.officialOnly}
-          </h2>
+          <h2 className="mb-3 font-semibold text-zinc-100">{de.detail.officialOnly}</h2>
           <dl className="text-sm">
             {onlyO.map(([k, v]) => (
               <div
                 key={k}
-                className="flex items-center gap-2 border-b border-zinc-100 py-2 dark:border-zinc-800"
+                className="flex items-center gap-2 border-b border-zinc-800 py-1.5 sm:py-2"
               >
-                <dt className="shrink-0 font-mono text-xs leading-normal text-amber-800 dark:text-amber-200">
-                  {k}
-                </dt>
-                <dd className="min-w-0 text-sm leading-normal text-zinc-800 dark:text-zinc-200">
-                  {v}
-                </dd>
+                <dt className="shrink-0 font-mono text-xs leading-normal text-amber-200">{k}</dt>
+                <dd className="min-w-0 text-sm leading-normal text-zinc-200">{v}</dd>
               </div>
             ))}
-            {onlyO.length === 0 && <p className="text-zinc-500">—</p>}
+            {onlyO.length === 0 && <p className="text-zinc-400">—</p>}
           </dl>
         </section>
         <section>
-          <h2 className="mb-3 font-semibold text-zinc-900 dark:text-zinc-100">
-            {de.detail.osmOnly}
-          </h2>
+          <h2 className="mb-3 font-semibold text-zinc-100">{de.detail.osmOnly}</h2>
           <dl className="text-sm">
             {onlyS.map(([k, v]) => (
               <div
                 key={k}
-                className="flex items-center gap-2 border-b border-zinc-100 py-2 dark:border-zinc-800"
+                className="flex items-center gap-2 border-b border-zinc-800 py-1.5 sm:py-2"
               >
-                <dt className="shrink-0 font-mono text-xs leading-normal text-blue-800 dark:text-blue-300">
-                  {k}
-                </dt>
-                <dd className="min-w-0 text-sm leading-normal text-zinc-800 dark:text-zinc-200">
-                  {v}
-                </dd>
+                <dt className="shrink-0 font-mono text-xs leading-normal text-blue-300">{k}</dt>
+                <dd className="min-w-0 text-sm leading-normal text-zinc-200">{v}</dd>
               </div>
             ))}
-            {onlyS.length === 0 && <p className="text-zinc-500">—</p>}
+            {onlyS.length === 0 && <p className="text-zinc-400">—</p>}
           </dl>
         </section>
       </div>
@@ -500,13 +482,13 @@ export function SchuleDetail() {
     })
   }
 
-  if (q.isLoading) return <p className="text-zinc-500">{de.land.loading}</p>
-  if (q.isError) return <p className="text-red-600">{de.land.error}</p>
+  if (q.isLoading) return <p className="text-zinc-400">{de.land.loading}</p>
+  if (q.isError) return <p className="text-red-400">{de.land.error}</p>
   if (!row) {
     return (
-      <p className="text-zinc-600">
+      <p className="text-zinc-400">
         {de.detail.notFound}{' '}
-        <Link to="/bundesland/$code" params={{ code }} className="text-emerald-800">
+        <Link to="/bundesland/$code" params={{ code }} className="text-emerald-300">
           ←
         </Link>
       </p>
@@ -525,7 +507,7 @@ export function SchuleDetail() {
     <div>
       {detailMapFc && detailMapFc.features.length > 0 && (
         <div className="mb-8">
-          <div className="h-[360px] overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
+          <div className="h-[360px] overflow-hidden rounded-lg border border-zinc-700">
             <MapGL
               ref={mapRef}
               initialViewState={detailInitialViewState}
@@ -681,15 +663,15 @@ export function SchuleDetail() {
                   closeOnClick={false}
                   offset={14}
                 >
-                  <div className="max-w-[min(16rem,calc(100vw-2rem))] rounded-md border border-zinc-200 bg-white px-2.5 py-1.5 font-sans text-sm font-medium text-zinc-900 shadow-md dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50">
+                  <div className="max-w-[min(16rem,calc(100vw-2rem))] rounded-md border border-zinc-600 bg-zinc-900 px-2.5 py-1.5 font-sans text-sm font-medium text-zinc-50 shadow-md">
                     {hoveredOtherSchool.name}
                   </div>
                 </Popup>
               )}
             </MapGL>
           </div>
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-600 dark:text-zinc-400">
+          <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-400 sm:gap-x-4">
               <span className="inline-flex items-center gap-1.5">
                 <CategoryLegendSwatch category="official_only" />
                 {de.detail.mapLegendOfficial}
@@ -741,7 +723,7 @@ export function SchuleDetail() {
                 </span>
               )}
             </div>
-            <label className="inline-flex items-center gap-2">
+            <label className="inline-flex items-center gap-2 sm:shrink-0">
               <span className="relative inline-flex h-6 w-11 shrink-0 items-center">
                 <input
                   type="checkbox"
@@ -753,12 +735,10 @@ export function SchuleDetail() {
                     setHoveredOtherSchool(null)
                   }}
                 />
-                <span className="absolute inset-0 rounded-full bg-gray-200 inset-ring inset-ring-gray-900/5 transition-colors duration-200 ease-in-out peer-checked:bg-indigo-600 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-indigo-600 dark:bg-white/5 dark:inset-ring-white/10 dark:peer-checked:bg-indigo-500 dark:peer-focus-visible:outline-indigo-500" />
-                <span className="pointer-events-none absolute left-0.5 top-0.5 size-5 rounded-full bg-white shadow-xs ring-1 ring-gray-900/5 transition-transform duration-200 ease-in-out peer-checked:translate-x-5" />
+                <span className="absolute inset-0 rounded-full bg-white/5 inset-ring inset-ring-white/10 transition-colors duration-200 ease-in-out peer-checked:bg-indigo-500 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-indigo-500" />
+                <span className="pointer-events-none absolute left-0.5 top-0.5 size-5 rounded-full bg-zinc-900/40 shadow-xs ring-1 ring-gray-900/5 transition-transform duration-200 ease-in-out peer-checked:translate-x-5" />
               </span>
-              <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                {de.detail.showOtherData}
-              </span>
+              <span className="text-sm font-medium text-zinc-100">{de.detail.showOtherData}</span>
             </label>
           </div>
         </div>
@@ -786,7 +766,7 @@ export function SchuleDetail() {
           </a>
         )}
         {(jedeschuleItem || osmBrowseUrl) && (
-          <span className="inline-flex flex-wrap items-center gap-x-1.5 text-sm text-emerald-800 dark:text-emerald-300">
+          <span className="inline-flex flex-wrap items-center gap-x-1.5 text-sm text-emerald-300">
             {jedeschuleItem && (
               <a href={jedeschuleItem} target="_blank" rel="noreferrer" className="underline">
                 {de.detail.jedeschuleApi}
@@ -803,7 +783,7 @@ export function SchuleDetail() {
       </div>
 
       {row.category === 'matched' && (
-        <p className="mb-6 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+        <p className="mb-6 text-sm leading-relaxed text-zinc-400">
           {row.matchMode === 'distance' ? (
             de.detail.matchExplanationDistance
           ) : row.matchedByOsmNameNormalized ? (
@@ -811,7 +791,7 @@ export function SchuleDetail() {
               {row.matchMode === 'distance_and_name'
                 ? de.detail.matchExplanationDistanceAndName
                 : de.detail.matchExplanationName}{' '}
-              <code className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-[0.9em] text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
+              <code className="rounded bg-zinc-900 px-1.5 py-0.5 font-mono text-[0.9em] text-zinc-200">
                 {row.matchedByOsmNameNormalized}
               </code>
               {row.matchedByOsmNameTag != null && (
@@ -828,24 +808,21 @@ export function SchuleDetail() {
         row.matchMode === 'name' &&
         ambiguousCandidates.length > 0 && (
           <section
-            className="mb-6 rounded-md bg-amber-50 p-4 dark:bg-amber-500/10 dark:outline dark:outline-amber-500/20"
+            className="mb-6 rounded-md bg-amber-500/10 p-4 outline outline-amber-500/20"
             aria-labelledby="schule-detail-ambiguous-name-alert-title"
           >
             <div className="flex">
               <div className="shrink-0">
-                <InformationCircleIcon
-                  aria-hidden
-                  className="size-5 text-amber-500 dark:text-amber-400"
-                />
+                <InformationCircleIcon aria-hidden className="size-5 text-amber-500" />
               </div>
               <div className="ml-3 min-w-0">
                 <h3
                   id="schule-detail-ambiguous-name-alert-title"
-                  className="text-sm font-medium text-amber-900 dark:text-amber-100"
+                  className="text-sm font-medium text-amber-900"
                 >
                   {de.detail.ambiguousNameNoGeoAlertTitle}
                 </h3>
-                <div className="mt-2 text-sm text-amber-800 dark:text-amber-100/85">
+                <div className="mt-2 text-sm text-amber-200">
                   <p className="leading-relaxed">
                     {miniMarkdownNodes(de.detail.ambiguousNameNoGeoAlertText)}
                   </p>
@@ -857,24 +834,21 @@ export function SchuleDetail() {
 
       {row.category === 'match_ambiguous' && ambiguousNoLocalGeoFeature && (
         <section
-          className="mb-6 rounded-md bg-amber-50 p-4 dark:bg-amber-500/10 dark:outline dark:outline-amber-500/20"
+          className="mb-6 rounded-md bg-amber-500/10 p-4 outline outline-amber-500/20"
           aria-labelledby="schule-detail-ambiguous-no-local-geo-title"
         >
           <div className="flex">
             <div className="shrink-0">
-              <InformationCircleIcon
-                aria-hidden
-                className="size-5 text-amber-500 dark:text-amber-400"
-              />
+              <InformationCircleIcon aria-hidden className="size-5 text-amber-500" />
             </div>
             <div className="ml-3 min-w-0">
               <h3
                 id="schule-detail-ambiguous-no-local-geo-title"
-                className="text-sm font-medium text-amber-900 dark:text-amber-100"
+                className="text-sm font-medium text-amber-900"
               >
                 {de.detail.ambiguousNoLocalGeoTitle}
               </h3>
-              <div className="mt-2 text-sm text-amber-800 dark:text-amber-100/85">
+              <div className="mt-2 text-sm text-amber-200">
                 <p className="leading-relaxed">
                   {miniMarkdownNodes(de.detail.ambiguousNoLocalGeoText)}
                 </p>
@@ -886,24 +860,21 @@ export function SchuleDetail() {
 
       {ambiguousCandidates.length > 0 && (
         <section
-          className="mb-6 rounded-md bg-violet-50 p-4 dark:bg-violet-500/10 dark:outline dark:outline-violet-500/20"
+          className="mb-6 rounded-md bg-violet-500/10 p-4 outline outline-violet-500/20"
           aria-labelledby="schule-detail-ambiguous-alert-title"
         >
           <div className="flex">
             <div className="shrink-0">
-              <InformationCircleIcon
-                aria-hidden
-                className="size-5 text-violet-500 dark:text-violet-400"
-              />
+              <InformationCircleIcon aria-hidden className="size-5 text-violet-500" />
             </div>
             <div className="ml-3 min-w-0">
               <h3
                 id="schule-detail-ambiguous-alert-title"
-                className="text-sm font-medium text-violet-900 dark:text-violet-100"
+                className="text-sm font-medium text-violet-100"
               >
                 {de.detail.ambiguousAlertTitle}
               </h3>
-              <div className="mt-2 text-sm text-violet-800 dark:text-violet-100/80">
+              <div className="mt-2 text-sm text-violet-100/80">
                 <p className="leading-relaxed">{miniMarkdownNodes(de.detail.ambiguousIntro)}</p>
               </div>
             </div>
@@ -913,10 +884,10 @@ export function SchuleDetail() {
 
       {ambiguousCandidates.length > 0 ? (
         <div className="space-y-6">
-          <h2 className="flex flex-wrap items-center gap-2 text-base font-semibold text-zinc-900 dark:text-zinc-100">
+          <h2 className="flex flex-row flex-wrap items-baseline gap-x-2 text-base font-semibold text-zinc-100">
             <span>{de.detail.ambiguousOfficialHeading}</span>
-            <span className="inline-flex min-h-6 items-center rounded-full bg-zinc-900 px-2.5 text-xs font-semibold tabular-nums text-white dark:bg-zinc-100 dark:text-zinc-900">
-              {formatDeInteger(ambiguousCandidates.length)}
+            <span className="font-semibold tabular-nums text-zinc-400">
+              ({formatDeInteger(ambiguousCandidates.length)})
             </span>
           </h2>
           {ambiguousCandidates.map((c, idx) => {
@@ -931,52 +902,49 @@ export function SchuleDetail() {
                     <MapPinIcon
                       title={latLngTitle}
                       aria-label={latLngTitle}
-                      className="size-4 shrink-0 text-zinc-500 dark:text-zinc-400"
+                      className="size-4 shrink-0 text-zinc-400"
                     />
                   )}
                   {de.detail.abstand}: {formatDeInteger(c.distM)} m
                 </span>
               ) : c.showOfficialCoordsMissing ? (
-                <span className="whitespace-nowrap font-medium text-orange-800 dark:text-orange-300">
+                <span className="whitespace-nowrap font-medium text-orange-300">
                   {de.detail.officialCoordsMissing}
                 </span>
               ) : null
             return (
               <DetailsOpenByDefault
                 key={c.id}
-                className="group rounded-lg border border-zinc-200/90 bg-zinc-50/40 transition-[border-color,background-color] open:border-transparent open:bg-transparent dark:border-zinc-600/70 dark:bg-zinc-900/25 dark:open:border-transparent dark:open:bg-transparent"
+                className="group rounded-lg border border-zinc-600/70 bg-zinc-900/25 transition-[border-color,background-color] open:border-transparent open:bg-transparent"
               >
-                <summary className="flex w-full cursor-pointer list-none items-start gap-2 rounded-lg px-3 py-3 text-left transition-colors hover:bg-zinc-100/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/70 dark:hover:bg-zinc-800/50 dark:focus-visible:ring-zinc-500/60 [&::-webkit-details-marker]:hidden">
+                <summary className="flex w-full cursor-pointer list-none items-start gap-2 rounded-lg px-2.5 py-2.5 text-left transition-colors hover:bg-zinc-800/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500/60 sm:px-3 sm:py-3 [&::-webkit-details-marker]:hidden">
                   <ChevronRightIcon
                     aria-hidden
-                    className="mt-0.5 size-5 shrink-0 text-zinc-400 transition-transform group-open:rotate-90 dark:text-zinc-500"
+                    className="mt-0.5 size-5 shrink-0 text-zinc-500 transition-transform group-open:rotate-90"
                   />
-                  <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
-                    <h3 className="min-w-0 flex-1 break-words text-lg font-semibold leading-snug text-zinc-900 dark:text-zinc-100">
-                      <span className="text-zinc-500 dark:text-zinc-400">{idx + 1}. </span>
+                  <div className="flex min-w-0 flex-1 flex-col items-stretch gap-2 sm:flex-row sm:items-start sm:gap-3 md:gap-4">
+                    <h3 className="min-w-0 flex-1 break-words text-lg font-semibold leading-snug text-zinc-100">
+                      <span className="text-zinc-400">{idx + 1}. </span>
                       {c.name}
                     </h3>
-                    <div className="flex shrink-0 flex-row flex-wrap items-center justify-end gap-x-2 gap-y-1 text-right text-sm text-zinc-600 dark:text-zinc-400">
+                    <div className="flex shrink-0 flex-row flex-wrap items-center gap-x-2 gap-y-1 text-left text-sm text-zinc-400 sm:justify-end sm:text-right">
                       <span className="font-mono">{c.id}</span>
                       {summaryMiddle != null && (
                         <>
-                          <span
-                            aria-hidden
-                            className="select-none text-zinc-400 dark:text-zinc-500"
-                          >
+                          <span aria-hidden className="select-none text-zinc-500">
                             {'\u00B7'}
                           </span>
                           {summaryMiddle}
                         </>
                       )}
-                      <span aria-hidden className="select-none text-zinc-400 dark:text-zinc-500">
+                      <span aria-hidden className="select-none text-zinc-500">
                         {'\u00B7'}
                       </span>
                       <a
                         href={`https://jedeschule.codefor.de/schools/${encodeURIComponent(c.id)}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-emerald-800 underline dark:text-emerald-300"
+                        className="text-emerald-300 underline"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {de.detail.ambiguousJedeschule}
@@ -984,7 +952,7 @@ export function SchuleDetail() {
                     </div>
                   </div>
                 </summary>
-                <div className="border-t border-zinc-200/80 px-3 pb-4 pt-4 dark:border-zinc-700/80">
+                <div className="border-t border-zinc-700/80 px-2.5 pb-3 pt-3 sm:px-3 sm:pb-4 sm:pt-4">
                   <MatchCompareBody
                     official={c.properties}
                     osm={row.osmTags ?? null}

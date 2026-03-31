@@ -4,7 +4,7 @@ import { boundsToBboxParam } from '../lib/mapBounds'
 import type { LandMapBbox } from '../lib/useLandMapBbox'
 
 const btnBase =
-  'pointer-events-auto relative inline-flex items-center bg-white px-3 py-2 text-sm font-medium text-zinc-900 ring-1 ring-zinc-300 ring-inset hover:bg-zinc-50 focus:z-10 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-600 dark:hover:bg-zinc-700/80'
+  'pointer-events-auto relative inline-flex items-center bg-zinc-800 px-3 py-2 text-sm font-medium text-zinc-100 ring-1 ring-zinc-600 ring-inset hover:bg-zinc-700/80 focus:z-10 disabled:cursor-not-allowed disabled:opacity-50'
 
 export function LandMapBboxToolbar({
   mapId,
@@ -34,7 +34,7 @@ export function LandMapBboxToolbar({
   const disabled = !mapReady || !mapRef
 
   return (
-    <fieldset className="pointer-events-none absolute bottom-3 left-1/2 z-10 m-0 inline-flex min-w-0 -translate-x-1/2 isolate rounded-md border-0 p-0 shadow-xs dark:shadow-none">
+    <fieldset className="pointer-events-none absolute bottom-3 left-1/2 z-10 m-0 inline-flex min-w-0 -translate-x-1/2 isolate rounded-md border-0 p-0 shadow-none">
       <legend className="sr-only">{de.land.mapBboxToolbarAria}</legend>
       <button
         type="button"

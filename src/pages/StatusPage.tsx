@@ -25,52 +25,50 @@ function SourceMetaCard({
 }) {
   if (!result.present) {
     return (
-      <div className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
-        <p className="text-sm font-medium text-zinc-800 dark:text-zinc-100">{title}</p>
-        <p className="mt-1 text-xs text-zinc-500">{de.status.nationalMetaMissing}</p>
+      <div className="rounded-lg border border-zinc-700 p-3">
+        <p className="text-sm font-medium text-zinc-200">{title}</p>
+        <p className="mt-1 text-xs text-zinc-400">{de.status.nationalMetaMissing}</p>
       </div>
     )
   }
   const { data } = result
   return (
-    <div className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+    <div className="rounded-lg border border-zinc-700 p-3">
       <div className="flex flex-wrap items-center gap-2">
-        <p className="text-sm font-medium text-zinc-800 dark:text-zinc-100">{title}</p>
+        <p className="text-sm font-medium text-zinc-200">{title}</p>
         <span
           className={cn(
             'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
-            data.ok
-              ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-100'
-              : 'bg-red-100 text-red-900 dark:bg-red-950/60 dark:text-red-200',
+            data.ok ? 'bg-emerald-900/50 text-emerald-100' : 'bg-red-950/60 text-red-200',
           )}
         >
           {data.ok ? de.status.downloadOk : de.status.downloadFail}
         </span>
       </div>
-      <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
+      <p className="mt-1 text-xs text-zinc-400">
         {de.status.refreshedAt}:{' '}
         {new Date(data.generatedAt).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })}
       </p>
       {data.pipelineStep === 'pipeline:download:jedeschule' && data.httpLastModified ? (
-        <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
+        <p className="mt-1 text-xs text-zinc-400">
           {de.status.jedeschuleHttpLastModified}: {data.httpLastModified}
         </p>
       ) : null}
       {data.pipelineStep === 'pipeline:download:jedeschule' && data.csvMaxUpdateTimestamp ? (
-        <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
+        <p className="mt-1 text-xs text-zinc-400">
           {de.status.jedeschuleCsvMaxUpdate}: {data.csvMaxUpdateTimestamp}
         </p>
       ) : null}
       {data.pipelineStep === 'pipeline:download:jedeschule' &&
       data.upstreamDatasetChanged !== undefined ? (
-        <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
+        <p className="mt-1 text-xs text-zinc-400">
           {data.upstreamDatasetChanged
             ? de.status.jedeschuleUpstreamChanged
             : de.status.jedeschuleUpstreamSame}
         </p>
       ) : null}
       {data.errorMessage ? (
-        <pre className="mt-1.5 max-h-24 overflow-auto rounded bg-zinc-100 p-1.5 text-xs dark:bg-zinc-900">
+        <pre className="mt-1.5 max-h-24 overflow-auto rounded bg-zinc-900 p-1.5 text-xs">
           {data.errorMessage}
         </pre>
       ) : null}
@@ -104,23 +102,16 @@ export function StatusPage() {
       <div className="mb-4">
         <PageBreadcrumb />
       </div>
-      <h1 className="text-2xl font-semibold">{de.status.heading}</h1>
+      <h1 className="text-2xl font-semibold text-zinc-100">{de.status.heading}</h1>
 
       <section className="mt-8" aria-labelledby="national-meta-heading">
-        <h2
-          id="national-meta-heading"
-          className="text-lg font-medium text-zinc-900 dark:text-zinc-100"
-        >
+        <h2 id="national-meta-heading" className="text-lg font-medium text-zinc-100">
           {de.status.nationalMetaHeading}
         </h2>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          {de.status.nationalMetaLead}
-        </p>
-        {metaQ.isLoading && <p className="mt-3 text-sm text-zinc-500">{de.status.loading}</p>}
+        <p className="mt-1 text-sm text-zinc-400">{de.status.nationalMetaLead}</p>
+        {metaQ.isLoading && <p className="mt-3 text-sm text-zinc-400">{de.status.loading}</p>}
         {metaQ.isError && (
-          <p className="mt-3 text-sm text-amber-800 dark:text-amber-200">
-            {de.status.nationalMetaError}
-          </p>
+          <p className="mt-3 text-sm text-amber-200">{de.status.nationalMetaError}</p>
         )}
         {metaQ.isSuccess && (
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -130,38 +121,34 @@ export function StatusPage() {
         )}
       </section>
 
-      <h2 className="mt-10 text-lg font-medium text-zinc-900 dark:text-zinc-100">
-        {de.status.runHistoryHeading}
-      </h2>
+      <h2 className="mt-10 text-lg font-medium text-zinc-100">{de.status.runHistoryHeading}</h2>
 
-      {runsQ.isLoading && <p className="mt-4 text-zinc-500">{de.status.loading}</p>}
-      {runsQ.isError && <p className="mt-4 text-amber-800">{de.status.error}</p>}
+      {runsQ.isLoading && <p className="mt-4 text-zinc-400">{de.status.loading}</p>}
+      {runsQ.isError && <p className="mt-4 text-amber-200">{de.status.error}</p>}
 
       {runsQ.isSuccess && (
-        <ul className="mt-4 divide-y divide-zinc-200 overflow-hidden rounded-lg border border-zinc-200 dark:divide-zinc-700 dark:border-zinc-700">
+        <ul className="mt-4 divide-y divide-zinc-700 overflow-hidden rounded-lg border border-zinc-700">
           {[...runsQ.data.runs].reverse().map((run) => (
             <li
               key={`${run.startedAt}-${run.finishedAt}-${run.durationMs}-${run.gitSha ?? ''}`}
-              className="px-3 py-3"
+              className="px-2.5 py-2.5 sm:px-3 sm:py-3"
             >
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+              <div className="flex flex-col items-start gap-1 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1">
                 <span className="min-w-0">
                   {de.status.started}: {new Date(run.startedAt).toLocaleString('de-DE')}
                 </span>
-                <span className="text-zinc-500">·</span>
+                <span className="hidden text-zinc-400 sm:inline">·</span>
                 <span>
                   {de.status.finished}: {new Date(run.finishedAt).toLocaleString('de-DE')}
                 </span>
-                <span className="text-zinc-500">·</span>
+                <span className="hidden text-zinc-400 sm:inline">·</span>
                 <span>
                   {de.status.duration}: {formatDurationMs(run.durationMs)}
                 </span>
                 <span
                   className={cn(
-                    'ml-auto inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-                    run.overallOk
-                      ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-100'
-                      : 'bg-red-100 text-red-900 dark:bg-red-950/60 dark:text-red-200',
+                    'inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-xs font-medium sm:ml-auto',
+                    run.overallOk ? 'bg-emerald-900/50 text-emerald-100' : 'bg-red-950/60 text-red-200',
                   )}
                 >
                   {run.overallOk ? de.status.okBadgeOk : de.status.okBadgeFail}
@@ -169,26 +156,20 @@ export function StatusPage() {
               </div>
 
               {run.matchSkipped ? (
-                <p className="mt-2 rounded-md bg-amber-50 px-2 py-1.5 text-xs text-amber-950 dark:bg-amber-950/40 dark:text-amber-100">
+                <p className="mt-2 rounded-md bg-amber-950/40 px-2 py-1.5 text-xs text-amber-100">
                   <span className="font-medium">{de.status.matchSkipped}.</span>{' '}
                   {run.matchSkipReason ?? ''}
                 </p>
               ) : run.lands.length > 0 ? (
-                <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
-                  {de.status.matchRan}
-                </p>
+                <p className="mt-2 text-xs text-zinc-400">{de.status.matchRan}</p>
               ) : run.errors.length > 0 ? (
-                <p className="mt-2 text-xs text-amber-800 dark:text-amber-200">
-                  {de.status.matchNotRunMissingInputs}
-                </p>
+                <p className="mt-2 text-xs text-amber-200">{de.status.matchNotRunMissingInputs}</p>
               ) : null}
 
               {run.downloads ? (
-                <div className="mt-2 rounded-md bg-zinc-50 p-2 text-xs dark:bg-zinc-900/50">
-                  <p className="font-medium text-zinc-800 dark:text-zinc-200">
-                    {de.status.runDownloads}
-                  </p>
-                  <ul className="mt-1 list-inside list-disc space-y-0.5 text-zinc-600 dark:text-zinc-400">
+                <div className="mt-2 rounded-md bg-zinc-900/50 p-2 text-xs">
+                  <p className="font-medium text-zinc-200">{de.status.runDownloads}</p>
+                  <ul className="mt-1 list-inside list-disc space-y-0.5 text-zinc-400">
                     <li>
                       {de.status.sourceJedeschule}:{' '}
                       {run.downloads.jedeschule.ok ? de.status.downloadOk : de.status.downloadFail}
@@ -208,11 +189,11 @@ export function StatusPage() {
               ) : null}
 
               {run.errors.length > 0 && (
-                <pre className="mt-2 max-h-32 overflow-auto rounded bg-zinc-100 p-1.5 text-xs dark:bg-zinc-900">
+                <pre className="mt-2 max-h-32 overflow-auto rounded bg-zinc-900 p-1.5 text-xs">
                   {run.errors.join('\n')}
                 </pre>
               )}
-              <details className="mt-2 text-xs text-zinc-500">
+              <details className="mt-2 text-xs text-zinc-400">
                 <summary>{de.status.lands}</summary>
                 <ul className="mt-1 list-inside list-disc">
                   {run.lands.map((l) => (
