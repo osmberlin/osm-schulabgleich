@@ -67,7 +67,9 @@ export function HomePage() {
       {q.isError && <p className="text-amber-200">{de.home.error}</p>}
       {q.isSuccess && q.data.lands.length === 0 && <p className="text-zinc-400">{de.home.empty}</p>}
 
-      {q.isSuccess && q.data.lands.length > 0 && germanyTotals && <HomeGermanyStats totals={germanyTotals} />}
+      {q.isSuccess && q.data.lands.length > 0 && germanyTotals && (
+        <HomeGermanyStats totals={germanyTotals} />
+      )}
 
       {q.isSuccess && q.data.lands.length > 0 && <HomeLandList byCode={byCode} />}
 

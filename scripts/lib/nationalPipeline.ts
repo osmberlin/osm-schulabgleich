@@ -154,6 +154,7 @@ function rowsToJson(rows: MatchRowOut[]) {
   return rows.map((r) => ({
     key: r.key,
     category: r.category,
+    matchCategory: r.category,
     matchMode: r.matchMode,
     officialId: r.officialId,
     officialName: r.officialName,

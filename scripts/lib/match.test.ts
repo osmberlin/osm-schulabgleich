@@ -217,6 +217,48 @@ describe('matchSchools', () => {
     expect(rows.some((r) => r.category === 'match_ambiguous' && r.osmId === 'wrs')).toBe(false)
   })
 
+  it('keeps a single remaining location candidate resolved (no remuddy to ambiguous)', () => {
+    const schools: OfficialInput[] = [
+      {
+        id: 'BE-a',
+        name: 'Albert Schule',
+        lon: 13.39995,
+        lat: 52.51995,
+        properties: { id: 'BE-a' },
+      },
+      {
+        id: 'BE-b',
+        name: 'Berta Schule',
+        lon: 13.40005,
+        lat: 52.52005,
+        properties: { id: 'BE-b' },
+      },
+    ]
+    const osmAlbert: OsmSchoolInput = {
+      ...osmNear,
+      osmId: 'albert',
+      name: 'Albert Schule',
+      tags: { amenity: 'school', name: 'Albert Schule' },
+      centroid: [13.39996, 52.51996],
+    }
+    const osmGeneric: OsmSchoolInput = {
+      ...osmNear,
+      osmId: 'generic',
+      name: 'Campus Mitte',
+      tags: { amenity: 'school', name: 'Campus Mitte' },
+      centroid: [13.40004, 52.52004],
+    }
+    const osmLandByKey = new Map<string, LandCode>([
+      ['way/albert', 'BE'],
+      ['way/generic', 'BE'],
+    ])
+    const { rows } = matchSchools(schools, [osmAlbert, osmGeneric], { osmLandByKey })
+    const generic = rows.find((r) => r.osmId === 'generic')
+    expect(generic?.category).toBe('matched')
+    expect(generic?.matchMode).toBe('distance')
+    expect(generic?.officialId).toBe('BE-b')
+  })
+
   it('stays ambiguous when normalized names collide', () => {
     const twoSameName: OfficialInput[] = [
       {

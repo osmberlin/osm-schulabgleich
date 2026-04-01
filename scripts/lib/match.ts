@@ -316,7 +316,6 @@ export function matchSchools(
       continue
     }
 
-    const fullAtStart = fullCandsByOsm.get(landKey) ?? []
     const cands = officialsNearOsm(o, withCoord, osmLand, reserved)
 
     if (cands.length === 0) {
@@ -341,74 +340,8 @@ export function matchSchools(
       const off = cands[0]
       const dM =
         distance(point([off.lon, off.lat]), point([lon, lat]), { units: 'kilometers' }) * 1000
-      if (fullAtStart.length >= 2) {
-        const nameWin = uniqueNameOfficialIn(fullAtStart, o)
-        if (nameWin == null) {
-          for (const x of cands) {
-            ambiguousAllIds.add(x.id)
-          }
-          rows.push({
-            key: `ambig-${o.osmType}-${o.osmId}`,
-            category: 'match_ambiguous',
-            officialId: null,
-            officialName: null,
-            officialProperties: null,
-            osmId: o.osmId,
-            osmType: o.osmType,
-            osmCentroidLon: lon,
-            osmCentroidLat: lat,
-            distanceMeters: Math.round(dM),
-            osmName: o.name,
-            osmTags: o.tags,
-            ambiguousOfficialIds: cands.map((x) => x.id),
-            ambiguousOfficialSnapshots: snapshotsFromOfficials(cands),
-          })
-          continue
-        }
-        if (nameWin.id !== off.id) {
-          for (const x of cands) {
-            ambiguousAllIds.add(x.id)
-          }
-          rows.push({
-            key: `ambig-${o.osmType}-${o.osmId}`,
-            category: 'match_ambiguous',
-            officialId: null,
-            officialName: null,
-            officialProperties: null,
-            osmId: o.osmId,
-            osmType: o.osmType,
-            osmCentroidLon: lon,
-            osmCentroidLat: lat,
-            distanceMeters: Math.round(dM),
-            osmName: o.name,
-            osmTags: o.tags,
-            ambiguousOfficialIds: cands.map((x) => x.id),
-            ambiguousOfficialSnapshots: snapshotsFromOfficials(cands),
-          })
-          continue
-        }
-        reserved.add(off.id)
-        const offNorm = normalizeSchoolNameForMatch(off.name)!
-        const variantMapSingle = normalizedOsmNameVariantMap(o.tags)
-        rows.push({
-          key: `match-${off.id}`,
-          category: 'matched',
-          matchMode: 'distance_and_name',
-          officialId: off.id,
-          officialName: off.name,
-          officialProperties: off.properties,
-          osmId: o.osmId,
-          osmType: o.osmType,
-          osmCentroidLon: lon,
-          osmCentroidLat: lat,
-          distanceMeters: Math.round(dM),
-          osmName: o.name,
-          osmTags: o.tags,
-          matchedByOsmNameNormalized: offNorm,
-          matchedByOsmNameTag: variantMapSingle.get(offNorm),
-        })
-        continue
-      }
+      // If location filtering leaves exactly one candidate, keep the row resolved.
+      // This avoids re-muddying after earlier allocations in dense areas.
       if (ambiguousAllIds.has(off.id)) {
         rows.push({
           key: `osm-${o.osmType}-${o.osmId}`,

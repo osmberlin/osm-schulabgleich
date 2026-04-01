@@ -94,13 +94,13 @@ export const de = {
     officialCoordsMissing: 'Koordinaten fehlen',
     ambiguousAlertTitle: 'Uneindeutig',
     ambiguousIntro:
-      'Mehrere amtliche Schuldatensätze liegen im Abgleichsradius um dieses OSM-Objekt und ein Vergleich der Namen führte nicht zu einem eindeutigen Treffer. Prüfe den `name` in OSM und ob alle Daten das Attribut `amenity=school` tragen sollten. Manchmal kann auch ein `official_name` eingetragen werden.',
+      'Mehrere amtliche Schuldatensätze kommen als Treffer für dieses OSM-Objekt infrage. Prüfe und korrigiere bei Bedarf nur die OSM-Daten: `name`, `official_name` und `amenity=school`.',
     ambiguousNameNoGeoAlertTitle: 'Uneindeutig (Namensabgleich ohne Koordinaten)',
     ambiguousNameNoGeoAlertText:
-      'Diese Uneindeutigkeit kommt aus einem reinen Namensabgleich mit amtlichen Datensätzen ohne Koordinaten. Die Karte hilft hier kaum; nutze die Kandidatenliste unten. Bei gleichen Schulnamen kann das ein Fehlalarm sein.',
+      'Diese Uneindeutigkeit kommt aus einem reinen Namensabgleich mit amtlichen Datensätzen ohne Koordinaten. Nutze die Kandidatenliste unten und passe bei Bedarf nur OSM-Attribute an.',
     ambiguousNoLocalGeoTitle: 'Hinweis zur Karte',
     ambiguousNoLocalGeoText:
-      'Bei mindestens einem amtlichen Kandidaten fehlen nutzbare Koordinaten in den Rohdaten — dann gibt es keinen Punkt für diese Schule auf der Karte. Name, Adresse und die übrigen Felder stehen trotzdem in den Vergleichstabellen unten (inkl. Abstand zum OSM-Schwerpunkt, sofern im Datensatz hinterlegt). Der Abgleich für Uneindeutigkeiten erfolgt nur innerhalb desselben Bundeslandes wie die OSM-Schule.',
+      'Bei mindestens einem Kandidaten fehlen nutzbare Koordinaten, daher erscheint nicht jeder Kandidat als Punkt auf der Karte. Vergleiche die Felder in der Tabelle und entscheide anhand der OSM-Daten, welche Tags angepasst werden sollen.',
     ambiguousOfficialHeading: 'Amtliche Kandidaten',
     ambiguousJedeschule: 'JedeSchule',
     mapLegendOfficial: 'Offizielle Schule (Übereinstimmung/Kandidaten)',

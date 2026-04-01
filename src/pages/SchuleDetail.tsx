@@ -155,8 +155,7 @@ const AMBIGUOUS_COMPARE_SUMMARY_LAYOUT =
 const AMBIGUOUS_COMPARE_META_WRAP =
   'w-full min-w-0 overflow-x-auto text-sm text-zinc-400 md:min-w-0 md:max-w-[min(100%,28rem)] md:overflow-visible md:text-right'
 
-const AMBIGUOUS_COMPARE_META_ROW =
-  'flex min-w-0 w-full flex-nowrap items-center gap-x-2 md:ml-auto'
+const AMBIGUOUS_COMPARE_META_ROW = 'flex min-w-0 w-full flex-nowrap items-center gap-x-2 md:ml-auto'
 
 const AMBIGUOUS_COMPARE_META_DOT = 'shrink-0 select-none text-zinc-500'
 
@@ -626,7 +625,7 @@ export function SchuleDetail() {
         properties: {
           matchKey: match.key,
           name: match.osmName ?? match.officialName ?? match.key,
-          matchCat: match.category,
+          matchCat: match.matchCategory ?? match.category,
         },
         geometry: { type: 'Point', coordinates: [lon, lat] },
       })
@@ -1042,7 +1041,7 @@ export function SchuleDetail() {
                   {hoveredMapLabel.name}
                 </p>
                 <p className="mt-0.5 text-xs leading-snug text-zinc-400">
-                  {detailMapPopupCategoryLine(hoveredMapLabel, row.category)}
+                  {detailMapPopupCategoryLine(hoveredMapLabel, row.matchCategory ?? row.category)}
                 </p>
               </div>
             ) : null}
@@ -1195,60 +1194,6 @@ export function SchuleDetail() {
         </p>
       )}
 
-      {row.category === 'match_ambiguous' &&
-        row.matchMode === 'name' &&
-        ambiguousCandidates.length > 0 && (
-          <section
-            className="mb-6 rounded-md bg-amber-500/10 p-4 outline outline-amber-500/20"
-            aria-labelledby="schule-detail-ambiguous-name-alert-title"
-          >
-            <div className="flex">
-              <div className="shrink-0">
-                <InformationCircleIcon aria-hidden className="size-5 text-amber-500" />
-              </div>
-              <div className="ml-3 min-w-0">
-                <h3
-                  id="schule-detail-ambiguous-name-alert-title"
-                  className="text-sm font-medium text-amber-900"
-                >
-                  {de.detail.ambiguousNameNoGeoAlertTitle}
-                </h3>
-                <div className="mt-2 text-sm text-amber-200">
-                  <p className="leading-relaxed">
-                    {miniMarkdownNodes(de.detail.ambiguousNameNoGeoAlertText)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
-      {row.category === 'match_ambiguous' && ambiguousNoLocalGeoFeature && (
-        <section
-          className="mb-6 rounded-md bg-amber-500/10 p-4 outline outline-amber-500/20"
-          aria-labelledby="schule-detail-ambiguous-no-local-geo-title"
-        >
-          <div className="flex">
-            <div className="shrink-0">
-              <InformationCircleIcon aria-hidden className="size-5 text-amber-500" />
-            </div>
-            <div className="ml-3 min-w-0">
-              <h3
-                id="schule-detail-ambiguous-no-local-geo-title"
-                className="text-sm font-medium text-amber-900"
-              >
-                {de.detail.ambiguousNoLocalGeoTitle}
-              </h3>
-              <div className="mt-2 text-sm text-amber-200">
-                <p className="leading-relaxed">
-                  {miniMarkdownNodes(de.detail.ambiguousNoLocalGeoText)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
       {ambiguousCandidates.length > 0 && (
         <section
           className="mb-6 rounded-md bg-violet-500/10 p-4 outline outline-violet-500/20"
@@ -1267,6 +1212,16 @@ export function SchuleDetail() {
               </h3>
               <div className="mt-2 text-sm text-violet-100/80">
                 <p className="leading-relaxed">{miniMarkdownNodes(de.detail.ambiguousIntro)}</p>
+                {row.matchMode === 'name' && (
+                  <p className="mt-2 leading-relaxed">
+                    {miniMarkdownNodes(de.detail.ambiguousNameNoGeoAlertText)}
+                  </p>
+                )}
+                {ambiguousNoLocalGeoFeature && (
+                  <p className="mt-2 leading-relaxed">
+                    {miniMarkdownNodes(de.detail.ambiguousNoLocalGeoText)}
+                  </p>
+                )}
               </div>
             </div>
           </div>

@@ -147,14 +147,17 @@ export function HomeLandList({ byCode }: { byCode: Map<string, LandSummaryLike> 
                       <div className="mt-1 text-xs text-zinc-400">
                         {de.land.categoryLabel.matched} {formatDeInteger(land.counts.matched)} ·{' '}
                         {de.land.categoryLabel.official_only}{' '}
-                        {formatDeInteger(land.counts.official_only)} · {de.land.categoryLabel.osm_only}{' '}
-                        {formatDeInteger(land.counts.osm_only)} · {de.land.categoryLabel.match_ambiguous}{' '}
+                        {formatDeInteger(land.counts.official_only)} ·{' '}
+                        {de.land.categoryLabel.osm_only} {formatDeInteger(land.counts.osm_only)} ·{' '}
+                        {de.land.categoryLabel.match_ambiguous}{' '}
                         {formatDeInteger(land.counts.ambiguous)} · {de.land.officialNoCoordKpi}{' '}
                         {formatDeInteger(land.counts.official_no_coord)}
                         {land.osmSource === 'cached' ? ' · OSM-Cache' : ''}
                       </div>
                     )}
-                    {!land && <div className="mt-1 text-xs text-zinc-400">Keine Zusammenfassung</div>}
+                    {!land && (
+                      <div className="mt-1 text-xs text-zinc-400">Keine Zusammenfassung</div>
+                    )}
                   </div>
                 </div>
                 <ChevronRightIcon aria-hidden className="size-5 shrink-0 text-zinc-500" />

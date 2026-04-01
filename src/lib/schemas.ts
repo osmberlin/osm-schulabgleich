@@ -32,28 +32,47 @@ const ambiguousOfficialSnapshotSchema = z.object({
   properties: z.record(z.string(), z.unknown()),
 })
 
-export const schoolsMatchRowSchema = z.object({
-  key: z.string(),
-  category: matchCategorySchema,
-  matchMode: z.enum(['distance', 'distance_and_name', 'name']).optional(),
-  officialId: z.string().nullable(),
-  officialName: z.string().nullable(),
-  officialProperties: z.record(z.string(), z.unknown()).nullable().optional(),
-  osmId: z.string().nullable(),
-  osmType: z.enum(['way', 'relation', 'node']).nullable(),
-  /** OSM geometry centroid; Abstand bezieht sich auf diesen Punkt. */
-  osmCentroidLon: z.number().nullable().optional(),
-  osmCentroidLat: z.number().nullable().optional(),
-  distanceMeters: z.number().nullable(),
-  osmName: z.string().nullable(),
-  osmTags: z.record(z.string(), z.string()).nullable().optional(),
-  ambiguousOfficialIds: z.array(z.string()).optional(),
-  /** Amtliche Stammdaten der Kandidaten zum Match-Zeitpunkt (für Detailseite ohne Bundesland-GeoJSON). */
-  ambiguousOfficialSnapshots: z.array(ambiguousOfficialSnapshotSchema).optional(),
-  matchedByOsmNameNormalized: z.string().optional(),
-  matchedByOsmNameTag: z.enum(OSM_SCHOOL_NAME_TAGS_IN_ORDER).optional(),
-  pipelineLand: z.string().optional(),
-})
+export const schoolsMatchRowSchema = z
+  .object({
+    key: z.string(),
+    category: matchCategorySchema.optional(),
+    matchCategory: matchCategorySchema.optional(),
+    matchMode: z.enum(['distance', 'distance_and_name', 'name']).optional(),
+    officialId: z.string().nullable(),
+    officialName: z.string().nullable(),
+    officialProperties: z.record(z.string(), z.unknown()).nullable().optional(),
+    osmId: z.string().nullable(),
+    osmType: z.enum(['way', 'relation', 'node']).nullable(),
+    /** OSM geometry centroid; Abstand bezieht sich auf diesen Punkt. */
+    osmCentroidLon: z.number().nullable().optional(),
+    osmCentroidLat: z.number().nullable().optional(),
+    distanceMeters: z.number().nullable(),
+    osmName: z.string().nullable(),
+    osmTags: z.record(z.string(), z.string()).nullable().optional(),
+    ambiguousOfficialIds: z.array(z.string()).optional(),
+    /** Amtliche Stammdaten der Kandidaten zum Match-Zeitpunkt (für Detailseite ohne Bundesland-GeoJSON). */
+    ambiguousOfficialSnapshots: z.array(ambiguousOfficialSnapshotSchema).optional(),
+    matchedByOsmNameNormalized: z.string().optional(),
+    matchedByOsmNameTag: z.enum(OSM_SCHOOL_NAME_TAGS_IN_ORDER).optional(),
+    pipelineLand: z.string().optional(),
+  })
+  .superRefine((row, ctx) => {
+    if (!row.category && !row.matchCategory) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['matchCategory'],
+        message: 'Either "matchCategory" or "category" is required.',
+      })
+    }
+  })
+  .transform((row) => {
+    const resolved = (row.matchCategory ?? row.category)!
+    return {
+      ...row,
+      category: resolved,
+      matchCategory: resolved,
+    }
+  })
 
 export const schoolsMatchesFileSchema = z.array(schoolsMatchRowSchema)
 

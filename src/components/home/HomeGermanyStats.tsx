@@ -1,8 +1,5 @@
 import { InformationCircleIcon } from '@heroicons/react/20/solid'
-import {
-  CategoryLegendSwatch,
-  OfficialNoCoordLegendSwatch,
-} from '../CategoryLegendSwatch'
+import { CategoryLegendSwatch, OfficialNoCoordLegendSwatch } from '../CategoryLegendSwatch'
 import { ReadOnlyStatBlock, StatBlocksRow } from '../StatBlocks'
 import { de } from '../../i18n/de'
 import { formatDeInteger } from '../../lib/formatNumber'
