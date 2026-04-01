@@ -1,8 +1,10 @@
-import { DocumentTextIcon } from '@heroicons/react/20/solid'
+import { ScaleIcon } from '@heroicons/react/20/solid'
+import { format, isValid, parseISO } from 'date-fns'
+import { de as deLocale } from 'date-fns/locale/de'
 import { de } from '../../i18n/de'
 import {
   BUNDESLAND_OFFICIAL_SOURCES,
-  type OsmLicenseCompatibility,
+  licenceTableRowHash,
 } from '../../lib/bundeslandOfficialSources'
 import {
   BUNDESLAND_OFFICIAL_SOURCES_FILE,
@@ -11,19 +13,13 @@ import {
 } from '../../lib/githubRepo'
 import { STATE_LABEL_DE, STATE_ORDER } from '../../lib/stateConfig'
 
-function OsmCompatibleBadge({ value }: { value: OsmLicenseCompatibility }) {
-  const label = de.home.officialSources.osmCompatibleLabel[value]
-  const tone =
-    value === 'unknown'
-      ? 'bg-zinc-700/80 text-zinc-200'
-      : value === 'no'
-        ? 'bg-rose-900/50 text-rose-100'
-        : 'bg-emerald-900/40 text-emerald-100'
-  return (
-    <span className={`inline-block rounded px-1.5 py-0.5 text-xs font-medium ${tone}`}>
-      {label}
-    </span>
-  )
+const OSM_COMPAT_LEGEND_BASE_ORDER = ['unknown', 'no'] as const
+
+/** `YYYY-MM-DD` → `d.m.yyyy` (German locale, no leading zeros on day/month). */
+function formatOfficialSourceCheckedDate(isoDate: string): string {
+  const parsed = parseISO(isoDate.trim())
+  if (!isValid(parsed)) return isoDate
+  return format(parsed, 'd.M.yyyy', { locale: deLocale })
 }
 
 export function HomeOfficialSourcesSection() {
@@ -37,7 +33,7 @@ export function HomeOfficialSourcesSection() {
       aria-labelledby="official-sources-heading"
     >
       <div className="mb-4 flex flex-wrap items-start gap-3">
-        <DocumentTextIcon className="mt-0.5 size-6 shrink-0 text-emerald-400/90" aria-hidden />
+        <ScaleIcon className="mt-0.5 size-6 shrink-0 text-emerald-400/90" aria-hidden />
         <div className="min-w-0 flex-1">
           <h2 id="official-sources-heading" className="text-lg font-semibold text-zinc-100">
             {t.heading}
@@ -70,16 +66,16 @@ export function HomeOfficialSourcesSection() {
         <table className="min-w-full border-collapse text-left text-sm text-zinc-300">
           <thead>
             <tr className="border-b border-zinc-700 bg-zinc-900/80 text-xs font-semibold uppercase tracking-wide text-zinc-400">
-              <th scope="col" className="px-3 py-2.5">
+              <th scope="col" className="px-3 py-2.5 align-top">
                 {t.colLand}
               </th>
-              <th scope="col" className="px-3 py-2.5">
+              <th scope="col" className="px-3 py-2.5 align-top">
                 {t.colOfficialLicense}
               </th>
-              <th scope="col" className="px-3 py-2.5">
+              <th scope="col" className="px-3 py-2.5 align-top">
                 {t.colOsmCompatible}
               </th>
-              <th scope="col" className="px-3 py-2.5">
+              <th scope="col" className="px-3 py-2.5 align-top">
                 {t.colChecked}
               </th>
             </tr>
@@ -91,21 +87,26 @@ export function HomeOfficialSourcesSection() {
               return (
                 <tr
                   key={code}
-                  className="border-b border-zinc-800/90 odd:bg-zinc-950/30 hover:bg-zinc-800/20"
+                  id={licenceTableRowHash(code)}
+                  className="scroll-mt-4 border-b border-zinc-800/90 odd:bg-zinc-950/30 [&:target>*]:bg-emerald-500/15 [&:target>*]:ring-1 [&:target>*]:ring-inset [&:target>*]:ring-emerald-500/35"
                 >
                   <th
                     scope="row"
-                    title={name}
-                    className="whitespace-nowrap px-3 py-2 font-medium text-zinc-200"
+                    title={`${code} — ${name}`}
+                    className="px-3 py-2 align-top font-medium text-zinc-200"
                   >
-                    <span className="text-zinc-500">{code}</span>{' '}
-                    <span className="sr-only">{name}</span>
-                    <span className="hidden sm:inline">{name}</span>
+                    {name}
                   </th>
-                  <td className="max-w-[14rem] px-3 py-2 align-top">
+                  <td className="px-3 py-2 align-top">
                     <div className="flex flex-col gap-1">
                       <div>
-                        <span className="break-words text-zinc-300">
+                        <span
+                          className={
+                            row.officialLicense === 'unknown'
+                              ? 'text-orange-300/55'
+                              : 'text-zinc-300'
+                          }
+                        >
                           {row.officialLicense === 'unknown'
                             ? t.unknownLicense
                             : row.officialLicense}
@@ -126,9 +127,15 @@ export function HomeOfficialSourcesSection() {
                       </a>
                     </div>
                   </td>
-                  <td className="max-w-[11rem] px-3 py-2 align-top">
+                  <td className="px-3 py-2 align-top">
                     <div className="flex flex-col gap-1">
-                      <OsmCompatibleBadge value={row.osmCompatible} />
+                      <span
+                        className={
+                          row.osmCompatible === 'unknown' ? 'text-orange-300/55' : 'text-zinc-300'
+                        }
+                      >
+                        {t.osmCompatibleLabel[row.osmCompatible]}
+                      </span>
                       {row.osmCompatibilityRefUrl ? (
                         <a
                           href={row.osmCompatibilityRefUrl}
@@ -141,29 +148,45 @@ export function HomeOfficialSourcesSection() {
                       ) : null}
                     </div>
                   </td>
-                  <td className="max-w-[9rem] px-3 py-2 align-top text-xs leading-snug text-zinc-500">
-                    {row.lastCheckedAt && row.lastCheckedByGithub ? (
-                      <div className="flex flex-col gap-0.5">
-                        <span className="break-words">
-                          {t.checkedDateLine.replace('{date}', row.lastCheckedAt)}
-                        </span>
-                        <span className="break-all">
-                          {t.checkedGithubLine.replace('{user}', row.lastCheckedByGithub)}
-                        </span>
-                      </div>
-                    ) : row.lastCheckedAt ? (
-                      <span className="break-words">
-                        {t.checkedDateOnly.replace('{date}', row.lastCheckedAt)}
-                      </span>
-                    ) : (
-                      '—'
-                    )}
+                  <td
+                    className="px-3 py-2 align-top text-xs leading-snug text-zinc-500"
+                    {...(row.lastCheckedByGithub
+                      ? { 'data-checked-by': row.lastCheckedByGithub }
+                      : {})}
+                  >
+                    {row.lastCheckedAt ? formatOfficialSourceCheckedDate(row.lastCheckedAt) : '—'}
                   </td>
                 </tr>
               )
             })}
           </tbody>
         </table>
+      </div>
+
+      <div className="mt-5 border-t border-zinc-700/60 pt-5">
+        <h3
+          id="official-sources-osm-legend-heading"
+          className="text-sm font-semibold text-zinc-200"
+        >
+          {t.osmCompatLegendHeading}
+        </h3>
+        <ul
+          className="mt-2 list-disc space-y-2 pl-5 text-sm leading-relaxed text-zinc-400"
+          aria-labelledby="official-sources-osm-legend-heading"
+        >
+          {OSM_COMPAT_LEGEND_BASE_ORDER.map((key) => (
+            <li key={key}>
+              <span className="font-medium text-zinc-300">{t.osmCompatibleLabel[key]}</span>
+              {' \u2013 '}
+              {t.osmCompatLegendText[key]}
+            </li>
+          ))}
+          <li>
+            <span className="font-medium text-zinc-300">{t.osmCompatibleLabel.yes_licence}</span>
+            {' \u2013 '}
+            {t.osmCompatLegendText.yesLicenceOrWaiver}
+          </li>
+        </ul>
       </div>
     </section>
   )

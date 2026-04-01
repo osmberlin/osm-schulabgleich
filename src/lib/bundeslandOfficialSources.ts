@@ -90,3 +90,8 @@ for (const code of STATE_ORDER) {
     throw new Error(`Missing BUNDESLAND_OFFICIAL_SOURCES entry for ${code}`)
   }
 }
+
+/** Fragment for homepage licence table row (e.g. `licence-bw` → URL `#licence-bw`). No leading `#`. */
+export function licenceTableRowHash(code: LandCode): string {
+  return `licence-${code.toLowerCase()}`
+}

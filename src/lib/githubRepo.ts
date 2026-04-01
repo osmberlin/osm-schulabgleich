@@ -1,5 +1,5 @@
 /** Public repo for “edit on GitHub” and issue links (aligned with AppFooter). */
-export const GITHUB_REPO_ROOT = 'https://github.com/tordans/osm-schul-abgleich'
+export const GITHUB_REPO_ROOT = 'https://github.com/osmberlin/osm-schul-abgleich'
 
 export const GITHUB_DEFAULT_BRANCH = 'main'
 

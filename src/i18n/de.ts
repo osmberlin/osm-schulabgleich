@@ -43,7 +43,7 @@ export const de = {
     historyLoading: 'Lade Verlauf…',
     historyError: 'Verlauf konnte nicht geladen werden.',
     officialSources: {
-      heading: 'Amtliche Schuldaten — Quellen und Lizenzen',
+      heading: 'Quellen und Lizenzen der amtlichen Schuldaten',
       lead: 'Die App nutzt die aggregierten Daten von jedeschule.codefor.de, wo amtliche Ursprungsquellen aggregiert und aufbereitet werden. Bitte helft mit und ergänze die Tabelle mit den aktuellen Lizenzen.',
       disclaimer:
         'Die Tabelle wird in Github gepflegt. Du kannst einen Issue erstellen oder die Tabelle direkt auf GitHub bearbeiten.',
@@ -53,18 +53,22 @@ export const de = {
       colOfficialLicense: 'Amtliche Lizenz',
       colOsmCompatible: 'OSM-kompatibel',
       colChecked: 'Zuletzt geprüft',
-      unknownLicense: 'unbekannt',
+      unknownLicense: 'Unbekannt',
       sourceLinkLabel: 'Link',
-      checkedDateLine: 'Zuletzt geprüft am {date}',
-      checkedGithubLine: '@{user}',
-      checkedDateOnly: 'Datum {date}',
       osmCompatibleLabel: {
         unknown: 'Unbekannt',
         no: 'Nein',
-        yes_licence: 'Ja (Lizenz)',
-        yes_waiver: 'Ja (Freigabe)',
+        yes_licence: 'Ja (Lizenz oder Freigabe)',
+        yes_waiver: 'Ja (Lizenz oder Freigabe)',
       },
       osmCompatibilityRefLink: 'Nachweis (OSM-Wiki, PDF)',
+      osmCompatLegendHeading: 'Legende zur OSM-Kompatibilität',
+      osmCompatLegendText: {
+        unknown:
+          'Die Nutzbarkeit der amtlichen Daten für OpenStreetMap ist ungeklärt. Dieser Abgleich darf daher nur als Basis für eine eigene Recherche genutzt werden.',
+        no: 'Für diese amtliche Quelle besteht keine Freigabe zur Nutzung in OSM. Dieser Abgleich darf daher nur als Basis für eine eigene Recherche genutzt werden.',
+        yesLicenceOrWaiver: 'Diese Daten dürfen in OSM übernommen werden.',
+      },
     },
   },
   land: {
@@ -121,11 +125,18 @@ export const de = {
     editJosm: 'In JOSM laden',
     jedeschuleApi: 'Auf JedeSchule öffnen (JSON)',
     openOsmBrowse: 'Auf OSM öffnen',
+    licenceCompatibleLinkLabel: 'Datenlizenz: OSM-kompatibel',
+    licenceUnknownLinkSentence: 'Die Lizenz der amtlichen Daten ist unbekannt.',
+    licenceNoLinkBeforeBold: 'Für diese Daten besteht ',
+    licenceNoLinkBoldKeine: 'keine',
+    licenceNoLinkAfterBold: ' Freigabe zur Nutzung in OSM.',
+    licenceResearchOnlyDisclaimer:
+      'Dieser Abgleich darf daher nur als Basis für eine eigene Recherche genutzt werden.',
     abstand: 'Abstand',
     officialCoordsMissing: 'Koordinaten fehlen',
     ambiguousAlertTitle: 'Uneindeutig',
     ambiguousIntro:
-      'Mehrere amtliche Schuldatensätze kommen als Treffer für dieses OSM-Objekt infrage. Prüfe und korrigiere bei Bedarf nur die OSM-Daten: `name`, `official_name` und `amenity=school`.',
+      'Mehrere amtliche Schuldatensätze kommen als Treffer für dieses OSM-Objekt infrage. Prüfe und korrigiere bei Bedarf die Daten in OSM.',
     ambiguousNameNoGeoAlertTitle: 'Uneindeutig (Namensabgleich ohne Koordinaten)',
     ambiguousNameNoGeoAlertText:
       'Diese Uneindeutigkeit kommt aus einem reinen Namensabgleich mit amtlichen Datensätzen ohne Koordinaten. Nutze die Kandidatenliste unten und passe bei Bedarf nur OSM-Attribute an.',
@@ -195,7 +206,7 @@ export const de = {
     osmLinkLabel: 'OpenStreetMap Mitwirkende',
     osmLinkHref: 'https://www.openstreetmap.org/copyright',
     githubLabel: 'Quellcode auf GitHub',
-    githubHref: 'https://github.com/tordans/osm-schul-abgleich',
+    githubHref: 'https://github.com/osmberlin/osm-schul-abgleich',
     /** OpenFreeMap first; OSM / JedeSchule only on geo line above. */
     openSourceThanks: [
       {

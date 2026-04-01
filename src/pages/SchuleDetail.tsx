@@ -10,6 +10,11 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import MapGL, { Layer, type MapLayerMouseEvent, type MapRef, Source } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { Feature, FeatureCollection, MultiPolygon, Polygon } from 'geojson'
+import {
+  getSchuleDetailLicenceInfo,
+  SchuleDetailLicenceCompatibleInline,
+  SchuleDetailLicenceWarnings,
+} from '../components/schule/SchuleDetailLicence'
 import { de } from '../i18n/de'
 import { detailMapConnectorLines } from '../lib/detailMapConnectorLines'
 import { buildIdUrl, buildJosmLoadObject, buildOsmBrowseUrl } from '../lib/editorLinks'
@@ -852,6 +857,8 @@ export function SchuleDetail() {
       ? `https://jedeschule.codefor.de/schools/${encodeURIComponent(row.officialId)}`
       : null
 
+  const { officialLicenceRow, licenceHash, osmLicenceCompatible } = getSchuleDetailLicenceInfo(code)
+
   return (
     <div>
       {detailMapFc && detailMapFc.features.length > 0 && (
@@ -1155,7 +1162,7 @@ export function SchuleDetail() {
             {de.detail.editJosm}
           </a>
         )}
-        {(jedeschuleItem || osmBrowseUrl) && (
+        {(jedeschuleItem || osmBrowseUrl || osmLicenceCompatible) && (
           <span className="inline-flex flex-wrap items-center gap-x-1.5 text-sm text-emerald-300">
             {jedeschuleItem && (
               <a href={jedeschuleItem} target="_blank" rel="noreferrer" className="underline">
@@ -1168,9 +1175,20 @@ export function SchuleDetail() {
                 {de.detail.openOsmBrowse}
               </a>
             )}
+            <SchuleDetailLicenceCompatibleInline
+              osmLicenceCompatible={osmLicenceCompatible}
+              showLeadingSeparator={!!(osmLicenceCompatible && (jedeschuleItem || osmBrowseUrl))}
+              licenceHash={licenceHash}
+            />
           </span>
         )}
       </div>
+
+      <SchuleDetailLicenceWarnings
+        officialLicenceRow={officialLicenceRow}
+        licenceHash={licenceHash}
+        osmLicenceCompatible={osmLicenceCompatible}
+      />
 
       {row.category === 'matched' && (
         <p className="mb-6 text-sm leading-relaxed text-zinc-400">
@@ -1230,10 +1248,10 @@ export function SchuleDetail() {
 
       {ambiguousCandidates.length > 0 ? (
         <div className="space-y-6">
-          <h2 className="flex flex-row flex-wrap items-baseline gap-x-2 text-base font-semibold text-zinc-100">
+          <h2 className="flex flex-row flex-wrap items-center gap-x-2 text-base font-semibold text-zinc-100">
             <span>{de.detail.ambiguousOfficialHeading}</span>
-            <span className="font-semibold tabular-nums text-zinc-400">
-              ({formatDeInteger(ambiguousCandidates.length)})
+            <span className="inline-flex shrink-0 items-center rounded-full border border-zinc-300/90 bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-zinc-700">
+              {formatDeInteger(ambiguousCandidates.length)}
             </span>
           </h2>
           {ambiguousCandidates.map((c, idx) => {

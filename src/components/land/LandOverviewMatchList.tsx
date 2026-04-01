@@ -33,10 +33,10 @@ export function LandOverviewMatchList({
 }) {
   return (
     <>
-      <h2 className="mt-10 mb-2 flex flex-row flex-wrap items-baseline gap-x-2 text-lg font-semibold text-zinc-100">
+      <h2 className="mt-10 mb-2 flex flex-row flex-wrap items-center gap-x-2 text-lg font-semibold text-zinc-100">
         <span>{de.land.table}</span>
-        <span className="font-semibold tabular-nums text-zinc-400">
-          ({formatDeInteger(listMatches.length)})
+        <span className="inline-flex shrink-0 items-center rounded-full border border-zinc-300/90 bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-zinc-700">
+          {formatDeInteger(listMatches.length)}
         </span>
       </h2>
       <div className="overflow-hidden border-y border-zinc-700 bg-zinc-900/40 shadow-none outline outline-zinc-100/10 max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 sm:rounded-lg sm:border sm:border-zinc-700">
