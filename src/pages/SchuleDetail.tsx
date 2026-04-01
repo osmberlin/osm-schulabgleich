@@ -534,7 +534,7 @@ export function SchuleDetail() {
     return ring
   }, [mapOsmCentroid])
 
-  /** Bundeslandfläche abzüglich Kreis — nur für Abdunklung (nicht in fitBounds). */
+  /** Bundeslandfläche abzüglich Kreis — Abdunklung außerhalb des Vergleichsradius (Innen unverdeckt). */
   const maskShellFeature = useMemo((): Feature | null => {
     if (!q.data?.boundary || !compareRadiusRing) return null
     const b = q.data.boundary
@@ -649,18 +649,11 @@ export function SchuleDetail() {
   const detailMapFc = useMemo((): FeatureCollection | null => {
     if (!detailFc) return null
     const features: Feature[] = [...detailFc.features]
-    if (compareRadiusRing) features.push(compareRadiusRing)
     if (maskShellFeature) features.push(maskShellFeature)
     features.push(...connectorLineFeatures)
     features.push(...hoverRelationLineFeatures)
     return { type: 'FeatureCollection', features }
-  }, [
-    compareRadiusRing,
-    connectorLineFeatures,
-    detailFc,
-    hoverRelationLineFeatures,
-    maskShellFeature,
-  ])
+  }, [connectorLineFeatures, detailFc, hoverRelationLineFeatures, maskShellFeature])
 
   /** fitBounds ohne Bundesland-Maske (sonst zu weit herausgezoomt). */
   const detailMapBoundsSourceFc = useMemo((): FeatureCollection | null => {
@@ -671,7 +664,7 @@ export function SchuleDetail() {
     return { type: 'FeatureCollection', features }
   }, [compareRadiusRing, connectorLineFeatures, detailFc])
 
-  /** Bbox of the official point + OSM feature + Vergleichsradius on the map. */
+  /** Bbox of the official point + OSM feature + Abgleichsradius (unsichtbar, nur für Zoom). */
   const bounds = useMemo(() => {
     if (!detailMapBoundsSourceFc || detailMapBoundsSourceFc.features.length === 0) return null
     try {
@@ -906,7 +899,6 @@ export function SchuleDetail() {
                   filter={[
                     'all',
                     ['in', ['geometry-type'], ['literal', ['Polygon', 'MultiPolygon']]],
-                    ['!=', ['get', '_mapDetail'], 'compareRadius'],
                     ['!=', ['get', '_mapDetail'], 'maskShell'],
                   ]}
                   paint={{
@@ -920,30 +912,9 @@ export function SchuleDetail() {
                   filter={[
                     'all',
                     ['in', ['geometry-type'], ['literal', ['Polygon', 'MultiPolygon']]],
-                    ['!=', ['get', '_mapDetail'], 'compareRadius'],
                     ['!=', ['get', '_mapDetail'], 'maskShell'],
                   ]}
                   paint={{ 'line-color': DETAIL_MAP_OSM.polygonOutlineHex, 'line-width': 2 }}
-                />
-                <Layer
-                  id="compare-radius-halo"
-                  type="line"
-                  filter={['==', ['get', '_mapDetail'], 'compareRadius']}
-                  paint={{
-                    'line-color': '#ffffff',
-                    'line-width': 5,
-                    'line-opacity': 1,
-                  }}
-                />
-                <Layer
-                  id="compare-radius-dash"
-                  type="line"
-                  filter={['==', ['get', '_mapDetail'], 'compareRadius']}
-                  paint={{
-                    'line-color': '#000000',
-                    'line-width': 2,
-                    'line-dasharray': [1.5, 2.5],
-                  }}
                 />
                 {connectorLineFeatures.length > 0 ? (
                   <Layer
@@ -1088,56 +1059,25 @@ export function SchuleDetail() {
                 {de.detail.mapLegendOfficial}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className={DETAIL_MAP_OSM.twPolygonSwatch} aria-hidden />
-                {de.detail.mapLegendOsmArea}
-              </span>
-              {mapOsmCentroid != null && (
-                <span className="inline-flex items-center gap-1.5">
+                {mapOsmCentroid != null && (
                   <span className={DETAIL_MAP_LEGEND_POINT_TILE} aria-hidden>
                     <DetailMapLegendPointDot
                       haloClassName="bg-blue-500/45"
                       coreClassName="bg-black"
                     />
                   </span>
-                  {de.detail.mapLegendOsmReference}
+                )}
+                <span className={DETAIL_MAP_LEGEND_POINT_TILE} aria-hidden>
+                  <div
+                    className="box-border size-[14px] shrink-0 rounded-[2px] border-2 border-solid"
+                    style={{
+                      backgroundColor: DETAIL_MAP_OSM.polygonFillRgba,
+                      borderColor: DETAIL_MAP_OSM.polygonOutlineHex,
+                    }}
+                  />
                 </span>
-              )}
-              {compareRadiusRing != null && (
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="inline-block h-3 w-10 shrink-0" aria-hidden>
-                    <svg
-                      width="40"
-                      height="12"
-                      viewBox="0 0 40 12"
-                      className="h-3 w-10"
-                      xmlns="http://www.w3.org/2000/svg"
-                      aria-hidden
-                    >
-                      <title>Vergleichsradius (Linie)</title>
-                      <line
-                        x1="0"
-                        y1="6"
-                        x2="40"
-                        y2="6"
-                        stroke="#ffffff"
-                        strokeWidth="6"
-                        strokeLinecap="round"
-                      />
-                      <line
-                        x1="0"
-                        y1="6"
-                        x2="40"
-                        y2="6"
-                        stroke="#000000"
-                        strokeWidth="1.5"
-                        strokeDasharray="2 3"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </span>
-                  {de.detail.mapLegendCompareRadius.replace('{m}', formatDeInteger(MATCH_RADIUS_M))}
-                </span>
-              )}
+                {de.detail.mapLegendOsmReference}
+              </span>
               {allOtherSchoolPoints.features.length > 0 && (
                 <>
                   <span className="inline-flex items-center gap-1.5">
@@ -1172,12 +1112,12 @@ export function SchuleDetail() {
                 </>
               )}
             </div>
-            <label className="inline-flex shrink-0 items-center gap-1.5">
+            <label className="inline-flex shrink-0 cursor-pointer items-center gap-1.5">
               <span className="relative inline-flex h-5 w-9 shrink-0 items-center">
                 <input
                   type="checkbox"
                   checked={showMapMask}
-                  aria-label={de.detail.mapMask}
+                  aria-label={`${de.detail.mapMask}, ${formatDeInteger(MATCH_RADIUS_M)} m`}
                   className="peer sr-only"
                   onChange={(e) => {
                     void setShowMapMask(e.target.checked)
@@ -1186,7 +1126,10 @@ export function SchuleDetail() {
                 <span className="absolute inset-0 rounded-full bg-brand-950/90 ring-1 ring-inset ring-brand-800/60 transition-colors duration-200 ease-in-out peer-checked:bg-brand-800 peer-checked:ring-brand-500/50 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-emerald-500" />
                 <span className="pointer-events-none absolute top-0.5 left-0.5 size-4 rounded-full bg-brand-50 shadow-sm ring-1 ring-brand-900/35 transition-transform duration-200 ease-in-out peer-checked:translate-x-4" />
               </span>
-              <span className="text-sm leading-snug text-zinc-400">{de.detail.mapMask}</span>
+              <span className="flex flex-col text-xs leading-snug text-zinc-400">
+                <span>{de.detail.mapMask}</span>
+                <span>{formatDeInteger(MATCH_RADIUS_M)}m</span>
+              </span>
             </label>
           </div>
         </div>
