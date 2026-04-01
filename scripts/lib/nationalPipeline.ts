@@ -36,12 +36,7 @@ import {
   statusDir,
   writeJson,
 } from './pipelineCommon'
-import {
-  isRefreshedTodayBerlin,
-  isRefreshedWithinDaysBerlin,
-  JEDESCHULE_DOWNLOAD_FRESHNESS_DAYS,
-  jedeschuleUpstreamDatasetChanged,
-} from './pipelineFreshness'
+import { jedeschuleUpstreamDatasetChanged } from './pipelineFreshness'
 import type { PipelineSourceMeta } from './pipelineMeta'
 
 function envScopedJsonFileName(fileName: string): string {
@@ -332,10 +327,8 @@ export async function runMatchNational(projectRoot: string): Promise<MatchNation
   const officialMeta = await readJsonFile<PipelineSourceMeta>(pathOfficialMeta)
   const osmMeta = await readJsonFile<PipelineSourceMeta>(pathOsmMeta)
 
-  const jedeschuleFresh =
-    officialMeta?.ok === true &&
-    isRefreshedWithinDaysBerlin(officialMeta.generatedAt, JEDESCHULE_DOWNLOAD_FRESHNESS_DAYS)
-  const osmFresh = osmMeta?.ok === true && isRefreshedTodayBerlin(osmMeta.generatedAt)
+  const jedeschuleReady = officialMeta?.ok === true
+  const osmReady = osmMeta?.ok === true
 
   const downloadSnapshot = {
     jedeschule: {
@@ -356,11 +349,12 @@ export async function runMatchNational(projectRoot: string): Promise<MatchNation
   const forceMatch =
     process.env.PIPELINE_FORCE_MATCH === '1' || process.env.PIPELINE_FORCE_MATCH === 'true'
   if (forceMatch) {
-    console.info('[pipeline:match] PIPELINE_FORCE_MATCH: Abgleich ohne heutigen Download')
+    console.info('[pipeline:match] PIPELINE_FORCE_MATCH: Abgleich ohne frische beide Downloads')
   }
 
-  if (!forceMatch && !jedeschuleFresh && !osmFresh) {
-    const reason = `Match übersprungen: weder JedeSchule (erfolgreicher Download innerhalb der letzten ${JEDESCHULE_DOWNLOAD_FRESHNESS_DAYS} Tage, Europe/Berlin) noch OSM (heute, Europe/Berlin).`
+  if (!forceMatch && (!jedeschuleReady || !osmReady)) {
+    const reason =
+      'Match übersprungen: JedeSchule- und OSM-Download müssen beide erfolgreich sein (Meta `ok: true`).'
     console.warn(`[pipeline:match] ${reason}`)
     await setSkipSplit(projectRoot, true)
     const finishedAt = new Date().toISOString()

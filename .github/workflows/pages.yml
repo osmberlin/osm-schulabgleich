@@ -5,8 +5,8 @@ on:
     branches: [main]
   workflow_dispatch:
   schedule:
-    # Sunday ~07:00 CET / ~08:00 CEST (Europe/Berlin), i.e. day after typical jedeschule.codefor.de Saturday CSV drop
-    - cron: '0 6 * * 0'
+    # Daily ~07:00 CET / ~08:00 CEST — JedeSchule-CSV + Overpass neu laden, Abgleich nur bei beiden OK
+    - cron: '0 6 * * *'
 
 permissions:
   contents: write

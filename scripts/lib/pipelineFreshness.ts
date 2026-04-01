@@ -34,7 +34,7 @@ export function isRefreshedWithinDaysBerlin(iso: string | undefined, maxDays: nu
   return diffDays <= maxDays
 }
 
-/** Aligns with Code for Germany’s weekly CSV; freshness gate for JedeSchule downloads. */
+/** Default max-age (days) for `isRefreshedWithinDaysBerlin` (tests); JedeSchule-CSV upstream wöchentlich. */
 export const JEDESCHULE_DOWNLOAD_FRESHNESS_DAYS = 7
 
 export function jedeschuleUpstreamDatasetChanged(
