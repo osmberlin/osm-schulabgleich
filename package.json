@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "prepare": "simple-git-hooks",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
@@ -57,9 +58,13 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "knip": "^6.1.0",
+    "simple-git-hooks": "^2.13.1",
     "tailwindcss": "^4.1.18",
     "typescript": "~6.0.2",
     "vite": "^8.0.0",
     "vitest": "^4.1.2"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "bun run format"
   }
 }
