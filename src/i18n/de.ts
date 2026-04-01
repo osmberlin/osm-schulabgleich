@@ -37,6 +37,8 @@ export const de = {
     historyError: 'Verlauf konnte nicht geladen werden.',
   },
   land: {
+    /** Bundesland-Übersicht — ein Kopfzeilentext statt getrenntem Titel und Code. */
+    overviewTitle: 'Schulabgleich in {name} ({code})',
     back: 'Alle Bundesländer',
     loading: 'Lade Daten…',
     error: 'Fehler beim Laden der Landdaten.',

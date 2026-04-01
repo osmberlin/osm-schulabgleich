@@ -68,7 +68,7 @@ export function LandLayout() {
               schuleRow.officialProperties ?? null,
               schuleRow.osmTags ?? null,
             )}
-            {schuleRow.distanceMeters != null && (
+            {schuleRow.category === 'matched' && schuleRow.distanceMeters != null && (
               <>
                 {' \u00B7 '}
                 {de.detail.abstand}: {formatDeInteger(schuleRow.distanceMeters)} m
@@ -83,10 +83,9 @@ export function LandLayout() {
         </>
       )
     ) : (
-      <>
-        <h1 className="mb-2 text-2xl font-semibold text-zinc-100">{label}</h1>
-        <p className="mb-6 text-sm text-zinc-400">{code}</p>
-      </>
+      <h1 className="mb-6 min-w-0 text-2xl font-semibold text-zinc-100">
+        {de.land.overviewTitle.replace('{name}', label).replace('{code}', code)}
+      </h1>
     )
 
   return (
