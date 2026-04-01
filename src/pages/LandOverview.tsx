@@ -104,6 +104,11 @@ export function LandOverview() {
 
   const matches = dataQ.data?.matches ?? []
 
+  const matchesForCatCounts = useMemo(() => {
+    if (!listBbox) return matches
+    return matches.filter((r) => matchRowInLandMapBbox(r, listBbox))
+  }, [matches, listBbox])
+
   const catCounts = useMemo(() => {
     const z = {
       matched: 0,
@@ -111,11 +116,11 @@ export function LandOverview() {
       osm_only: 0,
       match_ambiguous: 0,
     }
-    for (const r of matches) {
+    for (const r of matchesForCatCounts) {
       z[r.category]++
     }
     return z
-  }, [matches])
+  }, [matchesForCatCounts])
 
   const visibleMatches = useMemo(
     () => matches.filter((r) => enabledSet.has(r.category)),
