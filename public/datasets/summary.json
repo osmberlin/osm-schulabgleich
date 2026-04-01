@@ -1,71 +1,83 @@
 {
-  "generatedAt": "2026-03-31T20:35:05.415Z",
+  "generatedAt": "2026-04-01T03:31:08.582Z",
   "pipelineVersion": 1,
   "jedeschuleCsvSource": "schools_official_de.geojson",
   "lands": [
     {
       "code": "BW",
-      "osmSource": "missing",
+      "osmSource": "live",
+      "osmSnapshotAt": "2026-04-01T03:24:43Z",
+      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
       "counts": {
-        "matched": 2461,
-        "official_only": 11226,
-        "osm_only": 1136,
-        "ambiguous": 1663,
-        "official_no_coord": 620
+        "matched": 2524,
+        "official_only": 11246,
+        "osm_only": 1123,
+        "ambiguous": 1614,
+        "official_no_coord": 621
       },
       "jedeschuleLastUpdated": "2026-03-28"
     },
     {
       "code": "BY",
-      "osmSource": "missing",
+      "osmSource": "live",
+      "osmSnapshotAt": "2026-04-01T03:24:43Z",
+      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
       "counts": {
-        "matched": 2125,
-        "official_only": 261,
-        "osm_only": 2061,
-        "ambiguous": 1509,
+        "matched": 2149,
+        "official_only": 262,
+        "osm_only": 2038,
+        "ambiguous": 1508,
         "official_no_coord": 0
       },
       "jedeschuleLastUpdated": "2026-03-28"
     },
     {
       "code": "BE",
-      "osmSource": "missing",
+      "osmSource": "live",
+      "osmSnapshotAt": "2026-04-01T03:24:43Z",
+      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
       "counts": {
-        "matched": 732,
-        "official_only": 128,
-        "osm_only": 268,
-        "ambiguous": 66,
+        "matched": 734,
+        "official_only": 129,
+        "osm_only": 263,
+        "ambiguous": 69,
         "official_no_coord": 1
       },
       "jedeschuleLastUpdated": "2026-03-28"
     },
     {
       "code": "BB",
-      "osmSource": "missing",
+      "osmSource": "live",
+      "osmSnapshotAt": "2026-04-01T03:24:43Z",
+      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
       "counts": {
-        "matched": 679,
+        "matched": 682,
         "official_only": 104,
         "osm_only": 258,
-        "ambiguous": 129,
+        "ambiguous": 126,
         "official_no_coord": 6
       },
       "jedeschuleLastUpdated": "2026-03-28"
     },
     {
       "code": "HB",
-      "osmSource": "missing",
+      "osmSource": "live",
+      "osmSnapshotAt": "2026-04-01T03:24:43Z",
+      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
       "counts": {
-        "matched": 102,
+        "matched": 108,
         "official_only": 0,
-        "osm_only": 150,
+        "osm_only": 144,
         "ambiguous": 0,
-        "official_no_coord": 105
+        "official_no_coord": 99
       },
       "jedeschuleLastUpdated": "2026-02-14"
     },
     {
       "code": "HH",
-      "osmSource": "missing",
+      "osmSource": "live",
+      "osmSnapshotAt": "2026-04-01T03:24:43Z",
+      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
       "counts": {
         "matched": 406,
         "official_only": 68,
@@ -77,120 +89,140 @@
     },
     {
       "code": "HE",
-      "osmSource": "missing",
+      "osmSource": "live",
+      "osmSnapshotAt": "2026-04-01T03:24:43Z",
+      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
       "counts": {
-        "matched": 1440,
-        "official_only": 347,
-        "osm_only": 874,
-        "ambiguous": 110,
+        "matched": 1454,
+        "official_only": 349,
+        "osm_only": 882,
+        "ambiguous": 88,
         "official_no_coord": 189
       },
       "jedeschuleLastUpdated": "2026-03-28"
     },
     {
       "code": "MV",
-      "osmSource": "missing",
+      "osmSource": "live",
+      "osmSnapshotAt": "2026-04-01T03:24:43Z",
+      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
       "counts": {
-        "matched": 381,
+        "matched": 395,
         "official_only": 69,
-        "osm_only": 216,
-        "ambiguous": 105,
+        "osm_only": 213,
+        "ambiguous": 94,
         "official_no_coord": 2
       },
       "jedeschuleLastUpdated": "2026-03-28"
     },
     {
       "code": "NI",
-      "osmSource": "missing",
+      "osmSource": "live",
+      "osmSnapshotAt": "2026-04-01T03:24:43Z",
+      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
       "counts": {
-        "matched": 1085,
+        "matched": 1090,
         "official_only": 0,
-        "osm_only": 2837,
+        "osm_only": 2833,
         "ambiguous": 14,
-        "official_no_coord": 2043
+        "official_no_coord": 2038
       },
       "jedeschuleLastUpdated": "2026-03-28"
     },
     {
       "code": "NW",
-      "osmSource": "missing",
+      "osmSource": "live",
+      "osmSnapshotAt": "2026-04-01T03:24:43Z",
+      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
       "counts": {
-        "matched": 3860,
+        "matched": 3795,
         "official_only": 455,
-        "osm_only": 2278,
-        "ambiguous": 1309,
+        "osm_only": 2249,
+        "ambiguous": 1402,
         "official_no_coord": 0
       },
       "jedeschuleLastUpdated": "2026-03-28"
     },
     {
       "code": "RP",
-      "osmSource": "missing",
+      "osmSource": "live",
+      "osmSnapshotAt": "2026-04-01T03:24:43Z",
+      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
       "counts": {
-        "matched": 852,
-        "official_only": 522,
+        "matched": 841,
+        "official_only": 524,
         "osm_only": 667,
-        "ambiguous": 223,
+        "ambiguous": 235,
         "official_no_coord": 0
       },
       "jedeschuleLastUpdated": "2026-03-28"
     },
     {
       "code": "SL",
-      "osmSource": "missing",
+      "osmSource": "live",
+      "osmSnapshotAt": "2026-04-01T03:24:43Z",
+      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
       "counts": {
-        "matched": 273,
+        "matched": 271,
         "official_only": 38,
         "osm_only": 90,
-        "ambiguous": 51,
+        "ambiguous": 53,
         "official_no_coord": 354
       },
       "jedeschuleLastUpdated": "2026-03-28"
     },
     {
       "code": "SN",
-      "osmSource": "missing",
+      "osmSource": "live",
+      "osmSnapshotAt": "2026-04-01T03:24:43Z",
+      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
       "counts": {
-        "matched": 1154,
+        "matched": 1168,
         "official_only": 285,
-        "osm_only": 398,
-        "ambiguous": 407,
+        "osm_only": 402,
+        "ambiguous": 387,
         "official_no_coord": 2
       },
       "jedeschuleLastUpdated": "2026-03-28"
     },
     {
       "code": "ST",
-      "osmSource": "missing",
+      "osmSource": "live",
+      "osmSnapshotAt": "2026-04-01T03:24:43Z",
+      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
       "counts": {
-        "matched": 613,
+        "matched": 622,
         "official_only": 93,
-        "osm_only": 307,
-        "ambiguous": 171,
+        "osm_only": 304,
+        "ambiguous": 165,
         "official_no_coord": 899
       },
       "jedeschuleLastUpdated": "2026-03-28"
     },
     {
       "code": "SH",
-      "osmSource": "missing",
+      "osmSource": "live",
+      "osmSnapshotAt": "2026-04-01T03:24:43Z",
+      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
       "counts": {
-        "matched": 702,
+        "matched": 709,
         "official_only": 150,
-        "osm_only": 265,
-        "ambiguous": 178,
+        "osm_only": 264,
+        "ambiguous": 172,
         "official_no_coord": 978
       },
       "jedeschuleLastUpdated": "2026-03-28"
     },
     {
       "code": "TH",
-      "osmSource": "missing",
+      "osmSource": "live",
+      "osmSnapshotAt": "2026-04-01T03:24:43Z",
+      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
       "counts": {
-        "matched": 609,
-        "official_only": 118,
-        "osm_only": 458,
-        "ambiguous": 232,
+        "matched": 602,
+        "official_only": 119,
+        "osm_only": 454,
+        "ambiguous": 243,
         "official_no_coord": 105
       },
       "jedeschuleLastUpdated": "2026-03-28"

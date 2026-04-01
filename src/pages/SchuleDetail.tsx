@@ -17,11 +17,10 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import type { Feature, FeatureCollection } from 'geojson'
 import { CategoryLegendSwatch } from '../components/CategoryLegendSwatch'
 import { de } from '../i18n/de'
-import { boundsToBboxParam } from '../lib/mapBounds'
 import { buildIdUrl, buildJosmLoadObject, buildOsmBrowseUrl } from '../lib/editorLinks'
 import { fetchLandSchoolsBundle } from '../lib/fetchLandSchoolsBundle'
 import { formatDeInteger } from '../lib/formatNumber'
-import { miniMarkdownNodes } from '../lib/miniMarkdown'
+import { boundsToBboxParam } from '../lib/mapBounds'
 import {
   DETAIL_MAP_OFFICIAL,
   DETAIL_MAP_OSM,
@@ -29,6 +28,7 @@ import {
   paintMatchCatHalo,
 } from '../lib/matchCategoryTheme'
 import { MATCH_RADIUS_KM, MATCH_RADIUS_M } from '../lib/matchRadius'
+import { miniMarkdownNodes } from '../lib/miniMarkdown'
 import {
   applyFlatMapRotationLocks,
   flatMapGlProps,
@@ -36,7 +36,7 @@ import {
 } from '../lib/openFreeMapStyle'
 import { findOsmFeature } from '../lib/osmFeatureLookup'
 import { osmGeometryCentroidLonLat } from '../lib/osmGeometryCentroid'
-import { comparePropertySections } from '../lib/propertyCompare'
+import { comparePropertySections, normalizeAddressCompareString } from '../lib/propertyCompare'
 import { useDetailShowOtherData } from '../lib/useDetailShowOtherData'
 import type { LandMapBbox } from '../lib/useLandMapBbox'
 import { parseJedeschuleLonLatFromRecord, parseMatchRowOsmCentroidLonLat } from '../lib/zodGeo'
@@ -96,7 +96,7 @@ function MatchCompareBody({
   osmTypeForHeader: 'way' | 'relation' | 'node' | null
   osmIdForHeader: string | null
 }) {
-  const { both, onlyO, onlyS } = comparePropertySections(official, osm)
+  const { both, onlyO, onlyS, compareGroups } = comparePropertySections(official, osm)
   const bothRows = [...both]
     .filter(([k]) => k !== 'id')
     .sort(([a], [b]) => {
@@ -106,8 +106,11 @@ function MatchCompareBody({
       if (!aName && bName) return 1
       return a.localeCompare(b, 'de')
     })
+  const nameRows = bothRows.filter(([k]) => k === 'name')
+  const nonNameBothRows = bothRows.filter(([k]) => k !== 'name')
   const osmRefLabel =
     osmTypeForHeader && osmIdForHeader ? `${osmTypeForHeader}/${osmIdForHeader}` : null
+  const hasCommonRows = bothRows.length > 0 || compareGroups.length > 0
 
   return (
     <div className="space-y-10">
@@ -162,11 +165,88 @@ function MatchCompareBody({
               ) : null}
             </div>
           </div>
-          {bothRows.length === 0 ? (
+          {!hasCommonRows ? (
             <p className="p-2 text-sm text-zinc-400 sm:p-3">—</p>
           ) : (
             <div className="divide-y divide-zinc-800">
-              {bothRows.map(([k, o, s]) => (
+              {nameRows.map(([k, o, s]) => (
+                <div key={k} className="grid gap-3 p-2 md:grid-cols-2 md:gap-0 md:p-0">
+                  <div className="space-y-1 md:border-r md:border-zinc-800 md:bg-amber-950/15 md:p-3">
+                    <p className="text-[0.65rem] font-medium uppercase tracking-wide text-amber-200 md:hidden">
+                      {de.detail.official}
+                    </p>
+                    <dl className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
+                      <dt className="shrink-0 font-mono text-xs leading-normal text-amber-200">
+                        {k}
+                      </dt>
+                      <dd className="min-w-0 text-sm leading-normal text-zinc-200">{o}</dd>
+                    </dl>
+                  </div>
+                  <div className="space-y-1 md:bg-blue-950/15 md:p-3">
+                    <p className="text-[0.65rem] font-medium uppercase tracking-wide text-blue-300 md:hidden">
+                      {de.detail.osm}
+                    </p>
+                    <dl className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
+                      <dt className="shrink-0 font-mono text-xs leading-normal text-blue-300">
+                        {k}
+                      </dt>
+                      <dd className="min-w-0 text-sm leading-normal text-zinc-200">{s}</dd>
+                    </dl>
+                  </div>
+                </div>
+              ))}
+              {compareGroups.map((group) => {
+                if (group.kind !== 'address') return null
+                const normalizedOfficial = group.officialValue
+                  ? normalizeAddressCompareString(group.officialValue)
+                  : null
+                const isMatch =
+                  normalizedOfficial != null && group.compareTargets.includes(normalizedOfficial)
+                const rowTone = isMatch
+                  ? 'ring-1 ring-emerald-500/30'
+                  : normalizedOfficial != null && group.compareTargets.length > 0
+                    ? 'ring-1 ring-amber-500/30'
+                    : ''
+                return (
+                  <div
+                    key={`${group.kind}-${group.officialKey}`}
+                    className={`grid gap-3 p-2 md:grid-cols-2 md:gap-0 md:p-0 ${rowTone}`}
+                  >
+                    <div className="space-y-1 md:border-r md:border-zinc-800 md:bg-amber-950/15 md:p-3">
+                      <p className="text-[0.65rem] font-medium uppercase tracking-wide text-amber-200 md:hidden">
+                        {de.detail.official}
+                      </p>
+                      <dl className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
+                        <dt className="shrink-0 font-mono text-xs leading-normal text-amber-200">
+                          {group.officialKey}
+                        </dt>
+                        <dd className="min-w-0 text-sm leading-normal text-zinc-200">
+                          {group.officialValue ?? '—'}
+                        </dd>
+                      </dl>
+                    </div>
+                    <div className="space-y-1 md:bg-blue-950/15 md:p-3">
+                      <p className="text-[0.65rem] font-medium uppercase tracking-wide text-blue-300 md:hidden">
+                        {de.detail.osm}
+                      </p>
+                      {group.osmKeys.map((k) => (
+                        <dl
+                          key={`${group.kind}-${k}`}
+                          className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2"
+                        >
+                          <dt className="shrink-0 font-mono text-xs leading-normal text-blue-300">
+                            {k}
+                          </dt>
+                          <dd className="min-w-0 text-sm leading-normal text-zinc-200">
+                            {group.osmValues[k] ?? '—'}
+                          </dd>
+                        </dl>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+              {nonNameBothRows.map(([k, o, s]) => (
                 <div key={k} className="grid gap-3 p-2 md:grid-cols-2 md:gap-0 md:p-0">
                   <div className="space-y-1 md:border-r md:border-zinc-800 md:bg-amber-950/15 md:p-3">
                     <p className="text-[0.65rem] font-medium uppercase tracking-wide text-amber-200 md:hidden">
@@ -263,12 +343,7 @@ export function SchuleDetail() {
   }, [q.data, row])
 
   const ambiguousCandidates = useMemo(() => {
-    if (
-      !q.data ||
-      !row ||
-      !row.ambiguousOfficialIds?.length ||
-      row.category !== 'match_ambiguous'
-    ) {
+    if (!q.data || !row?.ambiguousOfficialIds?.length || row.category !== 'match_ambiguous') {
       return []
     }
     const snapById = new Map((row.ambiguousOfficialSnapshots ?? []).map((s) => [s.id, s] as const))

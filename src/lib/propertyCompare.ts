@@ -6,6 +6,28 @@ const COMPARE_KEY_ALIASES: Record<string, string> = {
   zip: 'postcode',
 }
 
+type CompareRowBoth = [string, string, string]
+type CompareRowSingle = [string, string]
+type AddressCompareOsmKey = 'street' | 'housenumber'
+
+export type AddressCompareGroup = {
+  kind: 'address'
+  officialKey: 'address'
+  officialValue: string | null
+  osmKeys: readonly ['street', 'housenumber']
+  osmValues: Record<AddressCompareOsmKey, string | null>
+  compareTargets: string[]
+  consumedKeys: string[]
+}
+
+export type PropertyCompareGroup = AddressCompareGroup
+
+function toComparableString(v: unknown): string | null {
+  if (v == null || typeof v === 'object') return null
+  const s = String(v).trim()
+  return s === '' ? null : s
+}
+
 /**
  * Canonical key for property compare: OSM `contact:email` ↔ official `email`,
  * `addr:city` ↔ official `city`, manual aliases like `zip` ↔ `postcode`, etc.
@@ -21,9 +43,11 @@ function canonicalPropertyKey(key: string): string {
 function flattenOfficialForCompare(o: Record<string, unknown>): Map<string, string> {
   const m = new Map<string, string>()
   for (const [k, v] of Object.entries(o)) {
-    if (v == null || typeof v === 'object') continue
-    const s = String(v)
-    m.set(canonicalPropertyKey(k), s)
+    const c = canonicalPropertyKey(k)
+    if (c.startsWith('_')) continue
+    const s = toComparableString(v)
+    if (s == null) continue
+    m.set(c, s)
   }
   return m
 }
@@ -37,14 +61,17 @@ function flattenOsmTagsForCompare(osm: Record<string, string>): Map<string, stri
   const fromAddr = new Map<string, string>()
   const fromContact = new Map<string, string>()
   for (const [k, v] of Object.entries(osm)) {
-    if (v == null) continue
+    const c = canonicalPropertyKey(k)
+    if (c.startsWith('_')) continue
+    const s = toComparableString(v)
+    if (s == null) continue
     if (k.startsWith('_pipeline')) continue
     if (k.startsWith('contact:')) {
-      fromContact.set(canonicalPropertyKey(k), v)
+      fromContact.set(c, s)
     } else if (k.startsWith('addr:')) {
-      fromAddr.set(canonicalPropertyKey(k), v)
+      fromAddr.set(c, s)
     } else {
-      fromBare.set(canonicalPropertyKey(k), v)
+      fromBare.set(c, s)
     }
   }
   const merged = new Map(fromBare)
@@ -53,26 +80,70 @@ function flattenOsmTagsForCompare(osm: Record<string, string>): Map<string, stri
   return merged
 }
 
+export function normalizeAddressCompareString(s: string): string {
+  return s.trim().replace(/\s+/g, ' ')
+}
+
+export function abbrevGermanStrasseForCompare(s: string): string {
+  return s.replaceAll('Straße', 'Str.').replaceAll('straße', 'str.')
+}
+
+function buildAddressCompareGroup(
+  offMap: Map<string, string>,
+  osmMap: Map<string, string>,
+): AddressCompareGroup | null {
+  const officialValue = offMap.get('address') ?? null
+  const street = osmMap.get('street') ?? null
+  const housenumber = osmMap.get('housenumber') ?? null
+  if (officialValue == null) return null
+
+  const line = normalizeAddressCompareString([street, housenumber].filter(Boolean).join(' '))
+  if (line === '') return null
+  const targets = new Set<string>()
+  targets.add(line)
+  targets.add(normalizeAddressCompareString(abbrevGermanStrasseForCompare(line)))
+  const normalizedOfficial = normalizeAddressCompareString(officialValue)
+  if (![...targets].includes(normalizedOfficial)) return null
+  return {
+    kind: 'address',
+    officialKey: 'address',
+    officialValue,
+    osmKeys: ['street', 'housenumber'],
+    osmValues: { street, housenumber },
+    compareTargets: [...targets],
+    consumedKeys: ['address', 'street', 'housenumber'],
+  }
+}
+
 export function comparePropertySections(
   official: Record<string, unknown> | null | undefined,
   osm: Record<string, string> | null | undefined,
 ): {
-  both: [string, string, string][]
-  onlyO: [string, string][]
-  onlyS: [string, string][]
+  both: CompareRowBoth[]
+  onlyO: CompareRowSingle[]
+  onlyS: CompareRowSingle[]
+  compareGroups: PropertyCompareGroup[]
 } {
   const offMap = flattenOfficialForCompare(official ?? {})
   const osmMap = flattenOsmTagsForCompare(osm ?? {})
+  const compareGroups: PropertyCompareGroup[] = []
+  const consumedKeys = new Set<string>()
+  const addressGroup = buildAddressCompareGroup(offMap, osmMap)
+  if (addressGroup) {
+    compareGroups.push(addressGroup)
+    for (const key of addressGroup.consumedKeys) consumedKeys.add(key)
+  }
   const keys = new Set([...offMap.keys(), ...osmMap.keys()])
-  const both: [string, string, string][] = []
-  const onlyO: [string, string][] = []
-  const onlyS: [string, string][] = []
+  const both: CompareRowBoth[] = []
+  const onlyO: CompareRowSingle[] = []
+  const onlyS: CompareRowSingle[] = []
   for (const k of [...keys].sort((a, b) => a.localeCompare(b, 'de'))) {
+    if (consumedKeys.has(k)) continue
     const os = offMap.get(k) ?? null
     const ss = osmMap.get(k) ?? null
     if (os != null && ss != null) both.push([k, os, ss])
     else if (os != null) onlyO.push([k, os])
     else if (ss != null) onlyS.push([k, ss])
   }
-  return { both, onlyO, onlyS }
+  return { both, onlyO, onlyS, compareGroups }
 }

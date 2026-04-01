@@ -148,7 +148,9 @@ export function StatusPage() {
                 <span
                   className={cn(
                     'inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-xs font-medium sm:ml-auto',
-                    run.overallOk ? 'bg-emerald-900/50 text-emerald-100' : 'bg-red-950/60 text-red-200',
+                    run.overallOk
+                      ? 'bg-emerald-900/50 text-emerald-100'
+                      : 'bg-red-950/60 text-red-200',
                   )}
                 >
                   {run.overallOk ? de.status.okBadgeOk : de.status.okBadgeFail}
