@@ -33,6 +33,7 @@ function RootLayout() {
 
 const rootRoute = createRootRoute({
   component: RootLayout,
+  notFoundComponent: NotFoundPage,
 })
 
 const indexRoute = createRoute({

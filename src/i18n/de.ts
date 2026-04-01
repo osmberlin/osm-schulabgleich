@@ -7,6 +7,13 @@ export const de = {
     navLabel: 'Brotkrumen-Navigation',
     home: 'Startseite',
   },
+  notFound: {
+    badge: 'Seite nicht gefunden',
+    title: 'Hier gibt es nichts zu sehen.',
+    description:
+      'Der aufgerufene Pfad ist im OSM Schulabgleich nicht vorhanden. Gehe zur Startseite, um den aktuellen Datenstand pro Bundesland zu sehen.',
+    homeCta: 'Zur Startseite',
+  },
 
   home: {
     heading: 'OpenStreetMap und offizielle Schuldaten',
