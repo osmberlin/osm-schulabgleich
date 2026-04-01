@@ -19,16 +19,6 @@ body {
   @apply m-0 min-h-screen bg-zinc-950 text-zinc-100;
 }
 
-/* MapLibre Popup: strip default chrome so popup content controls its own colors */
-.schule-detail-map-popup .maplibregl-popup-content {
-  background: transparent;
-  box-shadow: none;
-  padding: 0;
-}
-.schule-detail-map-popup .maplibregl-popup-tip {
-  display: none;
-}
-
 button,
 select,
 input[type="button"],

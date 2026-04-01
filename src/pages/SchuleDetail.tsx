@@ -7,16 +7,11 @@ import difference from '@turf/difference'
 import distance from '@turf/distance'
 import { featureCollection, point } from '@turf/helpers'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import MapGL, {
-  Layer,
-  type MapLayerMouseEvent,
-  type MapRef,
-  Popup,
-  Source,
-} from 'react-map-gl/maplibre'
+import MapGL, { Layer, type MapLayerMouseEvent, type MapRef, Source } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { Feature, FeatureCollection, MultiPolygon, Polygon } from 'geojson'
 import { de } from '../i18n/de'
+import { detailMapConnectorLines } from '../lib/detailMapConnectorLines'
 import { buildIdUrl, buildJosmLoadObject, buildOsmBrowseUrl } from '../lib/editorLinks'
 import { fetchLandSchoolsBundle } from '../lib/fetchLandSchoolsBundle'
 import { formatDeInteger } from '../lib/formatNumber'
@@ -151,6 +146,55 @@ function DetailsOpenByDefault({
     <details ref={ref} id={id} className={className}>
       {children}
     </details>
+  )
+}
+
+const AMBIGUOUS_COMPARE_SUMMARY_LAYOUT =
+  'flex min-w-0 flex-1 flex-col gap-2 md:flex-row md:items-start md:gap-4'
+
+const AMBIGUOUS_COMPARE_META_WRAP =
+  'w-full min-w-0 overflow-x-auto text-sm text-zinc-400 md:w-auto md:shrink-0 md:overflow-visible md:text-right'
+
+const AMBIGUOUS_COMPARE_META_ROW =
+  'inline-flex min-w-max flex-row flex-nowrap items-center gap-x-2 md:ml-auto'
+
+const AMBIGUOUS_COMPARE_META_DOT = 'select-none text-zinc-500'
+
+function AmbiguousCompareSummaryMeta({
+  officialId,
+  summaryMiddle,
+  jedeschuleLabel,
+}: {
+  officialId: string
+  summaryMiddle: React.ReactNode
+  jedeschuleLabel: string
+}) {
+  return (
+    <div className={AMBIGUOUS_COMPARE_META_WRAP}>
+      <div className={AMBIGUOUS_COMPARE_META_ROW}>
+        <span className="whitespace-nowrap font-mono">{officialId}</span>
+        {summaryMiddle != null && (
+          <>
+            <span aria-hidden className={AMBIGUOUS_COMPARE_META_DOT}>
+              {'\u00B7'}
+            </span>
+            {summaryMiddle}
+          </>
+        )}
+        <span aria-hidden className={AMBIGUOUS_COMPARE_META_DOT}>
+          {'\u00B7'}
+        </span>
+        <a
+          href={`https://jedeschule.codefor.de/schools/${encodeURIComponent(officialId)}`}
+          target="_blank"
+          rel="noreferrer"
+          className="whitespace-nowrap text-emerald-300 underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {jedeschuleLabel}
+        </a>
+      </div>
+    </div>
   )
 }
 
@@ -381,6 +425,7 @@ export function SchuleDetail() {
   const keyDecoded = decodeURIComponent(matchKey)
   const { showMapMask, setShowMapMask } = useDetailMapMask()
   const [detailMapBbox, setDetailMapBbox] = useState<LandMapBbox | null>(null)
+  const [hoveredMapLabel, setHoveredMapLabel] = useState<HoveredMapLabel | null>(null)
 
   const q = useQuery({
     queryKey: ['schule-detail', code, keyDecoded],
@@ -509,54 +554,62 @@ export function SchuleDetail() {
   const connectorLineFeatures = useMemo((): Feature[] => {
     if (!mapOsmCentroid || !q.data || !row) return []
     const [fromLon, fromLat] = mapOsmCentroid
-    const seen = new Set<string>()
-    const out: Feature[] = []
+    return detailMapConnectorLines({
+      officialFc: q.data.official as FeatureCollection,
+      matchRow: row,
+      fromLon,
+      fromLat,
+      mapDetail: 'connector',
+    })
+  }, [mapOsmCentroid, q.data, row])
 
-    const add = (id: string, lon: number, lat: number) => {
-      if (seen.has(id)) return
-      seen.add(id)
-      out.push({
-        type: 'Feature',
-        properties: { _mapDetail: 'connector' as const },
-        geometry: {
-          type: 'LineString',
-          coordinates: [
-            [fromLon, fromLat],
-            [lon, lat],
-          ],
-        },
+  const hoverRelationLineFeatures = useMemo((): Feature[] => {
+    if (!q.data || !row || !hoveredMapLabel) return []
+    const officialFc = q.data.official as FeatureCollection
+    if (hoveredMapLabel.kind === 'osm-other') {
+      const match = q.data.matches.find((m) => m.key === hoveredMapLabel.matchKey)
+      if (!match) return []
+      const from = parseMatchRowOsmCentroidLonLat(match)
+      if (!from) return []
+      const [fromLon, fromLat] = from
+      return detailMapConnectorLines({
+        officialFc,
+        matchRow: match,
+        fromLon,
+        fromLat,
+        mapDetail: 'hoverRelation',
       })
     }
-
-    if (row.ambiguousOfficialIds && row.ambiguousOfficialIds.length > 0) {
-      const snapById = new Map(
-        (row.ambiguousOfficialSnapshots ?? []).map((s) => [s.id, s] as const),
-      )
-      for (const oid of row.ambiguousOfficialIds) {
-        const fLocal = findOfficialSchoolFeature(q.data.official, oid)
-        const snap = snapById.get(oid)
-        const props = (fLocal?.properties ?? snap?.properties ?? {}) as Record<string, unknown>
-        const officialLonLat: readonly [number, number] | null =
-          fLocal?.geometry?.type === 'Point'
-            ? ([fLocal.geometry.coordinates[0], fLocal.geometry.coordinates[1]] as const)
-            : parseJedeschuleLonLatFromRecord(props)
-        if (officialLonLat) add(oid, officialLonLat[0], officialLonLat[1])
-      }
-      return out
+    if (hoveredMapLabel.kind === 'osm-reference') {
+      if (!mapOsmCentroid) return []
+      const [fromLon, fromLat] = mapOsmCentroid
+      return detailMapConnectorLines({
+        officialFc,
+        matchRow: row,
+        fromLon,
+        fromLat,
+        mapDetail: 'hoverRelation',
+      })
     }
-
-    if (row.officialId) {
-      const f = findOfficialSchoolFeature(q.data.official, row.officialId)
-      let ll: readonly [number, number] | null = null
-      if (f?.geometry?.type === 'Point') {
-        ll = [f.geometry.coordinates[0], f.geometry.coordinates[1]]
-      } else if (f?.properties) {
-        ll = parseJedeschuleLonLatFromRecord(f.properties as Record<string, unknown>)
-      }
-      if (ll) add(row.officialId, ll[0], ll[1])
+    if (hoveredMapLabel.kind === 'official-current') {
+      if (!mapOsmCentroid) return []
+      const [clon, clat] = mapOsmCentroid
+      return [
+        {
+          type: 'Feature',
+          properties: { _mapDetail: 'hoverRelation' as const },
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [hoveredMapLabel.lon, hoveredMapLabel.lat],
+              [clon, clat],
+            ],
+          },
+        },
+      ]
     }
-    return out
-  }, [mapOsmCentroid, q.data, row])
+    return []
+  }, [hoveredMapLabel, q.data, row, mapOsmCentroid])
 
   const allOtherSchoolPoints = useMemo((): FeatureCollection => {
     const features: Feature[] = []
@@ -597,8 +650,15 @@ export function SchuleDetail() {
     if (compareRadiusRing) features.push(compareRadiusRing)
     if (maskShellFeature) features.push(maskShellFeature)
     features.push(...connectorLineFeatures)
+    features.push(...hoverRelationLineFeatures)
     return { type: 'FeatureCollection', features }
-  }, [compareRadiusRing, connectorLineFeatures, detailFc, maskShellFeature])
+  }, [
+    compareRadiusRing,
+    connectorLineFeatures,
+    detailFc,
+    hoverRelationLineFeatures,
+    maskShellFeature,
+  ])
 
   /** fitBounds ohne Bundesland-Maske (sonst zu weit herausgezoomt). */
   const detailMapBoundsSourceFc = useMemo((): FeatureCollection | null => {
@@ -665,8 +725,6 @@ export function SchuleDetail() {
   }) => {
     setDetailMapBbox(boundsToBboxParam(e.target.getBounds()))
   }
-
-  const [hoveredMapLabel, setHoveredMapLabel] = useState<HoveredMapLabel | null>(null)
 
   const detailInteractiveLayerIds = useMemo(() => {
     const ids = [
@@ -804,7 +862,7 @@ export function SchuleDetail() {
     <div>
       {detailMapFc && detailMapFc.features.length > 0 && (
         <div className="mb-8">
-          <div className="h-[360px] overflow-hidden rounded-lg border border-zinc-700">
+          <div className="relative h-[360px] overflow-hidden rounded-lg border border-zinc-700">
             <MapGL
               ref={mapRef}
               initialViewState={detailInitialViewState}
@@ -901,6 +959,22 @@ export function SchuleDetail() {
                     }}
                   />
                 ) : null}
+                {hoverRelationLineFeatures.length > 0 ? (
+                  <Layer
+                    id="detail-hover-relations"
+                    type="line"
+                    layout={{
+                      'line-cap': 'round',
+                      'line-join': 'round',
+                    }}
+                    filter={['==', ['get', '_mapDetail'], 'hoverRelation']}
+                    paint={{
+                      'line-color': '#0a0a0a',
+                      'line-width': 2.5,
+                      'line-opacity': 0.85,
+                    }}
+                  />
+                ) : null}
                 <Layer
                   id="c-official-halo"
                   type="circle"
@@ -984,26 +1058,21 @@ export function SchuleDetail() {
                   />
                 </Source>
               )}
-              {hoveredMapLabel && (
-                <Popup
-                  className="schule-detail-map-popup"
-                  longitude={hoveredMapLabel.lon}
-                  latitude={hoveredMapLabel.lat}
-                  closeButton={false}
-                  closeOnClick={false}
-                  offset={14}
-                >
-                  <div className="max-w-[min(16rem,calc(100vw-2rem))] rounded-md border border-zinc-600 bg-zinc-900 px-2.5 py-1.5 font-sans shadow-md">
-                    <p className="text-sm font-medium leading-snug text-zinc-50">
-                      {hoveredMapLabel.name}
-                    </p>
-                    <p className="mt-0.5 text-xs leading-snug text-zinc-400">
-                      {detailMapPopupCategoryLine(hoveredMapLabel, row.category)}
-                    </p>
-                  </div>
-                </Popup>
-              )}
             </MapGL>
+            {hoveredMapLabel ? (
+              <div
+                className="pointer-events-none absolute left-2 top-2 z-10 max-w-[min(16rem,calc(100%-1rem))] rounded-md border border-zinc-600 bg-zinc-900 px-2.5 py-1.5 font-sans shadow-md"
+                role="status"
+                aria-live="polite"
+              >
+                <p className="text-sm font-medium leading-snug text-zinc-50">
+                  {hoveredMapLabel.name}
+                </p>
+                <p className="mt-0.5 text-xs leading-snug text-zinc-400">
+                  {detailMapPopupCategoryLine(hoveredMapLabel, row.category)}
+                </p>
+              </div>
+            ) : null}
           </div>
           <div className="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-2">
             <div className="min-w-0 flex flex-1 flex-wrap items-center gap-x-3 gap-y-1 text-xs leading-snug text-zinc-400">
@@ -1300,42 +1369,16 @@ export function SchuleDetail() {
                     aria-hidden
                     className="mt-0.5 size-5 shrink-0 text-zinc-500 transition-transform group-open:rotate-90"
                   />
-                  <div className="flex min-w-0 flex-1 flex-col items-stretch gap-2 sm:flex-row sm:items-start sm:gap-3 md:gap-4">
-                    <h3 className="min-w-0 flex-1 break-words text-lg font-semibold leading-snug text-zinc-100">
+                  <div className={AMBIGUOUS_COMPARE_SUMMARY_LAYOUT}>
+                    <h3 className="min-w-0 text-lg font-semibold leading-snug text-zinc-100 break-words md:flex-1">
                       <span className="text-zinc-400">{idx + 1}. </span>
                       {c.name}
                     </h3>
-                    <div className="@container/compare-meta min-w-0 text-sm text-zinc-400">
-                      <div className="flex flex-col items-start gap-y-1 text-left sm:items-end sm:text-right sm:@[22rem]:flex-row sm:@[22rem]:flex-nowrap sm:@[22rem]:items-center sm:@[22rem]:justify-end sm:@[22rem]:gap-x-2 sm:@[22rem]:gap-y-0">
-                        <span className="font-mono">{c.id}</span>
-                        {summaryMiddle != null && (
-                          <>
-                            <span
-                              aria-hidden
-                              className="hidden select-none text-zinc-500 sm:@[22rem]:inline"
-                            >
-                              {'\u00B7'}
-                            </span>
-                            {summaryMiddle}
-                          </>
-                        )}
-                        <span
-                          aria-hidden
-                          className="hidden select-none text-zinc-500 sm:@[22rem]:inline"
-                        >
-                          {'\u00B7'}
-                        </span>
-                        <a
-                          href={`https://jedeschule.codefor.de/schools/${encodeURIComponent(c.id)}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-emerald-300 underline"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {de.detail.ambiguousJedeschule}
-                        </a>
-                      </div>
-                    </div>
+                    <AmbiguousCompareSummaryMeta
+                      officialId={c.id}
+                      summaryMiddle={summaryMiddle}
+                      jedeschuleLabel={de.detail.ambiguousJedeschule}
+                    />
                   </div>
                 </summary>
                 <div className="border-t border-zinc-700/80 px-2.5 pb-3 pt-3 sm:px-3 sm:pb-4 sm:pt-4">
