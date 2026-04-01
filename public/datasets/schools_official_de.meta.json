@@ -1,6 +1,11 @@
 {
   "pipelineStep": "pipeline:download:jedeschule",
-  "generatedAt": "1970-01-01T00:00:00.000Z",
-  "ok": false,
-  "errorMessage": "No committed snapshot yet."
+  "generatedAt": "2026-04-01T05:13:23.467Z",
+  "sourceUrl": "https://jedeschule.codefor.de/csv-data/latest.csv",
+  "ok": true,
+  "httpLastModified": "Sat, 28 Mar 2026 16:51:00 GMT",
+  "httpEtag": "\"69c806f4-33ff021\"",
+  "csvSha256": "97140884af3beac2db01c7b3e2050bed98136d0dfaa3b18d56613a20a0ecc798",
+  "csvMaxUpdateTimestamp": "2026-03-28 16:50:59.482854",
+  "upstreamDatasetChanged": true
 }

@@ -1,6 +1,7 @@
 {
   "pipelineStep": "pipeline:download:osm",
-  "generatedAt": "1970-01-01T00:00:00.000Z",
-  "ok": false,
-  "errorMessage": "No committed snapshot yet."
+  "generatedAt": "2026-04-01T05:15:33.463Z",
+  "ok": true,
+  "overpassResponseTimestamp": "2026-04-01T05:12:18Z",
+  "interpreterUrl": "https://overpass-api.de/api/interpreter"
 }

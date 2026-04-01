@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-04-01T03:31:08.582Z",
+  "generatedAt": "2026-04-01T05:24:29.404Z",
   "pipelineVersion": 1,
   "jedeschuleCsvSource": "schools_official_de.geojson",
   "lands": [
     {
       "code": "BW",
       "osmSource": "live",
-      "osmSnapshotAt": "2026-04-01T03:24:43Z",
-      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
+      "osmSnapshotAt": "2026-04-01T05:12:18Z",
+      "overpassQueriedAt": "2026-04-01T05:15:33.463Z",
       "counts": {
         "matched": 2524,
         "official_only": 11246,
@@ -20,8 +20,8 @@
     {
       "code": "BY",
       "osmSource": "live",
-      "osmSnapshotAt": "2026-04-01T03:24:43Z",
-      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
+      "osmSnapshotAt": "2026-04-01T05:12:18Z",
+      "overpassQueriedAt": "2026-04-01T05:15:33.463Z",
       "counts": {
         "matched": 2149,
         "official_only": 262,
@@ -34,8 +34,8 @@
     {
       "code": "BE",
       "osmSource": "live",
-      "osmSnapshotAt": "2026-04-01T03:24:43Z",
-      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
+      "osmSnapshotAt": "2026-04-01T05:12:18Z",
+      "overpassQueriedAt": "2026-04-01T05:15:33.463Z",
       "counts": {
         "matched": 734,
         "official_only": 129,
@@ -48,8 +48,8 @@
     {
       "code": "BB",
       "osmSource": "live",
-      "osmSnapshotAt": "2026-04-01T03:24:43Z",
-      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
+      "osmSnapshotAt": "2026-04-01T05:12:18Z",
+      "overpassQueriedAt": "2026-04-01T05:15:33.463Z",
       "counts": {
         "matched": 682,
         "official_only": 104,
@@ -62,8 +62,8 @@
     {
       "code": "HB",
       "osmSource": "live",
-      "osmSnapshotAt": "2026-04-01T03:24:43Z",
-      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
+      "osmSnapshotAt": "2026-04-01T05:12:18Z",
+      "overpassQueriedAt": "2026-04-01T05:15:33.463Z",
       "counts": {
         "matched": 108,
         "official_only": 0,
@@ -76,8 +76,8 @@
     {
       "code": "HH",
       "osmSource": "live",
-      "osmSnapshotAt": "2026-04-01T03:24:43Z",
-      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
+      "osmSnapshotAt": "2026-04-01T05:12:18Z",
+      "overpassQueriedAt": "2026-04-01T05:15:33.463Z",
       "counts": {
         "matched": 406,
         "official_only": 68,
@@ -90,8 +90,8 @@
     {
       "code": "HE",
       "osmSource": "live",
-      "osmSnapshotAt": "2026-04-01T03:24:43Z",
-      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
+      "osmSnapshotAt": "2026-04-01T05:12:18Z",
+      "overpassQueriedAt": "2026-04-01T05:15:33.463Z",
       "counts": {
         "matched": 1454,
         "official_only": 349,
@@ -104,8 +104,8 @@
     {
       "code": "MV",
       "osmSource": "live",
-      "osmSnapshotAt": "2026-04-01T03:24:43Z",
-      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
+      "osmSnapshotAt": "2026-04-01T05:12:18Z",
+      "overpassQueriedAt": "2026-04-01T05:15:33.463Z",
       "counts": {
         "matched": 395,
         "official_only": 69,
@@ -118,8 +118,8 @@
     {
       "code": "NI",
       "osmSource": "live",
-      "osmSnapshotAt": "2026-04-01T03:24:43Z",
-      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
+      "osmSnapshotAt": "2026-04-01T05:12:18Z",
+      "overpassQueriedAt": "2026-04-01T05:15:33.463Z",
       "counts": {
         "matched": 1090,
         "official_only": 0,
@@ -132,8 +132,8 @@
     {
       "code": "NW",
       "osmSource": "live",
-      "osmSnapshotAt": "2026-04-01T03:24:43Z",
-      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
+      "osmSnapshotAt": "2026-04-01T05:12:18Z",
+      "overpassQueriedAt": "2026-04-01T05:15:33.463Z",
       "counts": {
         "matched": 3795,
         "official_only": 455,
@@ -146,8 +146,8 @@
     {
       "code": "RP",
       "osmSource": "live",
-      "osmSnapshotAt": "2026-04-01T03:24:43Z",
-      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
+      "osmSnapshotAt": "2026-04-01T05:12:18Z",
+      "overpassQueriedAt": "2026-04-01T05:15:33.463Z",
       "counts": {
         "matched": 841,
         "official_only": 524,
@@ -160,8 +160,8 @@
     {
       "code": "SL",
       "osmSource": "live",
-      "osmSnapshotAt": "2026-04-01T03:24:43Z",
-      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
+      "osmSnapshotAt": "2026-04-01T05:12:18Z",
+      "overpassQueriedAt": "2026-04-01T05:15:33.463Z",
       "counts": {
         "matched": 271,
         "official_only": 38,
@@ -174,8 +174,8 @@
     {
       "code": "SN",
       "osmSource": "live",
-      "osmSnapshotAt": "2026-04-01T03:24:43Z",
-      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
+      "osmSnapshotAt": "2026-04-01T05:12:18Z",
+      "overpassQueriedAt": "2026-04-01T05:15:33.463Z",
       "counts": {
         "matched": 1168,
         "official_only": 285,
@@ -188,8 +188,8 @@
     {
       "code": "ST",
       "osmSource": "live",
-      "osmSnapshotAt": "2026-04-01T03:24:43Z",
-      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
+      "osmSnapshotAt": "2026-04-01T05:12:18Z",
+      "overpassQueriedAt": "2026-04-01T05:15:33.463Z",
       "counts": {
         "matched": 622,
         "official_only": 93,
@@ -202,8 +202,8 @@
     {
       "code": "SH",
       "osmSource": "live",
-      "osmSnapshotAt": "2026-04-01T03:24:43Z",
-      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
+      "osmSnapshotAt": "2026-04-01T05:12:18Z",
+      "overpassQueriedAt": "2026-04-01T05:15:33.463Z",
       "counts": {
         "matched": 709,
         "official_only": 150,
@@ -216,8 +216,8 @@
     {
       "code": "TH",
       "osmSource": "live",
-      "osmSnapshotAt": "2026-04-01T03:24:43Z",
-      "overpassQueriedAt": "2026-04-01T03:27:43.648Z",
+      "osmSnapshotAt": "2026-04-01T05:12:18Z",
+      "overpassQueriedAt": "2026-04-01T05:15:33.463Z",
       "counts": {
         "matched": 602,
         "official_only": 119,
