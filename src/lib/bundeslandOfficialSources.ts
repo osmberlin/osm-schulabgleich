@@ -57,6 +57,14 @@ export const BUNDESLAND_OFFICIAL_SOURCES = {
   }),
   BB: seed(
     'https://geoportal.brandenburg.de/detailansichtdienst/render?view=gdibb&url=https://geoportal.brandenburg.de/gs-json/xml?fileid=d040077b-fcd1-4ab0-bc7f-a818fc6fa244',
+    {
+      officialLicense: 'DL-DE BY 2.0',
+      osmCompatible: 'yes_waiver',
+      lastCheckedAt: '2026-04-01',
+      lastCheckedByGithub: 'tordans',
+      osmCompatibilityRefUrl:
+        'https://wiki.openstreetmap.org/wiki/Brandenburg/Geoportal#Rechtliche_Grundlagen',
+    },
   ),
   HB: seed('https://www.bildung.bremen.de/detail.php?template=35_schulsuche_stufe2_d'),
   HH: seed('https://metaver.de/trefferanzeige?docuuid=BDEB9B13-0C2B-42A3-B248-A31B01B454BA'),
