@@ -1,7 +1,8 @@
 import { copyFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
-import react from '@vitejs/plugin-react'
+import babel from '@rolldown/plugin-babel'
+import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
 
 /**
@@ -29,6 +30,11 @@ function spaGithubPages404(): Plugin {
 
 export default defineConfig({
   base: process.env.GITHUB_PAGES === 'true' ? '/osm-schul-abgleich/' : '/',
-  plugins: [tailwindcss(), react(), spaGithubPages404()],
+  plugins: [
+    tailwindcss(),
+    react(),
+    babel({ presets: [reactCompilerPreset()] }),
+    spaGithubPages404(),
+  ],
   server: { port: 5174 },
 })
