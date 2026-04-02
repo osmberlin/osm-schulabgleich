@@ -1,4 +1,16 @@
-import type { ReactNode } from 'react'
+import { format, parseISO } from 'date-fns'
+import { de as dateFnsDe } from 'date-fns/locale/de'
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  type TooltipPayload,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import { berlinCalendarDateKey } from '../lib/berlinCalendarDateKey'
 import { formatDeInteger } from '../lib/formatNumber'
 import type { LandMatchCategory } from '../lib/landMatchCategories'
 import { CATEGORY_INNER_HEX, OFFICIAL_NO_COORD_INNER_HEX } from '../lib/matchCategoryTheme'
@@ -9,14 +21,7 @@ import {
   type MatchHistoryStackPoint,
 } from '../lib/matchHistoryFromRuns'
 
-/** SVG `viewBox` width/height (user units). The element uses `width="100%"`, so this defines aspect ratio and internal layout. */
-const VB_W = 800
-const VB_H = 232
-/** Padding inside the viewBox: plot area is x in [PAD_L, VB_W - PAD_R], y in [PAD_T, VB_H - PAD_B]. */
-const PAD_L = 40 // left: max-Y tick (`textAnchor="end"`) + gap before bars
-const PAD_R = 16 // right: margin past the x baseline
-const PAD_T = 12 // top: room above stacks for the Y tick
-const PAD_B = 56 // bottom: space for x-axis date labels (drawn near `VB_H − 12`)
+type ChartRow = MatchHistoryStackPoint & { berlinDay: string }
 
 function stackSegmentFill(key: MatchHistorySegmentKey): string {
   if (key === 'official_no_coord') return OFFICIAL_NO_COORD_INNER_HEX
@@ -27,132 +32,144 @@ function stackTotal(p: MatchHistoryStackPoint): number {
   return p.matched + p.official_only + p.osm_only + p.match_ambiguous + p.official_no_coord
 }
 
-function formatXLabel(iso: string): string {
-  const t = Date.parse(iso)
-  if (Number.isNaN(t)) return ''
-  return new Date(t).toLocaleDateString('de-DE', {
-    day: 'numeric',
-    month: 'short',
-    timeZone: 'Europe/Berlin',
-  })
+function formatBerlinDayTick(berlinDay: string): string {
+  const d = parseISO(berlinDay)
+  if (Number.isNaN(d.getTime())) return ''
+  return format(d, 'd. MMM', { locale: dateFnsDe })
 }
 
 function ariaSummary(points: MatchHistoryStackPoint[], labels: MatchHistoryChartLabels): string {
   return points
     .map((p) => {
+      const day = berlinCalendarDateKey(p.finishedAt)
+      const dayLabel = day ? formatBerlinDayTick(day) : ''
       const parts = MATCH_HISTORY_STACK_KEYS.map(
         (k) => `${labels[k]} ${formatDeInteger(p[k])}`,
       ).join(', ')
-      return `${formatXLabel(p.finishedAt)}: ${parts}`
+      return `${dayLabel}: ${parts}`
     })
     .join(' — ')
+}
+
+function pointsToChartData(points: MatchHistoryStackPoint[]): ChartRow[] {
+  return points.map((p) => {
+    const berlinDay = berlinCalendarDateKey(p.finishedAt)
+    return {
+      ...p,
+      berlinDay: berlinDay || p.finishedAt.slice(0, 10),
+    }
+  })
 }
 
 type Props = {
   points: MatchHistoryStackPoint[]
   categoryLabels: MatchHistoryChartLabels
-  /** Shown as chart `<title>` and screen-reader summary. */
+  /** Used for `aria-label` and screen-reader summary (`sr-only`). */
   chartDescription: string
 }
 
+type HistoryTooltipProps = {
+  active?: boolean
+  payload?: TooltipPayload
+  label?: string | number
+  categoryLabels: MatchHistoryChartLabels
+}
+
+function HistoryTooltip({ active, payload, label, categoryLabels }: HistoryTooltipProps) {
+  if (!active || !payload?.length) return null
+  const row = payload[0]?.payload as ChartRow | undefined
+  if (!row) return null
+
+  const dayLabel = row.berlinDay ? formatBerlinDayTick(row.berlinDay) : String(label ?? '')
+  const total = stackTotal(row)
+
+  return (
+    <div className="rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs shadow-lg">
+      <p className="mb-1.5 font-medium text-zinc-100">{dayLabel}</p>
+      <p className="mb-1.5 text-zinc-400">Summe: {formatDeInteger(total)}</p>
+      <ul className="space-y-0.5">
+        {MATCH_HISTORY_STACK_KEYS.map((key) => (
+          <li key={key} className="flex justify-between gap-4 tabular-nums">
+            <span className="flex min-w-0 items-center gap-2 text-zinc-400">
+              <span
+                className="size-2 shrink-0 rounded-sm"
+                style={{ backgroundColor: stackSegmentFill(key) }}
+                aria-hidden
+              />
+              <span className="truncate">{categoryLabels[key]}</span>
+            </span>
+            <span className="shrink-0 text-zinc-100">{formatDeInteger(row[key])}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 /**
- * Gestapelte Balken: x = Laufzeitpunkt (`finishedAt`), y = Summe aller KPI-Zähler inkl. `official_no_coord`.
+ * Gestapelte Flächen: x = Kalendertag (Berlin), y = Summe aller KPI-Zähler inkl. `official_no_coord`.
  */
 export function MatchCountsHistoryChart({ points, categoryLabels, chartDescription }: Props) {
   if (points.length === 0) return null
 
-  const chartW = VB_W - PAD_L - PAD_R
-  const chartH = VB_H - PAD_T - PAD_B
-  const yBase = PAD_T + chartH
-
-  let maxY = 1
-  for (const p of points) {
-    const t = stackTotal(p)
-    if (t > maxY) maxY = t
-  }
-
-  const n = points.length
-  const slot = chartW / n
+  const data = pointsToChartData(points)
+  const n = data.length
   const labelStep = n <= 14 ? 1 : Math.ceil(n / 12)
-
-  const bars: ReactNode[] = []
-  const labels: ReactNode[] = []
-
-  for (let i = 0; i < n; i++) {
-    const p = points[i]
-    if (p === undefined) continue
-    const barW = Math.max(3, slot * 0.7)
-    const cx = PAD_L + i * slot + (slot - barW) / 2
-    let y = yBase
-    const segments: React.ReactNode[] = []
-    for (const cat of MATCH_HISTORY_STACK_KEYS) {
-      const v = p[cat]
-      if (v <= 0) continue
-      const h = (v / maxY) * chartH
-      y -= h
-      segments.push(
-        <rect
-          key={cat}
-          x={cx}
-          y={y}
-          width={barW}
-          height={h}
-          fill={stackSegmentFill(cat)}
-          className="stroke-zinc-800"
-          strokeWidth={0.5}
-        />,
-      )
-    }
-    bars.push(<g key={p.finishedAt + String(i)}>{segments}</g>)
-
-    if (i % labelStep === 0 || i === n - 1) {
-      const lx = PAD_L + i * slot + slot / 2
-      labels.push(
-        <text
-          key={`lab-${i}`}
-          x={lx}
-          y={VB_H - 12}
-          textAnchor="middle"
-          className="fill-zinc-400 text-[11px]"
-        >
-          {formatXLabel(p.finishedAt)}
-        </text>,
-      )
-    }
-  }
+  const tickBerlinDays = data
+    .map((row, i) => ({ row, i }))
+    .filter(({ i }) => i % labelStep === 0 || i === n - 1)
+    .map(({ row }) => row.berlinDay)
 
   return (
     <div className="w-full overflow-x-auto">
-      <svg
-        width="100%"
-        height={VB_H}
-        viewBox={`0 0 ${VB_W} ${VB_H}`}
-        role="img"
-        className="min-h-[232px] min-w-[280px] text-zinc-100"
-        aria-label={chartDescription}
-      >
-        <title>{chartDescription}</title>
-        <desc>{ariaSummary(points, categoryLabels)}</desc>
-        {/* Y axis baseline */}
-        <line
-          x1={PAD_L}
-          y1={yBase}
-          x2={VB_W - PAD_R}
-          y2={yBase}
-          className="stroke-zinc-600"
-          strokeWidth={1}
-        />
-        <text
-          x={PAD_L - 4}
-          y={PAD_T + 10}
-          textAnchor="end"
-          className="fill-zinc-500 text-[10px] tabular-nums"
-        >
-          {formatDeInteger(maxY)}
-        </text>
-        {bars}
-        {labels}
-      </svg>
+      <div className="min-h-[260px] min-w-[280px]" role="img" aria-label={chartDescription}>
+        <span className="sr-only">{ariaSummary(points, categoryLabels)}</span>
+        <ResponsiveContainer width="100%" height={260}>
+          <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <CartesianGrid stroke="#3f3f46" strokeDasharray="3 3" vertical={false} />
+            <XAxis
+              dataKey="berlinDay"
+              type="category"
+              ticks={tickBerlinDays}
+              tick={{ fill: '#a1a1aa', fontSize: 11 }}
+              tickLine={{ stroke: '#52525b' }}
+              axisLine={{ stroke: '#52525b' }}
+              tickFormatter={(v: string) => formatBerlinDayTick(v)}
+            />
+            <YAxis
+              tick={{ fill: '#a1a1aa', fontSize: 11 }}
+              tickLine={{ stroke: '#52525b' }}
+              axisLine={{ stroke: '#52525b' }}
+              tickFormatter={(v: number) => formatDeInteger(v)}
+              width={44}
+            />
+            <Tooltip
+              content={({ active, payload, label }) => (
+                <HistoryTooltip
+                  active={active}
+                  payload={payload}
+                  label={label}
+                  categoryLabels={categoryLabels}
+                />
+              )}
+              cursor={{ stroke: '#71717a', strokeWidth: 1 }}
+            />
+            {MATCH_HISTORY_STACK_KEYS.map((key) => (
+              <Area
+                key={key}
+                type="monotone"
+                dataKey={key}
+                name={categoryLabels[key]}
+                stackId="matchHistory"
+                stroke={stackSegmentFill(key)}
+                fill={stackSegmentFill(key)}
+                fillOpacity={0.85}
+                isAnimationActive={false}
+              />
+            ))}
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 border-t border-zinc-700 pt-3">
         {MATCH_HISTORY_STACK_KEYS.map((cat) => (
           <div key={cat} className="flex items-center gap-2 text-xs text-zinc-400">

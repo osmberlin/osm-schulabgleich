@@ -37,9 +37,9 @@ export const de = {
     globalKpiAria: 'Deutschland — Kennzahlen (Summe aller Bundesländer)',
     historyHeading: 'Deutschland — Entwicklung über Pipeline-Läufe',
     historyLead:
-      'Summe aller Bundesländer je Lauf (nur vollständige bundesweite Abgleiche). Fünf Kennzahlen inkl. amtlicher Schulen ohne Koordinaten.',
+      'Gestapeltes Flächendiagramm: Summe aller Bundesländer je Kalendertag (nur vollständige bundesweite Abgleiche). Fünf Kennzahlen inkl. amtlicher Schulen ohne Koordinaten.',
     historyEmpty:
-      'Noch kein vollständiger Lauf mit Kategorien in der Statusdatei. Nach einem bundesweiten Abgleich erscheint hier ein Diagramm.',
+      'Noch kein vollständiger Lauf mit Kategorien in der Statusdatei. Nach einem bundesweiten Abgleich erscheint hier ein Verlaufsdiagramm.',
     historyLoading: 'Lade Verlauf…',
     historyError: 'Verlauf konnte nicht geladen werden.',
     officialSources: {
@@ -108,9 +108,9 @@ export const de = {
       'Hinweis: OSM-Daten stammen von einem früheren Lauf (Overpass war nicht erreichbar). Datenstand siehe unten.',
     historyHeading: 'Entwicklung der Treffer über Zeit',
     historyLead:
-      'Gestapelte Balken pro Pipeline-Lauf (Ende des Laufs, Europe/Berlin). Fünf Kennzahlen wie in der Legende inkl. amtlicher Schulen ohne Koordinaten.',
+      'Gestapeltes Flächendiagramm je Kalendertag (Ende des Laufs, Europe/Berlin). Fünf Kennzahlen wie in der Legende inkl. amtlicher Schulen ohne Koordinaten.',
     historyEmpty:
-      'Noch keine gespeicherten Läufe mit Kategorien für dieses Bundesland. Nach einem bundesweiten Abgleich erscheinen hier Balken.',
+      'Noch keine gespeicherten Läufe mit Kategorien für dieses Bundesland. Nach einem bundesweiten Abgleich erscheint hier der Verlauf.',
     historyLoading: 'Lade Verlauf…',
     historyError: 'Verlauf konnte nicht geladen werden.',
   },
