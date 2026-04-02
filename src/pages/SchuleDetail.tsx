@@ -29,6 +29,7 @@ import {
   buildOfficialSchoolLonLatIndex,
   matchRowDisplayName,
   matchRowMapLonLat,
+  spreadCoincidentMapPointFeatures,
 } from '../lib/matchRowInBbox'
 import { miniMarkdownNodes } from '../lib/miniMarkdown'
 import {
@@ -623,15 +624,19 @@ export function SchuleDetail() {
     return []
   }, [hoveredMapLabel, q.data, row, mapOsmCentroid])
 
-  const allOtherSchoolPoints = useMemo((): FeatureCollection => {
+  /** True coordinates (one row per `matchKey`); bbox filtering uses these, not display spread. */
+  const allOtherSchoolPointsRaw = useMemo((): FeatureCollection => {
     const features: Feature[] = []
     if (!q.data) return { type: 'FeatureCollection', features }
     const officialFc = q.data.official as FeatureCollection
     const officialLonLatIndex = officialFc?.features?.length
       ? buildOfficialSchoolLonLatIndex(officialFc)
       : null
+    const seen = new Set<string>()
     for (const match of q.data.matches) {
       if (match.key === keyDecoded) continue
+      if (seen.has(match.key)) continue
+      seen.add(match.key)
       const lonLat = matchRowMapLonLat(match, officialLonLatIndex)
       if (!lonLat) continue
       const [lon, lat] = lonLat
@@ -651,13 +656,16 @@ export function SchuleDetail() {
   const otherSchoolPointsInViewport = useMemo((): FeatureCollection => {
     if (!detailMapBbox) return { type: 'FeatureCollection', features: [] }
     const [w, s, e, n] = detailMapBbox
-    const features = allOtherSchoolPoints.features.filter((f) => {
+    const inView = allOtherSchoolPointsRaw.features.filter((f) => {
       if (f.geometry?.type !== 'Point') return false
       const [lon, lat] = f.geometry.coordinates
       return lon >= w && lon <= e && lat >= s && lat <= n
     })
-    return { type: 'FeatureCollection', features }
-  }, [allOtherSchoolPoints, detailMapBbox])
+    return {
+      type: 'FeatureCollection',
+      features: spreadCoincidentMapPointFeatures(inView),
+    }
+  }, [allOtherSchoolPointsRaw, detailMapBbox])
 
   /** Alles für die Karte inkl. Maske und Verbindungslinien. */
   const detailMapFc = useMemo((): FeatureCollection | null => {
@@ -1093,7 +1101,7 @@ export function SchuleDetail() {
                 </span>
                 {de.detail.mapLegendOsmReference}
               </span>
-              {allOtherSchoolPoints.features.length > 0 && (
+              {allOtherSchoolPointsRaw.features.length > 0 && (
                 <>
                   <span className="inline-flex items-center gap-1.5">
                     <span className={DETAIL_MAP_LEGEND_POINT_TILE} aria-hidden>

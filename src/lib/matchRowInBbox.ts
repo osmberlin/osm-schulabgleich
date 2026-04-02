@@ -1,4 +1,4 @@
-import type { Feature, FeatureCollection } from 'geojson'
+import type { Feature, FeatureCollection, Point } from 'geojson'
 import type { z } from 'zod'
 import type { schoolsMatchRowSchema } from './schemas'
 import type { LandMapBbox } from './useLandMapBbox'
@@ -78,15 +78,89 @@ export function matchRowMapLonLat(
   return null
 }
 
+/** Grouping key for coincident display spread (~1 m precision). */
+function mapDisplayCoordGroupKey(lon: number, lat: number): string {
+  const q = 1e5
+  return `${Math.round(lon * q) / q},${Math.round(lat * q) / q}`
+}
+
+/** Meters → degree offset (small local tangent plane). */
+function offsetMetersAtLat(latDeg: number, eastM: number, northM: number): [number, number] {
+  const dlat = northM / 111_320
+  const dlon = eastM / (111_320 * Math.cos((latDeg * Math.PI) / 180))
+  return [dlon, dlat]
+}
+
 /**
- * One map point per Treffer (same coordinate logic as list/bbox filter), `matchCat` = row category.
+ * Spreads Point features that share the same display-group coordinate on a small circle so
+ * halos/cores do not stack (amtliche Daten often reuse one Point for several schools).
+ * One output feature per input Point; non-Point features are appended unchanged after all Points.
+ */
+export function spreadCoincidentMapPointFeatures(features: Feature[]): Feature[] {
+  const nonPoints: Feature[] = []
+  const points: Feature[] = []
+  for (const f of features) {
+    if (f.geometry?.type === 'Point') points.push(f)
+    else nonPoints.push(f)
+  }
+  if (points.length <= 1) return features
+
+  const groups = new Map<string, Feature[]>()
+  for (const f of points) {
+    const [lon, lat] = (f.geometry as Point).coordinates
+    const k = mapDisplayCoordGroupKey(lon, lat)
+    let bucket = groups.get(k)
+    if (!bucket) {
+      bucket = []
+      groups.set(k, bucket)
+    }
+    bucket.push(f)
+  }
+
+  const spread: Feature[] = []
+  for (const group of groups.values()) {
+    if (group.length === 1) {
+      spread.push(group[0])
+      continue
+    }
+    const sorted = [...group].sort((a, b) =>
+      String(a.properties?.matchKey ?? '').localeCompare(
+        String(b.properties?.matchKey ?? ''),
+        'de',
+      ),
+    )
+    const n = sorted.length
+    const ringRadiusM = (n * 6) / (2 * Math.PI)
+    const refLat = (sorted[0].geometry as Point).coordinates[1]
+    for (let i = 0; i < n; i++) {
+      const feat = sorted[i]
+      const [glon, glat] = (feat.geometry as Point).coordinates
+      const angle = (2 * Math.PI * i) / n
+      const eastM = ringRadiusM * Math.cos(angle)
+      const northM = ringRadiusM * Math.sin(angle)
+      const [dlon, dlat] = offsetMetersAtLat(refLat, eastM, northM)
+      spread.push({
+        ...feat,
+        geometry: { type: 'Point', coordinates: [glon + dlon, glat + dlat] },
+      })
+    }
+  }
+  return [...spread, ...nonPoints]
+}
+
+/**
+ * One map point per Trefferliste row (unique `key`), `matchCat` = row category.
+ * Coincident coordinates are spread for display only; list/bbox/stats use `matchRowMapLonLat` elsewhere.
  */
 export function matchesToOverviewMapPoints(
   rows: Row[],
   officialLonLatIndex: Map<string, [number, number]> | null,
 ): FeatureCollection {
+  const seen = new Set<string>()
   const features: Feature[] = []
   for (const r of rows) {
+    if (seen.has(r.key)) continue
+    seen.add(r.key)
     const ll = matchRowMapLonLat(r, officialLonLatIndex)
     if (!ll) continue
     features.push({
@@ -99,7 +173,7 @@ export function matchesToOverviewMapPoints(
       geometry: { type: 'Point', coordinates: ll },
     })
   }
-  return { type: 'FeatureCollection', features }
+  return { type: 'FeatureCollection', features: spreadCoincidentMapPointFeatures(features) }
 }
 
 function pointInLandMapBbox(lon: number, lat: number, bbox: LandMapBbox): boolean {

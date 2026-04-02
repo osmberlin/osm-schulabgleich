@@ -4,6 +4,7 @@ import {
   buildOfficialSchoolLonLatIndex,
   lonLatFromOfficialFeature,
   matchRowMapLonLat,
+  spreadCoincidentMapPointFeatures,
 } from './matchRowInBbox'
 import { schoolsMatchRowSchema } from './schemas'
 
@@ -57,6 +58,36 @@ describe('matchRowMapLonLat', () => {
     })
     const index = new Map<string, [number, number]>([['X', [11, 52]]])
     expect(matchRowMapLonLat(row, index)).toEqual([10, 51])
+  })
+})
+
+describe('spreadCoincidentMapPointFeatures', () => {
+  it('offsets multiple features that share the same coordinates', () => {
+    const base = {
+      type: 'Feature' as const,
+      geometry: { type: 'Point' as const, coordinates: [7, 51] },
+    }
+    const a = { ...base, properties: { matchKey: 'a' } }
+    const b = { ...base, properties: { matchKey: 'b' } }
+    const c = { ...base, properties: { matchKey: 'c' } }
+    const out = spreadCoincidentMapPointFeatures([a, b, c])
+    expect(out).toHaveLength(3)
+    const coords = out.map(
+      (f) => (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates,
+    )
+    const uniq = new Set(coords.map(([x, y]) => `${x},${y}`))
+    expect(uniq.size).toBe(3)
+  })
+
+  it('leaves a single point unchanged', () => {
+    const f = {
+      type: 'Feature' as const,
+      properties: { matchKey: 'x' },
+      geometry: { type: 'Point' as const, coordinates: [10, 50] },
+    }
+    const out = spreadCoincidentMapPointFeatures([f])
+    expect(out).toHaveLength(1)
+    expect(out[0].geometry).toMatchObject({ type: 'Point', coordinates: [10, 50] })
   })
 })
 
