@@ -1,7 +1,7 @@
 {
   "name": "osm-schul-abgleich",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "prepare": "simple-git-hooks",
@@ -20,8 +20,9 @@
     "stats:user-facing": "bun run scripts/report-user-facing-dataset-sizes.ts",
     "analysis:jedeschule": "bun run analysis/scripts/jedeschule-official-analysis.ts",
     "build:compress": "bun run scripts/compress-dist-assets.ts dist",
-    "lint": "biome check .",
-    "format": "biome format --write .",
+    "lint": "oxlint -c oxlint.config.ts .",
+    "format": "oxfmt -c oxfmt.config.ts --write .",
+    "format:check": "oxfmt -c oxfmt.config.ts --check .",
     "test": "vitest run",
     "knip": "knip"
   },
@@ -54,7 +55,6 @@
     "zod": "^4.3.5"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.10",
     "@clack/prompts": "^1.2.0",
     "@maplibre/maplibre-gl-style-spec": "^24.7.0",
     "@rolldown/plugin-babel": "^0.2.2",
@@ -66,6 +66,8 @@
     "@vitejs/plugin-react": "^6.0.1",
     "babel-plugin-react-compiler": "^1.0.0",
     "knip": "^6.1.0",
+    "oxfmt": "^0.43.0",
+    "oxlint": "^1.58.0",
     "simple-git-hooks": "^2.13.1",
     "tailwindcss": "^4.1.18",
     "typescript": "~6.0.2",

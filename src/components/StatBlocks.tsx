@@ -15,9 +15,9 @@ export function StatBlocksRow({
       className={
         `flex min-w-0 flex-col gap-y-4 sm:flex-row sm:flex-nowrap sm:items-stretch sm:gap-x-0 sm:gap-y-0 ` +
         `[&>*]:min-w-0 ` +
-        `max-sm:[&>*]:border-l-0 max-sm:[&>*]:border-t max-sm:[&>*]:border-white/15 max-sm:[&>*]:pl-0 max-sm:[&>*]:pt-4 ` +
+        `max-sm:[&>*]:border-t max-sm:[&>*]:border-l-0 max-sm:[&>*]:border-white/15 max-sm:[&>*]:pt-4 max-sm:[&>*]:pl-0 ` +
         `max-sm:[&>*]:first:border-t-0 max-sm:[&>*]:first:pt-0 ` +
-        `sm:[&>*]:flex-1 sm:[&>*]:basis-0 sm:[&>*]:border-l sm:[&>*]:border-t-0 sm:[&>*]:border-white/15 sm:[&>*]:pl-3 sm:[&>*]:pt-0 ` +
+        `sm:[&>*]:flex-1 sm:[&>*]:basis-0 sm:[&>*]:border-t-0 sm:[&>*]:border-l sm:[&>*]:border-white/15 sm:[&>*]:pt-0 sm:[&>*]:pl-3 ` +
         `sm:[&>*]:first:border-l-0 sm:[&>*]:first:pl-0 ` +
         className
       }
@@ -83,7 +83,7 @@ export function LayerToggleStatBlock({
       </dt>
       <dd
         className={
-          `text-pretty font-semibold text-xl tracking-tight text-zinc-100 tabular-nums sm:text-2xl md:text-3xl ` +
+          `text-xl font-semibold tracking-tight text-pretty text-zinc-100 tabular-nums sm:text-2xl md:text-3xl ` +
           (disabled ? '' : 'transition-colors group-hover:text-white')
         }
       >
@@ -121,7 +121,7 @@ export function ReadOnlyStatBlock({
           {labelAddon ? <span className="shrink-0">{labelAddon}</span> : null}
         </span>
       </dt>
-      <dd className="flex min-w-0 items-center gap-2 text-pretty font-semibold text-xl tracking-tight text-zinc-100 tabular-nums sm:text-2xl md:text-3xl">
+      <dd className="flex min-w-0 items-center gap-2 text-xl font-semibold tracking-tight text-pretty text-zinc-100 tabular-nums sm:text-2xl md:text-3xl">
         <span className="inline-flex shrink-0 items-center">{swatch}</span>
         <span className="min-w-0">{value}</span>
       </dd>
