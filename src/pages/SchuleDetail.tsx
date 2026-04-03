@@ -6,7 +6,7 @@ import circle from '@turf/circle'
 import difference from '@turf/difference'
 import distance from '@turf/distance'
 import { featureCollection, point } from '@turf/helpers'
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import MapGL, { Layer, type MapLayerMouseEvent, type MapRef, Source } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { Feature, FeatureCollection, MultiPolygon, Polygon } from 'geojson'
@@ -211,6 +211,30 @@ function AmbiguousCompareSummaryMeta({
   )
 }
 
+function websiteHref(raw: string): string | null {
+  const t = raw.trim()
+  if (!t) return null
+  if (/^https?:\/\//i.test(t)) return t
+  if (t.startsWith('//')) return `https:${t}`
+  return `https://${t}`
+}
+
+function renderTagValueForKey(key: string, value: string): ReactNode {
+  if (key !== 'website') return value
+  const href = websiteHref(value)
+  if (!href) return value
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="break-all text-sky-400 underline underline-offset-2 hover:text-sky-300"
+    >
+      {value}
+    </a>
+  )
+}
+
 function findOfficialSchoolFeature(fc: FeatureCollection, schoolId: string): Feature | null {
   for (const x of fc.features) {
     const pid = x.properties?.id as string | undefined
@@ -313,7 +337,9 @@ function MatchCompareBody({
                       <dt className="shrink-0 font-mono text-xs leading-normal text-amber-200">
                         {k}
                       </dt>
-                      <dd className="min-w-0 text-sm leading-normal text-zinc-200">{o}</dd>
+                      <dd className="min-w-0 text-sm leading-normal text-zinc-200">
+                        {renderTagValueForKey(k, o)}
+                      </dd>
                     </dl>
                   </div>
                   <div className="space-y-1 md:bg-blue-950/15 md:p-3">
@@ -321,7 +347,9 @@ function MatchCompareBody({
                       <dt className="shrink-0 font-mono text-xs leading-normal text-blue-300">
                         {k}
                       </dt>
-                      <dd className="min-w-0 text-sm leading-normal text-zinc-200">{s}</dd>
+                      <dd className="min-w-0 text-sm leading-normal text-zinc-200">
+                        {renderTagValueForKey(k, s)}
+                      </dd>
                     </dl>
                   </div>
                 </div>
@@ -378,7 +406,9 @@ function MatchCompareBody({
                       <dt className="shrink-0 font-mono text-xs leading-normal text-amber-200">
                         {k}
                       </dt>
-                      <dd className="min-w-0 text-sm leading-normal text-zinc-200">{o}</dd>
+                      <dd className="min-w-0 text-sm leading-normal text-zinc-200">
+                        {renderTagValueForKey(k, o)}
+                      </dd>
                     </dl>
                   </div>
                   <div className="space-y-1 md:bg-blue-950/15 md:p-3">
@@ -386,7 +416,9 @@ function MatchCompareBody({
                       <dt className="shrink-0 font-mono text-xs leading-normal text-blue-300">
                         {k}
                       </dt>
-                      <dd className="min-w-0 text-sm leading-normal text-zinc-200">{s}</dd>
+                      <dd className="min-w-0 text-sm leading-normal text-zinc-200">
+                        {renderTagValueForKey(k, s)}
+                      </dd>
                     </dl>
                   </div>
                 </div>
@@ -406,7 +438,9 @@ function MatchCompareBody({
                 className="flex items-center gap-2 border-b border-zinc-800 py-1.5 sm:py-2"
               >
                 <dt className="shrink-0 font-mono text-xs leading-normal text-amber-200">{k}</dt>
-                <dd className="min-w-0 text-sm leading-normal text-zinc-200">{v}</dd>
+                <dd className="min-w-0 text-sm leading-normal text-zinc-200">
+                  {renderTagValueForKey(k, v)}
+                </dd>
               </div>
             ))}
             {onlyO.length === 0 && <p className="text-zinc-400">—</p>}
@@ -421,7 +455,9 @@ function MatchCompareBody({
                 className="flex items-center gap-2 border-b border-zinc-800 py-1.5 sm:py-2"
               >
                 <dt className="shrink-0 font-mono text-xs leading-normal text-blue-300">{k}</dt>
-                <dd className="min-w-0 text-sm leading-normal text-zinc-200">{v}</dd>
+                <dd className="min-w-0 text-sm leading-normal text-zinc-200">
+                  {renderTagValueForKey(k, v)}
+                </dd>
               </div>
             ))}
             {onlyS.length === 0 && <p className="text-zinc-400">—</p>}
