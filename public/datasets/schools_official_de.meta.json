@@ -1,6 +1,6 @@
 {
   "pipelineStep": "pipeline:download:jedeschule",
-  "generatedAt": "2026-04-02T07:15:14.432Z",
+  "generatedAt": "2026-04-03T07:11:40.761Z",
   "sourceUrl": "https://jedeschule.codefor.de/csv-data/latest.csv",
   "ok": true,
   "httpLastModified": "Sat, 28 Mar 2026 16:51:00 GMT",
