@@ -7,6 +7,7 @@
     "includes": [
       "src/**/*",
       "scripts/**/*",
+      "analysis/scripts/**/*",
       "*.ts",
       "*.tsx",
       "index.html",
