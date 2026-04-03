@@ -75,6 +75,61 @@ function mdTable(headers: string[], rows: string[][]): string {
   return [h, sep, body].join('\n')
 }
 
+/** Tabs → spaces, trim lines, drop empty lines, join with a single space. */
+function cleanSchoolTypeFragment(fragment: string): string {
+  const withSpaces = fragment.replace(/\t/g, ' ')
+  const lines = withSpaces.split(/\r?\n/)
+  return lines
+    .map((ln) => ln.trim())
+    .filter(Boolean)
+    .join(' ')
+}
+
+/**
+ * Treat `|` like `;`: split on both, clean each segment, drop empties, rejoin with `"; "`.
+ * Used for Q2 (`02-school-type-counts.md`) and Q3 (`03-school-type-by-state.md`) via `schoolTypeBucketKeyQ2`.
+ */
+function normalizeSchoolTypeForQ2(raw: string): string {
+  if (raw === '') return ''
+  const withSemicolons = raw.replace(/\|/g, ';')
+  const cleaned = withSemicolons
+    .split(';')
+    .map((seg) => cleanSchoolTypeFragment(seg))
+    .filter(Boolean)
+  return cleaned.join('; ')
+}
+
+function schoolTypeBucketKeyQ2(raw: string): string {
+  if (raw === '') return '(not set)'
+  const n = normalizeSchoolTypeForQ2(raw)
+  return n === '' ? '(not set)' : n
+}
+
+const Q2_DISPLAY_MAX_LEN = 80
+
+function truncateForQ2Display(s: string): string {
+  if (s.length <= Q2_DISPLAY_MAX_LEN) return s
+  return `${s.slice(0, Q2_DISPLAY_MAX_LEN)}…`
+}
+
+const Q3_SCHOOL_TYPE_DISPLAY_MAX_LEN = 60
+
+function truncateForQ3SchoolTypeDisplay(s: string): string {
+  if (s.length <= Q3_SCHOOL_TYPE_DISPLAY_MAX_LEN) return s
+  return `${s.slice(0, Q3_SCHOOL_TYPE_DISPLAY_MAX_LEN)}…`
+}
+
+/** e.g. `12.3 %` (one decimal, space before `%`). */
+function formatCountPct(count: number, total: number): string {
+  if (total <= 0) return '0.0 %'
+  return `${((count / total) * 100).toFixed(1)} %`
+}
+
+/** Markdown bullets for Q2/Q3 — describes `normalizeSchoolTypeForQ2` / `schoolTypeBucketKeyQ2`. */
+const MD_SCHOOL_TYPE_NORMALIZATION =
+  '- Tabs → spaces; trim each line; drop empty lines; collapse to one line per segment.\n' +
+  '- `|` is treated like `;`: split on both, each segment cleaned as above, empty segments removed, then rejoined with `"; "`.\n'
+
 function headerBlock(title: string, sourcePath: string): string {
   const gen = new Date().toISOString()
   return [
@@ -129,7 +184,9 @@ async function main() {
   }
 
   const schools: SchoolRow[] = []
-  for (const f of raw.features as Array<{ properties?: Record<string, unknown> }>) {
+  for (const f of raw.features as Array<{
+    properties?: Record<string, unknown>
+  }>) {
     const p = f.properties ?? {}
     const st = p.school_type
     const schoolTypeRaw = typeof st === 'string' ? st.trim() : st == null ? '' : String(st).trim()
@@ -151,10 +208,11 @@ async function main() {
       .sort(),
   ]
 
-  // --- Q1: states with school_type (non-empty) ---
+  // --- Q1: school_type coverage by state ---
   const q1Rows: string[][] = []
   let statesWithAnyType = 0
   let statesAllFilled = 0
+  const statesWithNoType: string[] = []
   for (const code of orderStates) {
     const subset = schools.filter((s) => s.land === code)
     const total = subset.length
@@ -163,47 +221,89 @@ async function main() {
     q1Rows.push([code, String(total), String(withType), `${share}%`])
     if (withType > 0) statesWithAnyType++
     if (total > 0 && withType === total) statesAllFilled++
+    if (total > 0 && withType === 0) statesWithNoType.push(code)
+  }
+
+  let q1HbNote = ''
+  if (statesWithNoType.length > 0) {
+    q1HbNote =
+      '\n\n## Bundesländer with no `school_type` values in this file\n\n' +
+      `**${statesWithNoType.join(', ')}** — in this extract, no school row has a \`school_type\` string.\n\n`
+    if (statesWithNoType.includes('HB')) {
+      q1HbNote +=
+        '**Bremen (HB):** Rows use the **same** GeoJSON properties as everywhere else (`school_type`, `legal_status`, `provider`, …). Here `school_type` is `null` for every school — there is **no other field** in this dataset that carries school type instead. `legal_status` and `provider` are usually unset too, so this reflects how JedeSchule publishes Bremen, not a different column layout.\n\n'
+    }
+    const otherZero = statesWithNoType.filter((c) => c !== 'HB')
+    if (otherZero.length > 0) {
+      q1HbNote += `**${otherZero.join(', ')}:** Same property keys as nationwide; \`school_type\` is simply not filled on these rows in the source data.\n\n`
+    }
   }
 
   const q1Md =
-    headerBlock('States with non-empty `school_type` (official nationwide GeoJSON)', geoPath) +
-    '## Question\n\nHow many federal states (Bundesländer) have at least one school with a non-empty `school_type` value?\n\n## Summary\n\n' +
+    headerBlock('`school_type` coverage by Bundesland (official nationwide GeoJSON)', geoPath) +
+    '## Question\n\nHow many Bundesländer have at least one school **with a `school_type` value**? For each state, how many schools **have** a value and what share is that?\n\n## Summary\n\n' +
     mdTable(
       ['Metric', 'Value'],
       [
         ['Bundesländer in this file', String(orderStates.length)],
-        ['With ≥1 school having non-empty `school_type`', String(statesWithAnyType)],
-        ['Where 100% of schools have non-empty `school_type`', String(statesAllFilled)],
+        ['Bundesländer with ≥1 school **with** a `school_type` value', String(statesWithAnyType)],
+        ['Bundesländer where **every** school has a `school_type` value', String(statesAllFilled)],
       ],
     ) +
-    '\n\n## Per state\n\n' +
-    mdTable(['State (code)', 'Schools', 'With non-empty `school_type`', 'Share'], q1Rows) +
+    q1HbNote +
+    '\n## Per state\n\n' +
+    mdTable(
+      [
+        'State (code)',
+        'Schools (total)',
+        'Schools **with** a `school_type` value',
+        'Share with a value',
+      ],
+      q1Rows,
+    ) +
     '\n'
 
   await writeFile(path.join(OUT_DIR, '01-states-school-type.md'), q1Md, 'utf8')
 
-  // --- Q2: global school_type counts ---
+  // --- Q2: global school_type counts (normalized, count ≥ 10, display truncated) ---
   const typeCounts = new Map<string, number>()
   for (const s of schools) {
-    const key = s.schoolTypeRaw === '' ? '(empty)' : s.schoolTypeRaw
+    const key = schoolTypeBucketKeyQ2(s.schoolTypeRaw)
     typeCounts.set(key, (typeCounts.get(key) ?? 0) + 1)
   }
-  const q2Sorted = [...typeCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  const q2Sorted = [...typeCounts.entries()]
+    .filter(([, c]) => c >= 10)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  const q2TotalSchools = schools.length
   const q2Md =
     headerBlock('Global `school_type` value counts', geoPath) +
-    '## Question\n\nWhat are the values of `school_type` over all states, and how many schools per value?\n\n## Result\n\n' +
+    '## Question\n\nWhat are the values of `school_type` over all states, and how many schools per value?\n\n' +
+    '## Processing (this report only)\n\n' +
+    MD_SCHOOL_TYPE_NORMALIZATION +
+    '- Rows with count **< 10** are omitted.\n' +
+    '- The `school_type` column is truncated to **80** characters in the table (full string is still used for grouping).\n' +
+    '- **%** = share of all schools in the file (denominator: total school count).\n\n' +
+    '## Result\n\n' +
     mdTable(
-      ['school_type', 'count'],
-      q2Sorted.map(([k, c]) => [k, String(c)]),
+      ['school_type', 'count', '%'],
+      q2Sorted.map(([k, c]) => [
+        truncateForQ2Display(k),
+        String(c),
+        formatCountPct(c, q2TotalSchools),
+      ]),
     ) +
     '\n'
 
   await writeFile(path.join(OUT_DIR, '02-school-type-counts.md'), q2Md, 'utf8')
 
-  // --- Q3: per state per type ---
+  // --- Q3: per state per type (same `school_type` normalization as Q2) ---
+  const landSchoolTotals = new Map<string, number>()
+  for (const s of schools) {
+    landSchoolTotals.set(s.land, (landSchoolTotals.get(s.land) ?? 0) + 1)
+  }
   const tripleKey = new Map<string, number>()
   for (const s of schools) {
-    const t = s.schoolTypeRaw === '' ? '(empty)' : s.schoolTypeRaw
+    const t = schoolTypeBucketKeyQ2(s.schoolTypeRaw)
     const k = JSON.stringify([s.land, t] as const)
     tripleKey.set(k, (tripleKey.get(k) ?? 0) + 1)
   }
@@ -213,12 +313,23 @@ async function main() {
       return { land, typ, c }
     })
     .sort((a, b) => a.land.localeCompare(b.land) || b.c - a.c || a.typ.localeCompare(b.typ))
-    .map((x) => [x.land, x.typ, String(x.c)])
+    .map((x) => [
+      x.land,
+      truncateForQ3SchoolTypeDisplay(x.typ),
+      String(x.c),
+      formatCountPct(x.c, landSchoolTotals.get(x.land) ?? 0),
+    ])
 
   const q3Md =
     headerBlock('`school_type` counts per state', geoPath) +
-    '## Question\n\nCount per `school_type` per Bundesland.\n\n## Result\n\n' +
-    mdTable(['State', 'school_type', 'count'], q3Rows) +
+    '## Question\n\nCount per `school_type` per Bundesland.\n\n' +
+    '## Processing\n\n' +
+    'Same `school_type` normalization as `02-school-type-counts.md` (`schoolTypeBucketKeyQ2` in the script):\n\n' +
+    MD_SCHOOL_TYPE_NORMALIZATION +
+    '- The `school_type` column is truncated to **60** characters in this table (full normalized string is used for grouping).\n' +
+    '- **%** = share of schools in that Bundesland (row’s state).\n\n' +
+    '## Result\n\n' +
+    mdTable(['State', 'school_type', 'count', '%'], q3Rows) +
     '\n'
 
   await writeFile(path.join(OUT_DIR, '03-school-type-by-state.md'), q3Md, 'utf8')

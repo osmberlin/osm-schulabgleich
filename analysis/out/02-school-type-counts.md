@@ -4,280 +4,147 @@
 
 **Source:** `public/datasets/schools_official_de.geojson`
 
-**Generated (UTC):** 2026-04-03T12:59:59.283Z
+**Generated (UTC):** 2026-04-03T13:26:43.435Z
 
 ## Question
 
 What are the values of `school_type` over all states, and how many schools per value?
 
+## Processing (this report only)
+
+- Tabs → spaces; trim each line; drop empty lines; collapse to one line per segment.
+- `|` is treated like `;`: split on both, each segment cleaned as above, empty segments removed, then rejoined with `"; "`.
+- Rows with count **< 10** are omitted.
+- The `school_type` column is truncated to **80** characters in the table (full string is still used for grouping).
+- **%** = share of all schools in the file (denominator: total school count).
+
 ## Result
 
-| school_type                                                                                                                                | count |
-| ------------------------------------------------------------------------------------------------------------------------------------------ | ----- |
-| education                                                                                                                                  | 16577 |
-| Grundschule                                                                                                                                | 10133 |
-| primaryEducation                                                                                                                           | 5547  |
-| (empty)                                                                                                                                    | 2774  |
-| Grundschulen                                                                                                                               | 2257  |
-| Gymnasium                                                                                                                                  | 1922  |
-| administrationForEducation                                                                                                                 | 1225  |
-| Förderschule                                                                                                                               | 890   |
-| Mittelschulen                                                                                                                              | 852   |
-| Oberschule                                                                                                                                 | 724   |
-| lowerSecondaryEduction                                                                                                                     | 679   |
-| Berufsbildende Schule                                                                                                                      | 562   |
-| Realschule                                                                                                                                 | 495   |
-| upperSecondaryEducation                                                                                                                    | 420   |
-| Gesamtschule                                                                                                                               | 393   |
-| Berufskolleg                                                                                                                               | 362   |
-| Gymnasien                                                                                                                                  | 323   |
-| Gemeinschaftsschule                                                                                                                        | 311   |
-| Berufsfachschule                                                                                                                           | 304   |
-| Sekundarschule                                                                                                                             | 240   |
-| Realschulen                                                                                                                                | 238   |
-| Grundschule\|vorschulische Sprachförderung\|Vorschulklasse                                                                                 | 208   |
-| Hauptschule                                                                                                                                | 206   |
-| Berufliche Schule                                                                                                                          | 198   |
-| Regelschule                                                                                                                                | 180   |
-| Integrierte Gesamtschule                                                                                                                   | 174   |
-| Förderzentren                                                                                                                              | 159   |
-| Gymnasium (Mittel- und Oberstufe)                                                                                                          | 153   |
-| Schule mit dem Förderschwerpunkt Lernen                                                                                                    | 150   |
-| Realschule plus                                                                                                                            | 138   |
-| Schulformübergreifende (integrierte) Gesamtschule                                                                                          | 135   |
-| Integrierte Sekundarschule                                                                                                                 | 129   |
-| Berufsschulen                                                                                                                              | 120   |
-| Sonstige Förderschule                                                                                                                      | 120   |
-| Schulformbezogene (kooperative) Gesamtschule                                                                                               | 114   |
-| Berufsfachs. f. Hauswirtschaft u. Sozialberufe                                                                                             | 108   |
-| Fachschule                                                                                                                                 | 107   |
-| Freie Trägerschaft ;  ;                                                                                                                    | 106   |
-| Berufsschule                                                                                                                               | 103   |
-| Förderzentrum                                                                                                                              | 83    |
-| Studienseminar                                                                                                                             | 81    |
-| Regionale Schule                                                                                                                           | 75    |
-| Stadtteilschule                                                                                                                            | 75    |
-| Gemeinschaftsschule ;  Hauptschule ;  Realschule ;                                                                                         | 72    |
-| Fachoberschulen                                                                                                                            | 69    |
-| Landwirtschaftliche Fachschulen                                                                                                            | 64    |
-| Regionale Schule mit Grundschule                                                                                                           | 62    |
-| Schule in freier Trägerschaft                                                                                                              | 61    |
-| Schule mit dem Förderschwerpunkt geistige Entwicklung                                                                                      | 61    |
-| Gemeinschaftsschule ;  Grundschule ;  Hauptschule ;  Realschule ;                                                                          | 60    |
-| Berufsoberschulen                                                                                                                          | 59    |
-| Schulaufsicht                                                                                                                              | 59    |
-| Waldorfschule                                                                                                                              | 55    |
-| Freie Waldorfschule                                                                                                                        | 54    |
-| Haupt- und Realschule                                                                                                                      | 54    |
-| Oberschule mit Grundschule                                                                                                                 | 49    |
-| Förderschule für Geistigbehinderte                                                                                                         | 43    |
-| Gewerbliche Fachschulen                                                                                                                    | 43    |
-| Weiterbildungskolleg                                                                                                                       | 43    |
-| Gesamtschule mit GOST                                                                                                                      | 42    |
-| Förderschulen                                                                                                                              | 40    |
-| Klinikschule                                                                                                                               | 38    |
-| Schule mit dem sonderpäd. Schwerpunkt Lernen                                                                                               | 38    |
-| Gemeinschaftsschule ;  Gymnasium ;  Hauptschule ;  Realschule ;                                                                            | 37    |
-| Kooperative Gesamtschule                                                                                                                   | 37    |
-| Schule mit dem sonderpäd. Förderschwerpunkt geistige Entwicklung                                                                           | 37    |
-| Oberstufenzentrum                                                                                                                          | 34    |
-| Kombinierte berufliche Schule                                                                                                              | 33    |
-| ZfsL                                                                                                                                       | 33    |
-| Grund- und Hauptschule                                                                                                                     | 32    |
-| Grundschule\|Vorschulklasse                                                                                                                | 32    |
-| Realschule plus mit Fachoberschule                                                                                                         | 32    |
-| Grundschule mit Orientierungsstufe                                                                                                         | 31    |
-| Oberschule mit gymnasialem Angebot                                                                                                         | 31    |
-| Seminar Gymnasien und Gesamtschulen                                                                                                        | 31    |
-| Wirtschaftsschulen                                                                                                                         | 31    |
-| Förderschule-Schule mit dem Förderschwerpunkt geistige Entwicklung                                                                         | 28    |
-| Grund- und Förderschule                                                                                                                    | 28    |
-| Seminar Grundschule                                                                                                                        | 28    |
-| Berufliche Schule in freier Trägerschaft                                                                                                   | 27    |
-| Berufsfachschulen des Gesundheitswesens                                                                                                    | 26    |
-| Förderschule für Lernbehinderte                                                                                                            | 26    |
-| Grund-, Haupt- und Realschule                                                                                                              | 26    |
-| Fachoberschule                                                                                                                             | 25    |
-| Förderschule-Schule mit dem Förderschwerpunkt Lernen                                                                                       | 24    |
-| Grundschule\|Stadtteilschule\|vorschulische Sprachförderung\|Vorschulklasse                                                                | 24    |
-| Abendgymnasium                                                                                                                             | 23    |
-| Berufsbildende Schule in freier Trägerschaft                                                                                               | 21    |
-| Gymnasiale Oberstufenschule                                                                                                                | 21    |
-| Sonderschule\|Vorschulklasse                                                                                                               | 21    |
-| Förderschwerp. "Geistige Entwicklung"                                                                                                      | 20    |
-| Übrige Förderschwerpunkte                                                                                                                  | 20    |
-| BEA                                                                                                                                        | 19    |
-| Förderschule im Bereich des Berufskollegs                                                                                                  | 19    |
-| Grund-, Haupt und Realschule mit Förderstufe                                                                                               | 19    |
-| Seminar Haupt-, Real- und Gesamtschulen                                                                                                    | 19    |
-| Berufliches Gymnasium                                                                                                                      | 18    |
-| Grund- und Realschule plus (org. verbunden)                                                                                                | 18    |
-| Sonderschule                                                                                                                               | 18    |
-| Kooperative Gesamtschule mit gymnasialer Oberstufe                                                                                         | 17    |
-| OSZ mit beruflichem Gymnasium                                                                                                              | 17    |
-| Grund- und Oberschule                                                                                                                      | 16    |
-| Gymnasium (Mittelstufe)                                                                                                                    | 16    |
-| Musikschule                                                                                                                                | 16    |
-| Förderschwerp. "Lernen"                                                                                                                    | 15    |
-| Grundschule mit Förderstufe                                                                                                                | 15    |
-| Seminar sonderpädagogische Förderung                                                                                                       | 15    |
-| Staatliches Schulamt                                                                                                                       | 15    |
-| Schule mit dem Förderschwerpunkt emotionale und soziale Entwicklung                                                                        | 14    |
-| Studienseminar Grund-, Haupt-, Real- und Sonderschulen                                                                                     | 14    |
-| Thüringer Gemeinschaftsschule                                                                                                              | 14    |
-| ZBW an VHS und anderen Schulformen                                                                                                         | 14    |
-| Berufsbildende Förderschule                                                                                                                | 13    |
-| Freie Waldorfförderschule                                                                                                                  | 13    |
-| Grundschule\|Stadtteilschule\|Vorschulklasse                                                                                               | 13    |
-| Kolleg                                                                                                                                     | 13    |
-| Seminar Berufskolleg                                                                                                                       | 13    |
-| Förderschule mit Ausgleichsklassen                                                                                                         | 12    |
-| Haupt- und Realschule mit Förderstufe                                                                                                      | 11    |
-| Klinik- und Krankenhausschule                                                                                                              | 11    |
-| Fachakademien                                                                                                                              | 10    |
-| Förderschule mit mehreren Förderschwerpunkten                                                                                              | 10    |
-| Gewerbliche Berufsfachschulen                                                                                                              | 10    |
-| Kombinierte allgemein bildende Schule                                                                                                      | 10    |
-| Studienseminar Gymnasien                                                                                                                   | 10    |
-| Studienseminare                                                                                                                            | 10    |
-| Berufsfachschulen f. techn. Assistenzberufe                                                                                                | 9     |
-| Integrative Gesamt- und Grundschule                                                                                                        | 9     |
-| Integrierte Gesamtschule mit gymnasialer Oberstufe                                                                                         | 9     |
-| Integrierte Gesamtschule mit gymnasialer Oberstufe und Grundschule                                                                         | 9     |
-| Mittelstufenschule                                                                                                                         | 9     |
-| Freie Trägerschaft                                                                                                                         | 8     |
-| OSZ                                                                                                                                        | 8     |
-| Berufsfachschule\|Berufsschule\|Berufsvorbereitungsschule                                                                                  | 7     |
-| Berufsfachschule\|Berufsschule\|Berufsvorbereitungsschule\|Fachoberschule\|Fachschule                                                      | 7     |
-| Hochschule                                                                                                                                 | 7     |
-| Mittelstufenschule mit Grundschule                                                                                                         | 7     |
-| Volkshochschule                                                                                                                            | 7     |
-| Förderschule-Schule mit den Förderschwerpunkten geistige Entwicklung und Lernen                                                            | 6     |
-| Grundschule ;  Förderzentrum ;                                                                                                             | 6     |
-| Gymnasium\|Stadtteilschule                                                                                                                 | 6     |
-| Kooperative Gesamtschule mit gymnasialer Oberstufe und Grundschule                                                                         | 6     |
-| Schule mit dem sonderpäd. Förderschwerpunkt emotionale und soziale Entwicklung                                                             | 6     |
-| Thür. Gemeinschaftsschule in freier Trägerschaft                                                                                           | 6     |
-| Berufsfachschule\|Berufsschule\|Berufsvorbereitungsschule\|Fachschule                                                                      | 5     |
-| Berufsfachschule\|Fachschule                                                                                                               | 5     |
-| Berufsschule mit sonderpäd. Aufgaben                                                                                                       | 5     |
-| Förderschwerp. einschl. beruflichem Teil                                                                                                   | 5     |
-| Gymnasium ;  Gemeinschaftsschule ;  Hauptschule ;  Realschule ;                                                                            | 5     |
-| Kooperative Gesamtschule mit Mittelstufenschule                                                                                            | 5     |
-| Oberschule+                                                                                                                                | 5     |
-| Primus (Schulversuch)                                                                                                                      | 5     |
-| Schullandheim                                                                                                                              | 5     |
-| Studienseminar Berufliche Schulen                                                                                                          | 5     |
-| Berufsakademie                                                                                                                             | 4     |
-| Förderschule für Körperbehinderte                                                                                                          | 4     |
-| Gemeinschaftsschule ;  Grundschule ;  Förderzentrum ;  Hauptschule ;  Realschule ;                                                         | 4     |
-| Gemeinschaftsschule ;  Grundschule ;  Gymnasium ;  Hauptschule ;  Realschule ;                                                             | 4     |
-| Gesamtschule mit Grundschule und GOST                                                                                                      | 4     |
-| Grundschule in freier Trägerschaft                                                                                                         | 4     |
-| Hessenkolleg                                                                                                                               | 4     |
-| Schule mit dem Förderschwerpunkt körperliche und motorische Entwicklung                                                                    | 4     |
-| Schule mit dem Förderschwerpunkt Sprache                                                                                                   | 4     |
-| Schule nach §63d SächsSchulG                                                                                                               | 4     |
-| Sonstige                                                                                                                                   | 4     |
-| Volkshochschul-Kolleg                                                                                                                      | 4     |
-| Abendoberschule                                                                                                                            | 3     |
-| Berufsfachschule\|Berufsoberschule\|Berufsschule\|Berufsvorbereitungsschule\|Fachoberschule                                                | 3     |
-| Berufsschulen zur sonderpädog. Förderung                                                                                                   | 3     |
-| Fachhochschule                                                                                                                             | 3     |
-| Grund- und Realschule                                                                                                                      | 3     |
-| Gymnasium mit Grundschule und Orientierungsstufe                                                                                           | 3     |
-| Gymnasium mit Regionaler Schule                                                                                                            | 3     |
-| Kaufmännische Berufsfachschulen                                                                                                            | 3     |
-| Kolleg und Abendgymnasium (org.verbunden)                                                                                                  | 3     |
-| Regelschule in freier Trägerschaft                                                                                                         | 3     |
-| Schule des ZBW                                                                                                                             | 3     |
-| Schule mit dem Förderschwerpunkt Hören                                                                                                     | 3     |
-| Sonstiges                                                                                                                                  | 3     |
-| Abend-Gymnasium                                                                                                                            | 2     |
-| Abendrealschule                                                                                                                            | 2     |
-| Berufliche Gymnasien\|Berufsfachschule\|Berufsoberschule\|Berufsschule\|Berufsvorbereitungsschule                                          | 2     |
-| Berufliche Gymnasien\|Berufsfachschule\|Berufsschule\|Berufsvorbereitungsschule                                                            | 2     |
-| Berufliche Gymnasien\|Berufsfachschule\|Berufsschule\|Berufsvorbereitungsschule\|Fachoberschule\|Fachschule                                | 2     |
-| Berufliche Schule in fr. Trägerschaft mit Beruflichem Gymnasium                                                                            | 2     |
-| Berufsfachschule (allg. bild.)\|Berufsvorbereitungsschule (allg. bild.)\|Grundschule\|Sonderschule\|Stadtteilschule\|Vorschulklasse        | 2     |
-| Berufsfachschule\|Berufsoberschule\|Berufsvorbereitungsschule\|Fachschule                                                                  | 2     |
-| Berufsfachschule\|Berufsschule\|Berufsvorbereitungsschule\|Fachoberschule                                                                  | 2     |
-| Berufsoberschule\|Berufsschule\|Berufsvorbereitungsschule\|Fachoberschule\|Fachschule                                                      | 2     |
-| Berufsschule\|Berufsvorbereitungsschule                                                                                                    | 2     |
-| Berufsvorbereitungsschule (allg. bild.)                                                                                                    | 2     |
-| Berufsvorbereitungsschule (allg. bild.)\|Sonderschule\|Vorschulklasse                                                                      | 2     |
-| Erweiterte Realschule                                                                                                                      | 2     |
-| Förderschule für Sprachentwicklung                                                                                                         | 2     |
-| Förderschule in freier Trägerschaft                                                                                                        | 2     |
-| Förderschule-Schule mit dem Förderschwerpunkt emotionale und soziale Entwicklung                                                           | 2     |
-| Förderschule-Schule mit dem Förderschwerpunkt körperliche und motorische Entwicklung                                                       | 2     |
-| Förderschule-Schule mit dem Förderschwerpunkt Unterricht kranker Schülerinnen und Schüler                                                  | 2     |
-| Förderschule-Schule mit den Förderschwerpunkten Lernen und Unterricht kranker Schülerinnen und Schüler                                     | 2     |
-| Förderschwerp. "Lernen"u."Geistige Entwickl."                                                                                              | 2     |
-| Förderzentrum ;  Grundschule ;                                                                                                             | 2     |
-| Freie Trägerschaft ;  Grundschule ;  ;                                                                                                     | 2     |
-| Gemeinschaftsschule ;  Grundschule ;  Förderzentrum ;  Gymnasium ;  Hauptschule ;  Realschule ;                                            | 2     |
-| Gemeinschaftsschule Abendform                                                                                                              | 2     |
-| Grund- und Hauptschule (org. verbunden)                                                                                                    | 2     |
-| Gymnasium in freier Trägerschaft                                                                                                           | 2     |
-| Gymnasium und Regionale Schule mit Grundschule                                                                                             | 2     |
-| Haupt- und Förderschule                                                                                                                    | 2     |
-| Hauswirtschaftliche Fachschulen                                                                                                            | 2     |
-| Integrierte Gesamtschule mit gymn. Oberstufe, Grundschule, Förderschule-Schule mit dem Förderschwerpunkt geistige Entwicklung              | 2     |
-| Integrierte Gesamtschule ohne gymnasiale Oberstufe                                                                                         | 2     |
-| Integrierte Gesamtschule ohne gymnasiale Oberstufe mit Grundschule                                                                         | 2     |
-| Kollegs                                                                                                                                    | 2     |
-| Schule mit dem Förderschwerpunkt Sehen                                                                                                     | 2     |
-| Schule mit dem sonderpäd. Förderschwerpunkt körperliche und motorische Entwicklung                                                         | 2     |
-| Schulischer Lernort                                                                                                                        | 2     |
-| Volksschule                                                                                                                                | 2     |
-| Abendgymnasium\|Abendschule\|Hansa-Kolleg                                                                                                  | 1     |
-| Allgemeine Dienststelle                                                                                                                    | 1     |
-| Berufliche Gymnasien\|Berufsfachschule\|Berufsschule\|Berufsvorbereitungsschule\|Fachoberschule                                            | 1     |
-| Berufliche Gymnasien\|Berufsfachschule\|Berufsvorbereitungsschule\|Fachschule                                                              | 1     |
-| Berufsfachschule\|Berufsoberschule\|Berufsschule\|Berufsvorbereitungsschule                                                                | 1     |
-| Berufsfachschulen f. Fremdsprachenberufe                                                                                                   | 1     |
-| Doppeltqualifizierender Bildungsgang\|Stadtteilschule                                                                                      | 1     |
-| Fachakademien für Landwirtschaft                                                                                                           | 1     |
-| Fiktive Dienststelle                                                                                                                       | 1     |
-| Förderschule für Gehörlose und Hörgeschädigte                                                                                              | 1     |
-| Förderschule im Bereich der Realschule                                                                                                     | 1     |
-| Förderschule im Bereich des Gymnasiums                                                                                                     | 1     |
-| Förderschule-Schule mit dem Förderschwerpunkt Hören                                                                                        | 1     |
-| Förderschule-Schule mit dem Förderschwerpunkt körperliche und motorische Entwicklung und Grundschule                                       | 1     |
-| Förderschule-Schule mit dem Förderschwerpunkt Sehen                                                                                        | 1     |
-| Förderschule-Schule mit den Förderschwerpunkten emotionale und soziale Entwicklung und Lernen                                              | 1     |
-| Förderschule-Schule mit den Förderschwerpunkten emotionale und soziale Entwicklung und Unterricht kranker Schülerinnen und Schüler         | 1     |
-| Förderschule-Schule mit den Förderschwerpunkten emotionale und soziale Entwicklung, Lernen und Unterricht kranker Schülerinnen und Schüler | 1     |
-| Förderschule-Schule mit den Förderschwerpunkten Lernen, emotionale und soziale Entwicklung und geistige Entwicklung                        | 1     |
-| Freie Trägerschaft ;  Grundschule ;  Gymnasium ;  Gemeinschaftsschule ;  Hauptschule ;  Realschule ;  ;                                    | 1     |
-| Freie Trägerschaft ;  Grundschule ;  Gymnasium ;  Regionalschule ;  Hauptschule ;  Realschule ;  ;                                         | 1     |
-| Gemeinschaftsschule ;  Förderzentrum ;  Gymnasium ;  Hauptschule ;  Realschule ;                                                           | 1     |
-| Gemeinschaftsschule ;  Förderzentrum ;  Hauptschule ;  Realschule ;                                                                        | 1     |
-| Grund und Hauptschule                                                                                                                      | 1     |
-| Grund-, Haupt-, Real- und Förderschule                                                                                                     | 1     |
-| Grundschule ;  Freie Trägerschaft ;                                                                                                        | 1     |
-| Grundschule ;  Hauptschule ;  Grund und Hauptschule ;  Realschule ;                                                                        | 1     |
-| Grundschule\|Gymnasium\|Vorschulklasse                                                                                                     | 1     |
-| Grundschule\|Sonderschule\|Stadtteilschule\|Vorschulklasse                                                                                 | 1     |
-| Gymnasium ;  Grundschule ;  Gemeinschaftsschule ;  Hauptschule ;  Realschule ;                                                             | 1     |
-| Hessisches Kultusministerium                                                                                                               | 1     |
-| Hiberniaschule                                                                                                                             | 1     |
-| Höhere Berufsfachschule                                                                                                                    | 1     |
-| Kaufmännische Fachschulen                                                                                                                  | 1     |
-| Kombinierte allg./berufl. Schule                                                                                                           | 1     |
-| Lyzeum                                                                                                                                     | 1     |
-| Regionale Schule mit Grundschule und Förderschule-Schule mit dem Förderschwerpunkt Lernen                                                  | 1     |
-| Regionale Schule mit integrierter Gesamtschule im Aufbau                                                                                   | 1     |
-| Saarland-Kolleg                                                                                                                            | 1     |
-| Schule des Zweiten Bildungsweges                                                                                                           | 1     |
-| Schule für Kranke                                                                                                                          | 1     |
-| Schule in freier Traegerschaft                                                                                                             | 1     |
-| Schule mit dem sonderpäd. Förderschwerpunkt Hören                                                                                          | 1     |
-| Schule mit dem sonderpäd. Förderschwerpunkt Sehen                                                                                          | 1     |
-| Schulen besonderer Art                                                                                                                     | 1     |
-| Schülerakademie                                                                                                                            | 1     |
-| Sonstige Dienststelle                                                                                                                      | 1     |
-| Sportschule                                                                                                                                | 1     |
-| Studienkolleg                                                                                                                              | 1     |
-| Universität                                                                                                                                | 1     |
+| school_type                                                                 | count | %      |
+| --------------------------------------------------------------------------- | ----- | ------ |
+| education                                                                   | 16577 | 31.3 % |
+| Grundschule                                                                 | 10133 | 19.1 % |
+| primaryEducation                                                            | 5547  | 10.5 % |
+| (not set)                                                                   | 2774  | 5.2 %  |
+| Grundschulen                                                                | 2257  | 4.3 %  |
+| Gymnasium                                                                   | 1922  | 3.6 %  |
+| administrationForEducation                                                  | 1225  | 2.3 %  |
+| Förderschule                                                                | 890   | 1.7 %  |
+| Mittelschulen                                                               | 852   | 1.6 %  |
+| Oberschule                                                                  | 724   | 1.4 %  |
+| lowerSecondaryEduction                                                      | 679   | 1.3 %  |
+| Berufsbildende Schule                                                       | 562   | 1.1 %  |
+| Realschule                                                                  | 495   | 0.9 %  |
+| upperSecondaryEducation                                                     | 420   | 0.8 %  |
+| Gesamtschule                                                                | 393   | 0.7 %  |
+| Berufskolleg                                                                | 362   | 0.7 %  |
+| Gymnasien                                                                   | 323   | 0.6 %  |
+| Gemeinschaftsschule                                                         | 311   | 0.6 %  |
+| Berufsfachschule                                                            | 304   | 0.6 %  |
+| Sekundarschule                                                              | 240   | 0.5 %  |
+| Realschulen                                                                 | 238   | 0.4 %  |
+| Grundschule; vorschulische Sprachförderung; Vorschulklasse                  | 208   | 0.4 %  |
+| Hauptschule                                                                 | 206   | 0.4 %  |
+| Berufliche Schule                                                           | 198   | 0.4 %  |
+| Regelschule                                                                 | 180   | 0.3 %  |
+| Integrierte Gesamtschule                                                    | 174   | 0.3 %  |
+| Förderzentren                                                               | 159   | 0.3 %  |
+| Gymnasium (Mittel- und Oberstufe)                                           | 153   | 0.3 %  |
+| Schule mit dem Förderschwerpunkt Lernen                                     | 150   | 0.3 %  |
+| Realschule plus                                                             | 138   | 0.3 %  |
+| Schulformübergreifende (integrierte) Gesamtschule                           | 135   | 0.3 %  |
+| Integrierte Sekundarschule                                                  | 129   | 0.2 %  |
+| Berufsschulen                                                               | 120   | 0.2 %  |
+| Sonstige Förderschule                                                       | 120   | 0.2 %  |
+| Freie Trägerschaft                                                          | 114   | 0.2 %  |
+| Schulformbezogene (kooperative) Gesamtschule                                | 114   | 0.2 %  |
+| Berufsfachs. f. Hauswirtschaft u. Sozialberufe                              | 108   | 0.2 %  |
+| Fachschule                                                                  | 107   | 0.2 %  |
+| Berufsschule                                                                | 103   | 0.2 %  |
+| Förderzentrum                                                               | 83    | 0.2 %  |
+| Studienseminar                                                              | 81    | 0.2 %  |
+| Regionale Schule                                                            | 75    | 0.1 %  |
+| Stadtteilschule                                                             | 75    | 0.1 %  |
+| Gemeinschaftsschule; Hauptschule; Realschule                                | 72    | 0.1 %  |
+| Fachoberschulen                                                             | 69    | 0.1 %  |
+| Landwirtschaftliche Fachschulen                                             | 64    | 0.1 %  |
+| Regionale Schule mit Grundschule                                            | 62    | 0.1 %  |
+| Schule in freier Trägerschaft                                               | 61    | 0.1 %  |
+| Schule mit dem Förderschwerpunkt geistige Entwicklung                       | 61    | 0.1 %  |
+| Gemeinschaftsschule; Grundschule; Hauptschule; Realschule                   | 60    | 0.1 %  |
+| Berufsoberschulen                                                           | 59    | 0.1 %  |
+| Schulaufsicht                                                               | 59    | 0.1 %  |
+| Waldorfschule                                                               | 55    | 0.1 %  |
+| Freie Waldorfschule                                                         | 54    | 0.1 %  |
+| Haupt- und Realschule                                                       | 54    | 0.1 %  |
+| Oberschule mit Grundschule                                                  | 49    | 0.1 %  |
+| Förderschule für Geistigbehinderte                                          | 43    | 0.1 %  |
+| Gewerbliche Fachschulen                                                     | 43    | 0.1 %  |
+| Weiterbildungskolleg                                                        | 43    | 0.1 %  |
+| Gesamtschule mit GOST                                                       | 42    | 0.1 %  |
+| Förderschulen                                                               | 40    | 0.1 %  |
+| Klinikschule                                                                | 38    | 0.1 %  |
+| Schule mit dem sonderpäd. Schwerpunkt Lernen                                | 38    | 0.1 %  |
+| Gemeinschaftsschule; Gymnasium; Hauptschule; Realschule                     | 37    | 0.1 %  |
+| Kooperative Gesamtschule                                                    | 37    | 0.1 %  |
+| Schule mit dem sonderpäd. Förderschwerpunkt geistige Entwicklung            | 37    | 0.1 %  |
+| Oberstufenzentrum                                                           | 34    | 0.1 %  |
+| Kombinierte berufliche Schule                                               | 33    | 0.1 %  |
+| ZfsL                                                                        | 33    | 0.1 %  |
+| Grund- und Hauptschule                                                      | 32    | 0.1 %  |
+| Grundschule; Vorschulklasse                                                 | 32    | 0.1 %  |
+| Realschule plus mit Fachoberschule                                          | 32    | 0.1 %  |
+| Grundschule mit Orientierungsstufe                                          | 31    | 0.1 %  |
+| Oberschule mit gymnasialem Angebot                                          | 31    | 0.1 %  |
+| Seminar Gymnasien und Gesamtschulen                                         | 31    | 0.1 %  |
+| Wirtschaftsschulen                                                          | 31    | 0.1 %  |
+| Förderschule-Schule mit dem Förderschwerpunkt geistige Entwicklung          | 28    | 0.1 %  |
+| Grund- und Förderschule                                                     | 28    | 0.1 %  |
+| Seminar Grundschule                                                         | 28    | 0.1 %  |
+| Berufliche Schule in freier Trägerschaft                                    | 27    | 0.1 %  |
+| Berufsfachschulen des Gesundheitswesens                                     | 26    | 0.0 %  |
+| Förderschule für Lernbehinderte                                             | 26    | 0.0 %  |
+| Grund-, Haupt- und Realschule                                               | 26    | 0.0 %  |
+| Fachoberschule                                                              | 25    | 0.0 %  |
+| Förderschule-Schule mit dem Förderschwerpunkt Lernen                        | 24    | 0.0 %  |
+| Grundschule; Stadtteilschule; vorschulische Sprachförderung; Vorschulklasse | 24    | 0.0 %  |
+| Abendgymnasium                                                              | 23    | 0.0 %  |
+| Berufsbildende Schule in freier Trägerschaft                                | 21    | 0.0 %  |
+| Gymnasiale Oberstufenschule                                                 | 21    | 0.0 %  |
+| Sonderschule; Vorschulklasse                                                | 21    | 0.0 %  |
+| Förderschwerp. "Geistige Entwicklung"                                       | 20    | 0.0 %  |
+| Übrige Förderschwerpunkte                                                   | 20    | 0.0 %  |
+| BEA                                                                         | 19    | 0.0 %  |
+| Förderschule im Bereich des Berufskollegs                                   | 19    | 0.0 %  |
+| Grund-, Haupt und Realschule mit Förderstufe                                | 19    | 0.0 %  |
+| Seminar Haupt-, Real- und Gesamtschulen                                     | 19    | 0.0 %  |
+| Berufliches Gymnasium                                                       | 18    | 0.0 %  |
+| Grund- und Realschule plus (org. verbunden)                                 | 18    | 0.0 %  |
+| Sonderschule                                                                | 18    | 0.0 %  |
+| Kooperative Gesamtschule mit gymnasialer Oberstufe                          | 17    | 0.0 %  |
+| OSZ mit beruflichem Gymnasium                                               | 17    | 0.0 %  |
+| Grund- und Oberschule                                                       | 16    | 0.0 %  |
+| Gymnasium (Mittelstufe)                                                     | 16    | 0.0 %  |
+| Musikschule                                                                 | 16    | 0.0 %  |
+| Förderschwerp. "Lernen"                                                     | 15    | 0.0 %  |
+| Grundschule mit Förderstufe                                                 | 15    | 0.0 %  |
+| Seminar sonderpädagogische Förderung                                        | 15    | 0.0 %  |
+| Staatliches Schulamt                                                        | 15    | 0.0 %  |
+| Schule mit dem Förderschwerpunkt emotionale und soziale Entwicklung         | 14    | 0.0 %  |
+| Studienseminar Grund-, Haupt-, Real- und Sonderschulen                      | 14    | 0.0 %  |
+| Thüringer Gemeinschaftsschule                                               | 14    | 0.0 %  |
+| ZBW an VHS und anderen Schulformen                                          | 14    | 0.0 %  |
+| Berufsbildende Förderschule                                                 | 13    | 0.0 %  |
+| Freie Waldorfförderschule                                                   | 13    | 0.0 %  |
+| Grundschule; Stadtteilschule; Vorschulklasse                                | 13    | 0.0 %  |
+| Kolleg                                                                      | 13    | 0.0 %  |
+| Seminar Berufskolleg                                                        | 13    | 0.0 %  |
+| Förderschule mit Ausgleichsklassen                                          | 12    | 0.0 %  |
+| Haupt- und Realschule mit Förderstufe                                       | 11    | 0.0 %  |
+| Klinik- und Krankenhausschule                                               | 11    | 0.0 %  |
+| Fachakademien                                                               | 10    | 0.0 %  |
+| Förderschule mit mehreren Förderschwerpunkten                               | 10    | 0.0 %  |
+| Gewerbliche Berufsfachschulen                                               | 10    | 0.0 %  |
+| Kombinierte allgemein bildende Schule                                       | 10    | 0.0 %  |
+| Studienseminar Gymnasien                                                    | 10    | 0.0 %  |
+| Studienseminare                                                             | 10    | 0.0 %  |

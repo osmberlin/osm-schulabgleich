@@ -4,7 +4,7 @@
 
 **Source:** `public/datasets/schools_official_de.geojson`
 
-**Generated (UTC):** 2026-04-03T12:59:59.394Z
+**Generated (UTC):** 2026-04-03T13:26:43.516Z
 
 ## Question
 
