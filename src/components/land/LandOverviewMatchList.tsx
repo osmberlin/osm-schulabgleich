@@ -26,12 +26,18 @@ export function LandOverviewMatchList({
   matchesLength,
   enabledCategoriesLength,
   visibleMatchesLength,
+  listBboxActive,
+  matchesAfterBboxCount,
+  exploreFilteredCount,
 }: {
   code: string
   listMatches: ListMatchRow[]
   matchesLength: number
   enabledCategoriesLength: number
   visibleMatchesLength: number
+  listBboxActive: boolean
+  matchesAfterBboxCount: number
+  exploreFilteredCount: number
 }) {
   return (
     <>
@@ -48,9 +54,13 @@ export function LandOverviewMatchList({
               ? '—'
               : enabledCategoriesLength === 0
                 ? de.land.mapNoVisibleCategories
-                : visibleMatchesLength === 0
-                  ? de.land.tableFilteredEmpty
-                  : de.land.tableBboxEmpty}
+                : listBboxActive && matchesAfterBboxCount === 0
+                  ? de.land.tableBboxEmpty
+                  : exploreFilteredCount === 0 && matchesAfterBboxCount > 0
+                    ? de.land.tableExplorerEmpty
+                    : visibleMatchesLength === 0
+                      ? de.land.tableFilteredEmpty
+                      : '—'}
           </p>
         ) : (
           <ul className="divide-y divide-zinc-700">

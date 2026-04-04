@@ -7,6 +7,7 @@ import {
 } from '../../src/lib/compareMatchKeys'
 import { MATCH_RADIUS_KM } from '../../src/lib/matchRadius'
 import { OSM_SCHOOL_NAME_TAGS_IN_ORDER, type OsmNameMatchTag } from '../../src/lib/osmNameMatchTags'
+import { canonicalSchoolKindDe } from '../../src/lib/osmSchoolKindDe'
 import type { LandCode } from '../../src/lib/stateConfig'
 import { landCodeFromSchoolId } from '../../src/lib/stateConfig'
 import centroid from '@turf/centroid'
@@ -95,6 +96,9 @@ export type MatchRowOut = {
   distanceMeters: number | null
   osmName: string | null
   osmTags: Record<string, string> | null
+  /** Canonical German Schulart from `school` / `school:de` (see `canonicalSchoolKindDe`). */
+  schoolKindDe: string | null
+  schoolKindDeSource: 'school:de' | 'mapped' | 'passthrough' | 'excluded' | 'unmapped' | null
   ambiguousOfficialIds?: string[]
   ambiguousOfficialSnapshots?: AmbiguousOfficialSnapshot[]
   /** Normalized string used for OSM↔official name equality (see pipeline). */
@@ -115,6 +119,20 @@ function snapshotsFromOfficials(offs: OfficialInput[]): AmbiguousOfficialSnapsho
     name: off.name,
     properties: off.properties,
   }))
+}
+
+function schoolKindFromOsmTags(
+  tags: Record<string, string> | null,
+): Pick<MatchRowOut, 'schoolKindDe' | 'schoolKindDeSource'> {
+  if (!tags) return { schoolKindDe: null, schoolKindDeSource: null }
+  const r = canonicalSchoolKindDe({
+    school: tags.school,
+    schoolDe: tags['school:de'],
+  })
+  return {
+    schoolKindDe: r.canonicalDe,
+    schoolKindDeSource: r.source === 'none' ? null : r.source,
+  }
 }
 
 /** Name-based fallback only considers official IDs from the same federal state as the OSM school. */
@@ -354,6 +372,7 @@ export function matchSchools(
       distanceMeters: Math.round(dM),
       osmName: p.o.name,
       osmTags: p.o.tags,
+      ...schoolKindFromOsmTags(p.o.tags),
       matchedByOsmNameNormalized: p.nameKey,
       matchedByOsmNameTag: p.osmNameTag,
     })
@@ -388,6 +407,7 @@ export function matchSchools(
         distanceMeters: null,
         osmName: o.name,
         osmTags: o.tags,
+        ...schoolKindFromOsmTags(o.tags),
       })
       continue
     }
@@ -412,6 +432,7 @@ export function matchSchools(
           distanceMeters: null,
           osmName: o.name,
           osmTags: o.tags,
+          ...schoolKindFromOsmTags(o.tags),
         })
         continue
       }
@@ -430,6 +451,7 @@ export function matchSchools(
         distanceMeters: Math.round(dM),
         osmName: o.name,
         osmTags: o.tags,
+        ...schoolKindFromOsmTags(o.tags),
       })
       continue
     }
@@ -466,6 +488,7 @@ export function matchSchools(
           distanceMeters: Math.round(dM),
           osmName: o.name,
           osmTags: o.tags,
+          ...schoolKindFromOsmTags(o.tags),
           matchedByOsmNameNormalized: offNorm,
           matchedByOsmNameTag: variantMapMulti.get(offNorm),
         })
@@ -490,6 +513,7 @@ export function matchSchools(
       distanceMeters: Math.round(closestKm * 1000),
       osmName: o.name,
       osmTags: o.tags,
+      ...schoolKindFromOsmTags(o.tags),
       ambiguousOfficialIds: withDist.map((x) => x.off.id),
       ambiguousOfficialSnapshots: snapshotsFromOfficials(withDist.map((x) => x.off)),
     })
@@ -510,6 +534,7 @@ export function matchSchools(
       distanceMeters: null,
       osmName: null,
       osmTags: null,
+      ...schoolKindFromOsmTags(null),
     })
   }
 
@@ -764,6 +789,7 @@ export function matchSchools(
       distanceMeters: null,
       osmName: null,
       osmTags: null,
+      ...schoolKindFromOsmTags(null),
     })
   }
 

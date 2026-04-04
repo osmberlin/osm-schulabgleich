@@ -22,6 +22,7 @@
         "clsx": "^2.1.1",
         "csv-parse": "^6.2.1",
         "date-fns": "^4.1.0",
+        "itemsjs": "^2.4.4",
         "maplibre-gl": "^5.17.0",
         "nuqs": "^2.8.9",
         "osmtogeojson": "^3.0.0-beta.5",
@@ -744,6 +745,8 @@
     "isbot": ["isbot@5.1.36", "", {}, "sha512-C/ZtXyJqDPZ7G7JPr06ApWyYoHjYexQbS6hPYD4WYCzpv2Qes6Z+CCEfTX4Owzf+1EJ933PoI2p+B9v7wpGZBQ=="],
 
     "isobject": ["isobject@3.0.1", "", {}, "sha512-WhB9zCku7EGTj/HQQRz5aUQEUeoQZH2bWcltRErOpymJ4boYE6wL9Tbr23krRPSZ+C5zqNSrSw+Cc7sZZ4b7vg=="],
+
+    "itemsjs": ["itemsjs@2.4.4", "", {}, "sha512-NlSLz1EdFs0GzRkvWt6nKRcP6WH555pDpVWmAu5RaNa6GKtccM539a1sa94ImXCA1LfPGPWgamO+NU5XcxiA6g=="],
 
     "jiti": ["jiti@2.6.1", "", { "bin": { "jiti": "lib/jiti-cli.mjs" } }, "sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ=="],
 

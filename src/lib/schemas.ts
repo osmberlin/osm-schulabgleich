@@ -1,6 +1,14 @@
 import { OSM_SCHOOL_NAME_TAGS_IN_ORDER } from './osmNameMatchTags'
 import { z } from 'zod'
 
+const schoolKindDeSourceSchema = z.enum([
+  'school:de',
+  'mapped',
+  'passthrough',
+  'excluded',
+  'unmapped',
+])
+
 export const jedeschuleSchoolSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -63,6 +71,8 @@ export const schoolsMatchRowSchema = z
     matchedByWebsiteNormalized: z.string().optional(),
     matchedByAddressNormalized: z.string().optional(),
     pipelineLand: z.string().optional(),
+    schoolKindDe: z.string().nullable().optional(),
+    schoolKindDeSource: schoolKindDeSourceSchema.nullable().optional(),
   })
   .superRefine((row, ctx) => {
     if (!row.category && !row.matchCategory) {

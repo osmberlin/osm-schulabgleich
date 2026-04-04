@@ -1,8 +1,14 @@
+import { LandOverviewFiltersDisclosure } from '../components/land/LandOverviewFiltersDisclosure'
 import { LandOverviewHistorySection } from '../components/land/LandOverviewHistorySection'
 import { LandOverviewMapSection } from '../components/land/LandOverviewMapSection'
 import { LandOverviewMatchList } from '../components/land/LandOverviewMatchList'
 import { LandOverviewStats } from '../components/land/LandOverviewStats'
 import { de } from '../i18n/de'
+import {
+  collectFilteredIdsFromSearchResult,
+  createLandMatchItemsJsEngine,
+  searchLandMatchesWithExplorer,
+} from '../lib/landOverviewItemsSearch'
 import { landHistoryFromRuns } from '../lib/matchHistoryFromRuns'
 import {
   buildOfficialSchoolLonLatIndex,
@@ -22,6 +28,7 @@ import {
 import { runsFileSchema, schoolsMatchesFileSchema, summaryFileSchema } from '../lib/schemas'
 import { useLandCategoryFilter } from '../lib/useLandCategoryFilter'
 import { useLandMapBbox } from '../lib/useLandMapBbox'
+import { useLandOverviewExplorerFilter } from '../lib/useLandOverviewExplorerFilter'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from '@tanstack/react-router'
 import type { Feature, FeatureCollection, MultiPolygon, Polygon } from 'geojson'
@@ -34,6 +41,7 @@ export function LandOverview() {
   const { enabledSet, enabledCategories, setCategoryEnabled, isCategoryEnabled } =
     useLandCategoryFilter()
   const { bbox: listBbox, setBbox: setListBbox, clearBbox: clearListBbox } = useLandMapBbox()
+  const explorer = useLandOverviewExplorerFilter()
 
   const summaryQ = useQuery({
     queryKey: ['summary'],
@@ -119,12 +127,53 @@ export function LandOverview() {
     return buildOfficialSchoolLonLatIndex(o)
   }, [dataQ.data?.official])
 
-  const matchesForCatCounts = useMemo(() => {
+  const matchesAfterBbox = useMemo(() => {
     if (!listBbox) return matches
     return matches.filter((r) =>
       matchRowIncludedWhenLandMapBboxActive(r, listBbox, officialLonLatIndex),
     )
   }, [matches, listBbox, officialLonLatIndex])
+
+  const explorerKey = useMemo(
+    () =>
+      [
+        explorer.exploreQ,
+        explorer.nameScope,
+        [...explorer.matchModes].sort().join('|'),
+        [...explorer.iscedLevels].sort().join('|'),
+        JSON.stringify([...explorer.schoolKinds].sort()),
+      ].join('\n'),
+    [
+      explorer.exploreQ,
+      explorer.nameScope,
+      explorer.matchModes,
+      explorer.iscedLevels,
+      explorer.schoolKinds,
+    ],
+  )
+
+  const itemsEngine = useMemo(
+    () => createLandMatchItemsJsEngine(matchesAfterBbox),
+    [matchesAfterBbox],
+  )
+
+  const exploreResult = useMemo(() => {
+    if (matchesAfterBbox.length === 0) return null
+    return searchLandMatchesWithExplorer(itemsEngine, {
+      query: explorer.exploreQ,
+      nameScope: explorer.nameScope,
+      matchModes: explorer.matchModes,
+      iscedLevels: explorer.iscedLevels,
+      schoolKinds: explorer.schoolKinds,
+    })
+  }, [itemsEngine, matchesAfterBbox, explorerKey])
+
+  const matchesAfterExplorer = useMemo(() => {
+    if (matchesAfterBbox.length === 0) return []
+    if (!exploreResult) return matchesAfterBbox
+    const ids = collectFilteredIdsFromSearchResult(exploreResult)
+    return matchesAfterBbox.filter((r) => ids.has(r.key))
+  }, [matchesAfterBbox, exploreResult])
 
   const catCounts = useMemo(() => {
     const z = {
@@ -134,23 +183,18 @@ export function LandOverview() {
       match_ambiguous: 0,
       official_no_coord: 0,
     }
-    for (const r of matchesForCatCounts) {
+    for (const r of matchesAfterExplorer) {
       z[r.category]++
     }
     return z
-  }, [matchesForCatCounts])
+  }, [matchesAfterExplorer])
 
   const visibleMatches = useMemo(
-    () => matches.filter((r) => enabledSet.has(r.category)),
-    [matches, enabledSet],
+    () => matchesAfterExplorer.filter((r) => enabledSet.has(r.category)),
+    [matchesAfterExplorer, enabledSet],
   )
 
-  const listMatches = useMemo(() => {
-    if (!listBbox) return visibleMatches
-    return visibleMatches.filter((r) =>
-      matchRowIncludedWhenLandMapBboxActive(r, listBbox, officialLonLatIndex),
-    )
-  }, [visibleMatches, listBbox, officialLonLatIndex])
+  const listMatches = visibleMatches
 
   const mapMatchPoints = useMemo(
     () => matchesToOverviewMapPoints(listMatches, officialLonLatIndex),
@@ -180,6 +224,27 @@ export function LandOverview() {
         </div>
       )}
 
+      <LandOverviewFiltersDisclosure
+        exploreQ={explorer.exploreQ}
+        setExploreQ={(q) => {
+          void explorer.setExploreQ(q)
+        }}
+        nameScope={explorer.nameScope}
+        setNameScope={(s) => {
+          void explorer.setNameScope(s)
+        }}
+        matchModes={explorer.matchModes}
+        toggleMatchMode={explorer.toggleMatchMode}
+        iscedLevels={explorer.iscedLevels}
+        toggleIscedLevel={explorer.toggleIscedLevel}
+        schoolKinds={explorer.schoolKinds}
+        toggleSchoolKind={explorer.toggleSchoolKind}
+        resetExplorer={explorer.resetExplorer}
+        aggregations={exploreResult?.data.aggregations}
+        filteredCount={matchesAfterExplorer.length}
+        bboxTotalCount={matchesAfterBbox.length}
+      />
+
       <LandOverviewStats
         catCounts={catCounts}
         statsInputId={statsInputId}
@@ -204,6 +269,9 @@ export function LandOverview() {
         matchesLength={matches.length}
         enabledCategoriesLength={enabledCategories.length}
         visibleMatchesLength={visibleMatches.length}
+        listBboxActive={listBbox != null}
+        matchesAfterBboxCount={matchesAfterBbox.length}
+        exploreFilteredCount={matchesAfterExplorer.length}
       />
 
       <LandOverviewHistorySection
