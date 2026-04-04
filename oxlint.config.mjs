@@ -1,6 +1,5 @@
-import { defineConfig } from 'oxlint'
-
-export default defineConfig({
+/** @type {import('oxlint').OxlintConfig} */
+export default {
   plugins: ['unicorn', 'typescript', 'oxc', 'react', 'vitest'],
   ignorePatterns: ['dist/**', 'node_modules/**', 'public/**'],
   rules: {
@@ -9,4 +8,4 @@ export default defineConfig({
     'typescript/no-explicit-any': 'warn',
     'typescript/consistent-type-imports': 'off',
   },
-})
+}

@@ -1,6 +1,5 @@
-import { defineConfig } from 'oxfmt'
-
-export default defineConfig({
+/** @type {import('oxfmt').Oxfmtrc} */
+export default {
   useTabs: false,
   tabWidth: 2,
   printWidth: 100,
@@ -25,4 +24,4 @@ export default defineConfig({
     stylesheet: 'src/index.css',
     functions: ['cn', 'clsx', 'twMerge', 'twJoin'],
   },
-})
+}

@@ -21,9 +21,9 @@
     "analysis:jedeschule": "bun run analysis/scripts/jedeschule-official-analysis.ts && bun run format",
     "analysis:osm-school-tags": "bun run analysis/scripts/osm-school-tags-analysis.ts && bun run format",
     "build:compress": "bun run scripts/compress-dist-assets.ts dist",
-    "lint": "oxlint -c oxlint.config.ts .",
-    "format": "oxfmt -c oxfmt.config.ts --write .",
-    "format:check": "oxfmt -c oxfmt.config.ts --check .",
+    "lint": "oxlint -c oxlint.config.mjs .",
+    "format": "oxfmt -c oxfmt.config.mjs --write .",
+    "format:check": "oxfmt -c oxfmt.config.mjs --check .",
     "test": "vitest run",
     "knip": "knip"
   },
