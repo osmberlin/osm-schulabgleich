@@ -40,6 +40,14 @@ describe('comparePropertySections address group', () => {
     ])
   })
 
+  it('creates address group for Straße vs Str. variants in either direction', () => {
+    const res = comparePropertySections(
+      { address: 'Musterstraße 10' },
+      { 'addr:street': 'Musterstr.', 'addr:housenumber': '10' },
+    )
+    expect(res.compareGroups).toHaveLength(1)
+  })
+
   it('filters underscore-prefixed helper properties from compare output', () => {
     const res = comparePropertySections(
       { _compare_address: 'x', address: 'Ring 7' },

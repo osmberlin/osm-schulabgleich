@@ -1,15 +1,21 @@
+import {
+  flattenOfficialForCompare,
+  flattenOsmTagsForCompare,
+  normalizeAddressMatchKey,
+  normalizeSchoolNameForMatch,
+  normalizeWebsiteMatchKey,
+} from '../../src/lib/compareMatchKeys'
 import { MATCH_RADIUS_KM } from '../../src/lib/matchRadius'
 import { OSM_SCHOOL_NAME_TAGS_IN_ORDER, type OsmNameMatchTag } from '../../src/lib/osmNameMatchTags'
 import type { LandCode } from '../../src/lib/stateConfig'
 import { landCodeFromSchoolId } from '../../src/lib/stateConfig'
-import { normalizeSchoolNameForMatch } from './schoolNameNormalize'
 import centroid from '@turf/centroid'
 import distance from '@turf/distance'
 import { point } from '@turf/helpers'
 import type { Feature, FeatureCollection, Geometry, MultiPolygon, Polygon } from 'geojson'
 
 export { MATCH_RADIUS_KM }
-export { normalizeSchoolNameForMatch } from './schoolNameNormalize'
+export { normalizeSchoolNameForMatch } from '../../src/lib/compareMatchKeys'
 
 export type { OsmNameMatchTag }
 
@@ -77,7 +83,7 @@ export type AmbiguousOfficialSnapshot = {
 export type MatchRowOut = {
   key: string
   category: 'matched' | 'official_only' | 'osm_only' | 'match_ambiguous' | 'official_no_coord'
-  matchMode?: 'distance' | 'distance_and_name' | 'name'
+  matchMode?: 'distance' | 'distance_and_name' | 'name' | 'website' | 'address'
   officialId: string | null
   officialName: string | null
   officialProperties: Record<string, unknown> | null
@@ -95,6 +101,10 @@ export type MatchRowOut = {
   matchedByOsmNameNormalized?: string
   /** OSM tag whose value aligned with `matchedByOsmNameNormalized` for name-based matches. */
   matchedByOsmNameTag?: OsmNameMatchTag
+  /** Normalized website string used for no-coord website fallback equality. */
+  matchedByWebsiteNormalized?: string
+  /** Normalized address string used for no-coord address fallback equality. */
+  matchedByAddressNormalized?: string
   /** Federal state code for national pipeline split (optional). */
   pipelineLand?: string
 }
@@ -114,6 +124,41 @@ function officialsInSameLandAsOsm(officials: OfficialInput[], osmLand: LandCode)
 
 function osmLandKey(o: OsmSchoolInput): string {
   return `${o.osmType}/${o.osmId}`
+}
+
+function rowLandByOsmRef(
+  row: Pick<MatchRowOut, 'osmType' | 'osmId'>,
+  opts: MatchSchoolsOptions,
+): LandCode {
+  const key = `${row.osmType}/${row.osmId}`
+  const land = opts.osmLandByKey.get(key)
+  if (land === undefined) {
+    throw new Error(`matchSchools: osmLandByKey missing entry "${key}"`)
+  }
+  return land
+}
+
+function officialWebsiteKey(off: OfficialInput): string {
+  const map = flattenOfficialForCompare(off.properties ?? {})
+  return normalizeWebsiteMatchKey(map.get('website') ?? '')
+}
+
+function osmRowWebsiteKey(row: MatchRowOut): string {
+  const map = flattenOsmTagsForCompare(row.osmTags ?? {})
+  return normalizeWebsiteMatchKey(map.get('website') ?? '')
+}
+
+function officialAddressKey(off: OfficialInput): string {
+  const map = flattenOfficialForCompare(off.properties ?? {})
+  return normalizeAddressMatchKey(map.get('address') ?? '')
+}
+
+function osmRowAddressKey(row: MatchRowOut): string {
+  const map = flattenOsmTagsForCompare(row.osmTags ?? {})
+  const street = map.get('street') ?? ''
+  const housenumber = map.get('housenumber') ?? ''
+  const line = [street, housenumber].filter((x) => x.trim() !== '').join(' ')
+  return normalizeAddressMatchKey(line)
 }
 
 /** Officials within match radius (same land); `excludeReserved` optional filter. */
@@ -534,6 +579,132 @@ export function matchSchools(
       ambiguousOfficialSnapshots: snapshotsFromOfficials(snapOffs),
       matchedByOsmNameNormalized: key,
       matchedByOsmNameTag: ambNoCoordVariantMap.get(key),
+    }
+  }
+
+  const noCoordByWebsite = new Map<string, OfficialInput[]>()
+  for (const off of withoutCoord) {
+    if (noCoordMatched.has(off.id)) continue
+    const key = officialWebsiteKey(off)
+    if (!key) continue
+    const arr = noCoordByWebsite.get(key)
+    if (arr) arr.push(off)
+    else noCoordByWebsite.set(key, [off])
+  }
+  const osmOnlyByWebsite = new Map<string, number[]>()
+  for (let idx = 0; idx < rows.length; idx++) {
+    const row = rows[idx]
+    if (row.category !== 'osm_only') continue
+    const key = osmRowWebsiteKey(row)
+    if (!key) continue
+    const arr = osmOnlyByWebsite.get(key)
+    if (arr) arr.push(idx)
+    else osmOnlyByWebsite.set(key, [idx])
+  }
+  for (const [key, officialsWithWebsiteAll] of noCoordByWebsite.entries()) {
+    const osmIdxs = osmOnlyByWebsite.get(key)
+    if (!osmIdxs) continue
+    if (osmIdxs.length !== 1) continue
+    const targetIdx = osmIdxs[0]
+    const base = rows[targetIdx]
+    const osmLandWebsite = rowLandByOsmRef(base, opts)
+    const officialsWithWebsite = officialsInSameLandAsOsm(officialsWithWebsiteAll, osmLandWebsite)
+    if (officialsWithWebsite.length === 0) continue
+    if (officialsWithWebsite.length === 1) {
+      const off = officialsWithWebsite[0]
+      if (noCoordMatched.has(off.id)) continue
+      rows[targetIdx] = {
+        ...base,
+        key: `match-${off.id}`,
+        category: 'matched',
+        matchMode: 'website',
+        officialId: off.id,
+        officialName: off.name,
+        officialProperties: off.properties,
+        matchedByWebsiteNormalized: key,
+      }
+      noCoordMatched.add(off.id)
+      continue
+    }
+    const ids = officialsWithWebsite.map((off) => off.id).filter((id) => !noCoordMatched.has(id))
+    if (ids.length <= 1) continue
+    const byId = new Map(officialsWithWebsite.map((off) => [off.id, off] as const))
+    const snapOffs = ids.map((id) => byId.get(id)).filter((x): x is OfficialInput => x != null)
+    rows[targetIdx] = {
+      ...base,
+      key: `ambig-${base.osmType ?? 'way'}-${base.osmId ?? 'unknown'}`,
+      category: 'match_ambiguous',
+      matchMode: 'website',
+      officialId: null,
+      officialName: null,
+      officialProperties: null,
+      distanceMeters: null,
+      ambiguousOfficialIds: ids,
+      ambiguousOfficialSnapshots: snapshotsFromOfficials(snapOffs),
+      matchedByWebsiteNormalized: key,
+    }
+  }
+
+  const noCoordByAddress = new Map<string, OfficialInput[]>()
+  for (const off of withoutCoord) {
+    if (noCoordMatched.has(off.id)) continue
+    const key = officialAddressKey(off)
+    if (!key) continue
+    const arr = noCoordByAddress.get(key)
+    if (arr) arr.push(off)
+    else noCoordByAddress.set(key, [off])
+  }
+  const osmOnlyByAddress = new Map<string, number[]>()
+  for (let idx = 0; idx < rows.length; idx++) {
+    const row = rows[idx]
+    if (row.category !== 'osm_only') continue
+    const key = osmRowAddressKey(row)
+    if (!key) continue
+    const arr = osmOnlyByAddress.get(key)
+    if (arr) arr.push(idx)
+    else osmOnlyByAddress.set(key, [idx])
+  }
+  for (const [key, officialsWithAddressAll] of noCoordByAddress.entries()) {
+    const osmIdxs = osmOnlyByAddress.get(key)
+    if (!osmIdxs) continue
+    if (osmIdxs.length !== 1) continue
+    const targetIdx = osmIdxs[0]
+    const base = rows[targetIdx]
+    const osmLandAddress = rowLandByOsmRef(base, opts)
+    const officialsWithAddress = officialsInSameLandAsOsm(officialsWithAddressAll, osmLandAddress)
+    if (officialsWithAddress.length === 0) continue
+    if (officialsWithAddress.length === 1) {
+      const off = officialsWithAddress[0]
+      if (noCoordMatched.has(off.id)) continue
+      rows[targetIdx] = {
+        ...base,
+        key: `match-${off.id}`,
+        category: 'matched',
+        matchMode: 'address',
+        officialId: off.id,
+        officialName: off.name,
+        officialProperties: off.properties,
+        matchedByAddressNormalized: key,
+      }
+      noCoordMatched.add(off.id)
+      continue
+    }
+    const ids = officialsWithAddress.map((off) => off.id).filter((id) => !noCoordMatched.has(id))
+    if (ids.length <= 1) continue
+    const byId = new Map(officialsWithAddress.map((off) => [off.id, off] as const))
+    const snapOffs = ids.map((id) => byId.get(id)).filter((x): x is OfficialInput => x != null)
+    rows[targetIdx] = {
+      ...base,
+      key: `ambig-${base.osmType ?? 'way'}-${base.osmId ?? 'unknown'}`,
+      category: 'match_ambiguous',
+      matchMode: 'address',
+      officialId: null,
+      officialName: null,
+      officialProperties: null,
+      distanceMeters: null,
+      ambiguousOfficialIds: ids,
+      ambiguousOfficialSnapshots: snapshotsFromOfficials(snapOffs),
+      matchedByAddressNormalized: key,
     }
   }
 

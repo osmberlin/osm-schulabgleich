@@ -1,3 +1,4 @@
+import { normalizeAddressMatchKey, normalizeWebsiteMatchKey } from '../../src/lib/compareMatchKeys'
 import type { LandCode } from '../../src/lib/stateConfig'
 import {
   MATCH_RADIUS_KM,
@@ -558,6 +559,142 @@ describe('matchSchools', () => {
     ])
     expect(rows.filter((r) => r.category === 'official_no_coord')).toHaveLength(0)
     expect(officialNoCoordCount).toBe(0)
+  })
+
+  it('matches no-coord official by normalized website after name fallback', () => {
+    const officialsNoCoord: OfficialInput[] = [
+      {
+        id: 'NI-web-1',
+        name: 'Andere Schule',
+        lon: Number.NaN,
+        lat: Number.NaN,
+        properties: { id: 'NI-web-1', website: 'https://schule.example.org' },
+      },
+    ]
+    const osmOnly: OsmSchoolInput = {
+      ...osmNear,
+      osmId: '301',
+      name: 'Noch Andere Schule',
+      tags: { amenity: 'school', website: 'schule.example.org/' },
+      centroid: [8.7, 52.1],
+    }
+    const { rows } = matchSchools(officialsNoCoord, [osmOnly], landOpts(osmOnly, 'NI'))
+    const m = rows.filter((r) => r.category === 'matched')
+    expect(m).toHaveLength(1)
+    expect(m[0].matchMode).toBe('website')
+    expect(m[0].officialId).toBe('NI-web-1')
+    expect(m[0].matchedByWebsiteNormalized).toBe(normalizeWebsiteMatchKey('schule.example.org/'))
+  })
+
+  it('keeps website fallback land-local and leaves osm_only otherwise', () => {
+    const officialsNoCoord: OfficialInput[] = [
+      {
+        id: 'HE-web-x',
+        name: 'Website Schule',
+        lon: Number.NaN,
+        lat: Number.NaN,
+        properties: { id: 'HE-web-x', website: 'https://schule.example.org' },
+      },
+    ]
+    const osmOnly: OsmSchoolInput = {
+      ...osmNear,
+      osmId: '302',
+      name: 'Website Schule OSM',
+      tags: { amenity: 'school', website: 'https://schule.example.org/' },
+      centroid: [8.7, 52.1],
+    }
+    const { rows } = matchSchools(officialsNoCoord, [osmOnly], landOpts(osmOnly, 'NI'))
+    expect(rows.some((r) => r.category === 'matched')).toBe(false)
+    expect(rows.find((r) => r.osmId === '302')?.category).toBe('osm_only')
+  })
+
+  it('marks website fallback ambiguous when multiple no-coord officials share normalized URL', () => {
+    const officialsNoCoord: OfficialInput[] = [
+      {
+        id: 'NI-web-a',
+        name: 'Website A',
+        lon: Number.NaN,
+        lat: Number.NaN,
+        properties: { id: 'NI-web-a', website: 'https://schule.example.org' },
+      },
+      {
+        id: 'NI-web-b',
+        name: 'Website B',
+        lon: Number.NaN,
+        lat: Number.NaN,
+        properties: { id: 'NI-web-b', website: 'http://schule.example.org/' },
+      },
+    ]
+    const osmOnly: OsmSchoolInput = {
+      ...osmNear,
+      osmId: '303',
+      name: 'Website OSM',
+      tags: { amenity: 'school', website: 'https://schule.example.org/' },
+      centroid: [8.7, 52.1],
+    }
+    const { rows } = matchSchools(officialsNoCoord, [osmOnly], landOpts(osmOnly, 'NI'))
+    const amb = rows.find((r) => r.category === 'match_ambiguous')
+    expect(amb).toBeTruthy()
+    expect(amb?.matchMode).toBe('website')
+    expect(amb?.matchedByWebsiteNormalized).toBe(normalizeWebsiteMatchKey('schule.example.org'))
+    expect((amb?.ambiguousOfficialIds ?? []).sort()).toEqual(['NI-web-a', 'NI-web-b'])
+  })
+
+  it('matches no-coord official by normalized address after website fallback', () => {
+    const officialsNoCoord: OfficialInput[] = [
+      {
+        id: 'NI-addr-1',
+        name: 'Address Schule',
+        lon: Number.NaN,
+        lat: Number.NaN,
+        properties: { id: 'NI-addr-1', address: 'Hauptstr. 7' },
+      },
+    ]
+    const osmOnly: OsmSchoolInput = {
+      ...osmNear,
+      osmId: '304',
+      name: 'Address OSM',
+      tags: { amenity: 'school', 'addr:street': 'Hauptstraße', 'addr:housenumber': '7' },
+      centroid: [8.7, 52.1],
+    }
+    const { rows } = matchSchools(officialsNoCoord, [osmOnly], landOpts(osmOnly, 'NI'))
+    const m = rows.filter((r) => r.category === 'matched')
+    expect(m).toHaveLength(1)
+    expect(m[0].officialId).toBe('NI-addr-1')
+    expect(m[0].matchMode).toBe('address')
+    expect(m[0].matchedByAddressNormalized).toBe(normalizeAddressMatchKey('Hauptstr. 7'))
+  })
+
+  it('marks address fallback ambiguous when multiple no-coord officials share normalized address', () => {
+    const officialsNoCoord: OfficialInput[] = [
+      {
+        id: 'NI-addr-a',
+        name: 'Adresse A',
+        lon: Number.NaN,
+        lat: Number.NaN,
+        properties: { id: 'NI-addr-a', address: 'Ringstraße 1' },
+      },
+      {
+        id: 'NI-addr-b',
+        name: 'Adresse B',
+        lon: Number.NaN,
+        lat: Number.NaN,
+        properties: { id: 'NI-addr-b', address: 'Ringstr. 1' },
+      },
+    ]
+    const osmOnly: OsmSchoolInput = {
+      ...osmNear,
+      osmId: '305',
+      name: 'Address OSM',
+      tags: { amenity: 'school', 'addr:street': 'Ringstraße', 'addr:housenumber': '1' },
+      centroid: [8.7, 52.1],
+    }
+    const { rows } = matchSchools(officialsNoCoord, [osmOnly], landOpts(osmOnly, 'NI'))
+    const amb = rows.find((r) => r.category === 'match_ambiguous')
+    expect(amb).toBeTruthy()
+    expect(amb?.matchMode).toBe('address')
+    expect(amb?.matchedByAddressNormalized).toBe(normalizeAddressMatchKey('Ringstraße 1'))
+    expect((amb?.ambiguousOfficialIds ?? []).sort()).toEqual(['NI-addr-a', 'NI-addr-b'])
   })
 })
 

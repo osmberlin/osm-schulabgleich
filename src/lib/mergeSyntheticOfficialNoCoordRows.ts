@@ -41,7 +41,10 @@ export function mergeSyntheticOfficialNoCoordRows(
 
   const noCoordNameMatchedOfficialIds = new Set<string>()
   for (const row of matches) {
-    if (row.matchMode === 'name' && row.officialId) {
+    if (
+      (row.matchMode === 'name' || row.matchMode === 'website' || row.matchMode === 'address') &&
+      row.officialId
+    ) {
       noCoordNameMatchedOfficialIds.add(row.officialId)
     }
   }

@@ -160,10 +160,16 @@ export const de = {
       'Zuordnung über Distanz und Namensgleichheit (normalisierter Vergleichsstring, siehe Pipeline):',
     matchExplanationName:
       'Zuordnung nur über Namensgleichheit (amtlicher Datensatz ohne Koordinaten, normalisierter Vergleichsstring):',
+    matchExplanationWebsite:
+      'Zuordnung nur über Website-Gleichheit (amtlicher Datensatz ohne Koordinaten, normalisierte URL):',
+    matchExplanationAddress:
+      'Zuordnung nur über Adress-Gleichheit (amtlicher Datensatz ohne Koordinaten, normalisierte Adresse):',
     matchModeLabel: {
       distance: 'Distanz',
       distance_and_name: 'Distanz + Name',
       name: 'Name',
+      website: 'Website',
+      address: 'Adresse',
     },
     matchMatchedByOsmTag: {
       name: 'Abgleich über das OSM-Tag `name`.',

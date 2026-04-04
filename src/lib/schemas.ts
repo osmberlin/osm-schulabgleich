@@ -43,7 +43,7 @@ export const schoolsMatchRowSchema = z
     key: z.string(),
     category: matchCategorySchema.optional(),
     matchCategory: matchCategorySchema.optional(),
-    matchMode: z.enum(['distance', 'distance_and_name', 'name']).optional(),
+    matchMode: z.enum(['distance', 'distance_and_name', 'name', 'website', 'address']).optional(),
     officialId: z.string().nullable(),
     officialName: z.string().nullable(),
     officialProperties: z.record(z.string(), z.unknown()).nullable().optional(),
@@ -60,6 +60,8 @@ export const schoolsMatchRowSchema = z
     ambiguousOfficialSnapshots: z.array(ambiguousOfficialSnapshotSchema).optional(),
     matchedByOsmNameNormalized: z.string().optional(),
     matchedByOsmNameTag: z.enum(OSM_SCHOOL_NAME_TAGS_IN_ORDER).optional(),
+    matchedByWebsiteNormalized: z.string().optional(),
+    matchedByAddressNormalized: z.string().optional(),
     pipelineLand: z.string().optional(),
   })
   .superRefine((row, ctx) => {

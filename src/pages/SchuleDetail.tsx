@@ -1254,17 +1254,34 @@ export function SchuleDetail() {
         <p className="mb-6 text-sm leading-relaxed text-zinc-400">
           {row.matchMode === 'distance' ? (
             de.detail.matchExplanationDistance
-          ) : row.matchedByOsmNameNormalized ? (
+          ) : row.matchMode === 'distance_and_name' || row.matchMode === 'name' ? (
             <>
               {row.matchMode === 'distance_and_name'
                 ? de.detail.matchExplanationDistanceAndName
-                : de.detail.matchExplanationName}{' '}
-              <code className="rounded bg-zinc-900 px-1.5 py-0.5 font-mono text-[0.9em] text-zinc-200">
-                {row.matchedByOsmNameNormalized}
-              </code>
+                : de.detail.matchExplanationName}
+              {row.matchedByOsmNameNormalized ? ' ' : ''}
+              {row.matchedByOsmNameNormalized ? (
+                <code className="rounded bg-zinc-900 px-1.5 py-0.5 font-mono text-[0.9em] text-zinc-200">
+                  {row.matchedByOsmNameNormalized}
+                </code>
+              ) : null}
               {row.matchedByOsmNameTag != null && (
                 <> {de.detail.matchMatchedByOsmTag[row.matchedByOsmNameTag]}</>
               )}
+            </>
+          ) : row.matchMode === 'website' ? (
+            <>
+              {de.detail.matchExplanationWebsite}{' '}
+              <code className="rounded bg-zinc-900 px-1.5 py-0.5 font-mono text-[0.9em] text-zinc-200">
+                {row.matchedByWebsiteNormalized ?? '—'}
+              </code>
+            </>
+          ) : row.matchMode === 'address' ? (
+            <>
+              {de.detail.matchExplanationAddress}{' '}
+              <code className="rounded bg-zinc-900 px-1.5 py-0.5 font-mono text-[0.9em] text-zinc-200">
+                {row.matchedByAddressNormalized ?? '—'}
+              </code>
             </>
           ) : (
             de.detail.matchExplanationDistance
