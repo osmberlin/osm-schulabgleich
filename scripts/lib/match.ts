@@ -138,6 +138,18 @@ function rowLandByOsmRef(
   return land
 }
 
+function groupOfficialsByLand(officials: OfficialInput[]): Map<LandCode, OfficialInput[]> {
+  const byLand = new Map<LandCode, OfficialInput[]>()
+  for (const off of officials) {
+    const land = landCodeFromSchoolId(off.id)
+    if (!land) continue
+    const arr = byLand.get(land)
+    if (arr) arr.push(off)
+    else byLand.set(land, [off])
+  }
+  return byLand
+}
+
 function officialWebsiteKey(off: OfficialInput): string {
   const map = flattenOfficialForCompare(off.properties ?? {})
   return normalizeWebsiteMatchKey(map.get('website') ?? '')
@@ -510,10 +522,11 @@ export function matchSchools(
     else noCoordByName.set(key, [off])
   }
 
-  const osmOnlyByName = new Map<string, number[]>()
+  const osmOnlyByNameAndLand = new Map<string, Map<LandCode, number[]>>()
   for (let idx = 0; idx < rows.length; idx++) {
     const row = rows[idx]
     if (row.category !== 'osm_only') continue
+    const rowLand = rowLandByOsmRef(row, opts)
     const tags = row.osmTags
     const keys =
       tags && Object.keys(tags).length > 0
@@ -523,62 +536,66 @@ export function matchSchools(
             return k ? [k] : []
           })()
     for (const normKey of keys) {
-      const arr = osmOnlyByName.get(normKey)
+      let byLand = osmOnlyByNameAndLand.get(normKey)
+      if (!byLand) {
+        byLand = new Map<LandCode, number[]>()
+        osmOnlyByNameAndLand.set(normKey, byLand)
+      }
+      const arr = byLand.get(rowLand)
       if (arr) arr.push(idx)
-      else osmOnlyByName.set(normKey, [idx])
+      else byLand.set(rowLand, [idx])
     }
   }
 
   const noCoordMatched = new Set<string>()
   for (const [key, officialsWithNameAll] of noCoordByName.entries()) {
-    const osmIdxs = osmOnlyByName.get(key)
-    if (!osmIdxs) continue
-    if (osmIdxs.length !== 1) continue
-    const targetIdx = osmIdxs[0]
-    const base = rows[targetIdx]
-    const nameLandKey = `${base.osmType}/${base.osmId}`
-    const osmLandName = opts.osmLandByKey.get(nameLandKey)
-    if (osmLandName === undefined) {
-      throw new Error(`matchSchools: osmLandByKey missing entry "${nameLandKey}"`)
-    }
-    const officialsWithName = officialsInSameLandAsOsm(officialsWithNameAll, osmLandName)
-    if (officialsWithName.length === 0) continue
-    if (officialsWithName.length === 1) {
-      const off = officialsWithName[0]
-      if (noCoordMatched.has(off.id)) continue
-      const noCoordVariantMap = normalizedOsmNameVariantMap(base.osmTags ?? {})
+    const byLand = osmOnlyByNameAndLand.get(key)
+    if (!byLand) continue
+    const officialsByLand = groupOfficialsByLand(officialsWithNameAll)
+    for (const [land, officialsWithName] of officialsByLand) {
+      const osmIdxs = byLand.get(land)
+      if (!osmIdxs) continue
+      if (osmIdxs.length !== 1) continue
+      const targetIdx = osmIdxs[0]
+      const base = rows[targetIdx]
+      if (officialsWithName.length === 0) continue
+      if (officialsWithName.length === 1) {
+        const off = officialsWithName[0]
+        if (noCoordMatched.has(off.id)) continue
+        const noCoordVariantMap = normalizedOsmNameVariantMap(base.osmTags ?? {})
+        rows[targetIdx] = {
+          ...base,
+          key: `match-${off.id}`,
+          category: 'matched',
+          matchMode: 'name',
+          officialId: off.id,
+          officialName: off.name,
+          officialProperties: off.properties,
+          matchedByOsmNameNormalized: key,
+          matchedByOsmNameTag: noCoordVariantMap.get(key),
+        }
+        noCoordMatched.add(off.id)
+        continue
+      }
+      const ids = officialsWithName.map((off) => off.id).filter((id) => !noCoordMatched.has(id))
+      if (ids.length <= 1) continue
+      const byId = new Map(officialsWithName.map((off) => [off.id, off] as const))
+      const snapOffs = ids.map((id) => byId.get(id)).filter((x): x is OfficialInput => x != null)
+      const ambNoCoordVariantMap = normalizedOsmNameVariantMap(base.osmTags ?? {})
       rows[targetIdx] = {
         ...base,
-        key: `match-${off.id}`,
-        category: 'matched',
+        key: `ambig-${base.osmType ?? 'way'}-${base.osmId ?? 'unknown'}`,
+        category: 'match_ambiguous',
         matchMode: 'name',
-        officialId: off.id,
-        officialName: off.name,
-        officialProperties: off.properties,
+        officialId: null,
+        officialName: null,
+        officialProperties: null,
+        distanceMeters: null,
+        ambiguousOfficialIds: ids,
+        ambiguousOfficialSnapshots: snapshotsFromOfficials(snapOffs),
         matchedByOsmNameNormalized: key,
-        matchedByOsmNameTag: noCoordVariantMap.get(key),
+        matchedByOsmNameTag: ambNoCoordVariantMap.get(key),
       }
-      noCoordMatched.add(off.id)
-      continue
-    }
-    const ids = officialsWithName.map((off) => off.id).filter((id) => !noCoordMatched.has(id))
-    if (ids.length <= 1) continue
-    const byId = new Map(officialsWithName.map((off) => [off.id, off] as const))
-    const snapOffs = ids.map((id) => byId.get(id)).filter((x): x is OfficialInput => x != null)
-    const ambNoCoordVariantMap = normalizedOsmNameVariantMap(base.osmTags ?? {})
-    rows[targetIdx] = {
-      ...base,
-      key: `ambig-${base.osmType ?? 'way'}-${base.osmId ?? 'unknown'}`,
-      category: 'match_ambiguous',
-      matchMode: 'name',
-      officialId: null,
-      officialName: null,
-      officialProperties: null,
-      distanceMeters: null,
-      ambiguousOfficialIds: ids,
-      ambiguousOfficialSnapshots: snapshotsFromOfficials(snapOffs),
-      matchedByOsmNameNormalized: key,
-      matchedByOsmNameTag: ambNoCoordVariantMap.get(key),
     }
   }
 
@@ -591,57 +608,66 @@ export function matchSchools(
     if (arr) arr.push(off)
     else noCoordByWebsite.set(key, [off])
   }
-  const osmOnlyByWebsite = new Map<string, number[]>()
+  const osmOnlyByWebsiteAndLand = new Map<string, Map<LandCode, number[]>>()
   for (let idx = 0; idx < rows.length; idx++) {
     const row = rows[idx]
     if (row.category !== 'osm_only') continue
+    const rowLand = rowLandByOsmRef(row, opts)
     const key = osmRowWebsiteKey(row)
     if (!key) continue
-    const arr = osmOnlyByWebsite.get(key)
+    let byLand = osmOnlyByWebsiteAndLand.get(key)
+    if (!byLand) {
+      byLand = new Map<LandCode, number[]>()
+      osmOnlyByWebsiteAndLand.set(key, byLand)
+    }
+    const arr = byLand.get(rowLand)
     if (arr) arr.push(idx)
-    else osmOnlyByWebsite.set(key, [idx])
+    else byLand.set(rowLand, [idx])
   }
   for (const [key, officialsWithWebsiteAll] of noCoordByWebsite.entries()) {
-    const osmIdxs = osmOnlyByWebsite.get(key)
-    if (!osmIdxs) continue
-    if (osmIdxs.length !== 1) continue
-    const targetIdx = osmIdxs[0]
-    const base = rows[targetIdx]
-    const osmLandWebsite = rowLandByOsmRef(base, opts)
-    const officialsWithWebsite = officialsInSameLandAsOsm(officialsWithWebsiteAll, osmLandWebsite)
-    if (officialsWithWebsite.length === 0) continue
-    if (officialsWithWebsite.length === 1) {
-      const off = officialsWithWebsite[0]
-      if (noCoordMatched.has(off.id)) continue
+    const byLand = osmOnlyByWebsiteAndLand.get(key)
+    if (!byLand) continue
+    const officialsByLand = groupOfficialsByLand(officialsWithWebsiteAll)
+    for (const [land, officialsWithWebsite] of officialsByLand) {
+      const osmIdxs = byLand.get(land)
+      if (!osmIdxs) continue
+      if (osmIdxs.length !== 1) continue
+      const targetIdx = osmIdxs[0]
+      const base = rows[targetIdx]
+      if (officialsWithWebsite.length === 0) continue
+      if (officialsWithWebsite.length === 1) {
+        const off = officialsWithWebsite[0]
+        if (noCoordMatched.has(off.id)) continue
+        rows[targetIdx] = {
+          ...base,
+          key: `match-${off.id}`,
+          category: 'matched',
+          matchMode: 'website',
+          officialId: off.id,
+          officialName: off.name,
+          officialProperties: off.properties,
+          matchedByWebsiteNormalized: key,
+        }
+        noCoordMatched.add(off.id)
+        continue
+      }
+      const ids = officialsWithWebsite.map((off) => off.id).filter((id) => !noCoordMatched.has(id))
+      if (ids.length <= 1) continue
+      const byId = new Map(officialsWithWebsite.map((off) => [off.id, off] as const))
+      const snapOffs = ids.map((id) => byId.get(id)).filter((x): x is OfficialInput => x != null)
       rows[targetIdx] = {
         ...base,
-        key: `match-${off.id}`,
-        category: 'matched',
+        key: `ambig-${base.osmType ?? 'way'}-${base.osmId ?? 'unknown'}`,
+        category: 'match_ambiguous',
         matchMode: 'website',
-        officialId: off.id,
-        officialName: off.name,
-        officialProperties: off.properties,
+        officialId: null,
+        officialName: null,
+        officialProperties: null,
+        distanceMeters: null,
+        ambiguousOfficialIds: ids,
+        ambiguousOfficialSnapshots: snapshotsFromOfficials(snapOffs),
         matchedByWebsiteNormalized: key,
       }
-      noCoordMatched.add(off.id)
-      continue
-    }
-    const ids = officialsWithWebsite.map((off) => off.id).filter((id) => !noCoordMatched.has(id))
-    if (ids.length <= 1) continue
-    const byId = new Map(officialsWithWebsite.map((off) => [off.id, off] as const))
-    const snapOffs = ids.map((id) => byId.get(id)).filter((x): x is OfficialInput => x != null)
-    rows[targetIdx] = {
-      ...base,
-      key: `ambig-${base.osmType ?? 'way'}-${base.osmId ?? 'unknown'}`,
-      category: 'match_ambiguous',
-      matchMode: 'website',
-      officialId: null,
-      officialName: null,
-      officialProperties: null,
-      distanceMeters: null,
-      ambiguousOfficialIds: ids,
-      ambiguousOfficialSnapshots: snapshotsFromOfficials(snapOffs),
-      matchedByWebsiteNormalized: key,
     }
   }
 
@@ -654,57 +680,66 @@ export function matchSchools(
     if (arr) arr.push(off)
     else noCoordByAddress.set(key, [off])
   }
-  const osmOnlyByAddress = new Map<string, number[]>()
+  const osmOnlyByAddressAndLand = new Map<string, Map<LandCode, number[]>>()
   for (let idx = 0; idx < rows.length; idx++) {
     const row = rows[idx]
     if (row.category !== 'osm_only') continue
+    const rowLand = rowLandByOsmRef(row, opts)
     const key = osmRowAddressKey(row)
     if (!key) continue
-    const arr = osmOnlyByAddress.get(key)
+    let byLand = osmOnlyByAddressAndLand.get(key)
+    if (!byLand) {
+      byLand = new Map<LandCode, number[]>()
+      osmOnlyByAddressAndLand.set(key, byLand)
+    }
+    const arr = byLand.get(rowLand)
     if (arr) arr.push(idx)
-    else osmOnlyByAddress.set(key, [idx])
+    else byLand.set(rowLand, [idx])
   }
   for (const [key, officialsWithAddressAll] of noCoordByAddress.entries()) {
-    const osmIdxs = osmOnlyByAddress.get(key)
-    if (!osmIdxs) continue
-    if (osmIdxs.length !== 1) continue
-    const targetIdx = osmIdxs[0]
-    const base = rows[targetIdx]
-    const osmLandAddress = rowLandByOsmRef(base, opts)
-    const officialsWithAddress = officialsInSameLandAsOsm(officialsWithAddressAll, osmLandAddress)
-    if (officialsWithAddress.length === 0) continue
-    if (officialsWithAddress.length === 1) {
-      const off = officialsWithAddress[0]
-      if (noCoordMatched.has(off.id)) continue
+    const byLand = osmOnlyByAddressAndLand.get(key)
+    if (!byLand) continue
+    const officialsByLand = groupOfficialsByLand(officialsWithAddressAll)
+    for (const [land, officialsWithAddress] of officialsByLand) {
+      const osmIdxs = byLand.get(land)
+      if (!osmIdxs) continue
+      if (osmIdxs.length !== 1) continue
+      const targetIdx = osmIdxs[0]
+      const base = rows[targetIdx]
+      if (officialsWithAddress.length === 0) continue
+      if (officialsWithAddress.length === 1) {
+        const off = officialsWithAddress[0]
+        if (noCoordMatched.has(off.id)) continue
+        rows[targetIdx] = {
+          ...base,
+          key: `match-${off.id}`,
+          category: 'matched',
+          matchMode: 'address',
+          officialId: off.id,
+          officialName: off.name,
+          officialProperties: off.properties,
+          matchedByAddressNormalized: key,
+        }
+        noCoordMatched.add(off.id)
+        continue
+      }
+      const ids = officialsWithAddress.map((off) => off.id).filter((id) => !noCoordMatched.has(id))
+      if (ids.length <= 1) continue
+      const byId = new Map(officialsWithAddress.map((off) => [off.id, off] as const))
+      const snapOffs = ids.map((id) => byId.get(id)).filter((x): x is OfficialInput => x != null)
       rows[targetIdx] = {
         ...base,
-        key: `match-${off.id}`,
-        category: 'matched',
+        key: `ambig-${base.osmType ?? 'way'}-${base.osmId ?? 'unknown'}`,
+        category: 'match_ambiguous',
         matchMode: 'address',
-        officialId: off.id,
-        officialName: off.name,
-        officialProperties: off.properties,
+        officialId: null,
+        officialName: null,
+        officialProperties: null,
+        distanceMeters: null,
+        ambiguousOfficialIds: ids,
+        ambiguousOfficialSnapshots: snapshotsFromOfficials(snapOffs),
         matchedByAddressNormalized: key,
       }
-      noCoordMatched.add(off.id)
-      continue
-    }
-    const ids = officialsWithAddress.map((off) => off.id).filter((id) => !noCoordMatched.has(id))
-    if (ids.length <= 1) continue
-    const byId = new Map(officialsWithAddress.map((off) => [off.id, off] as const))
-    const snapOffs = ids.map((id) => byId.get(id)).filter((x): x is OfficialInput => x != null)
-    rows[targetIdx] = {
-      ...base,
-      key: `ambig-${base.osmType ?? 'way'}-${base.osmId ?? 'unknown'}`,
-      category: 'match_ambiguous',
-      matchMode: 'address',
-      officialId: null,
-      officialName: null,
-      officialProperties: null,
-      distanceMeters: null,
-      ambiguousOfficialIds: ids,
-      ambiguousOfficialSnapshots: snapshotsFromOfficials(snapOffs),
-      matchedByAddressNormalized: key,
     }
   }
 

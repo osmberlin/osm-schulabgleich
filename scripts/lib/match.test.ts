@@ -518,6 +518,41 @@ describe('matchSchools', () => {
     expect(rows.find((r) => r.osmId === '556')?.category).toBe('osm_only')
   })
 
+  it('no-coord name fallback is unique per land, not nationwide', () => {
+    const officialsNoCoord: OfficialInput[] = [
+      {
+        id: 'HB-only',
+        name: 'Marie-Curie-Schule',
+        lon: Number.NaN,
+        lat: Number.NaN,
+        properties: { id: 'HB-only' },
+      },
+    ]
+    const osmHb: OsmSchoolInput = {
+      ...osmNear,
+      osmId: 'hb-1',
+      name: 'Marie-Curie-Schule',
+      tags: { amenity: 'school', name: 'Marie-Curie-Schule' },
+    }
+    const osmHeSameName: OsmSchoolInput = {
+      ...osmNear,
+      osmId: 'he-1',
+      name: 'Marie-Curie-Schule',
+      tags: { amenity: 'school', name: 'Marie-Curie-Schule' },
+    }
+    const osmLandByKey = new Map<string, LandCode>([
+      ['way/hb-1', 'HB'],
+      ['way/he-1', 'HE'],
+    ])
+    const { rows } = matchSchools(officialsNoCoord, [osmHb, osmHeSameName], { osmLandByKey })
+    const hbRow = rows.find((r) => r.osmId === 'hb-1')
+    const heRow = rows.find((r) => r.osmId === 'he-1')
+    expect(hbRow?.category).toBe('matched')
+    expect(hbRow?.matchMode).toBe('name')
+    expect(hbRow?.officialId).toBe('HB-only')
+    expect(heRow?.category).toBe('osm_only')
+  })
+
   it('keeps no-coord officials unmatched when normalized-name fallback is ambiguous', () => {
     const officialsNoCoord: OfficialInput[] = [
       {
