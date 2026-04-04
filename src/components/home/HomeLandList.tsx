@@ -1,6 +1,6 @@
 import { de } from '../../i18n/de'
 import { formatDeInteger } from '../../lib/formatNumber'
-import { CATEGORY_INNER_HEX, OFFICIAL_NO_COORD_INNER_HEX } from '../../lib/matchCategoryTheme'
+import { CATEGORY_INNER_HEX } from '../../lib/matchCategoryTheme'
 import { type LandCode, STATE_LABEL_DE, STATE_ORDER } from '../../lib/stateConfig'
 import { ChevronRightIcon } from '@heroicons/react/20/solid'
 import { Link } from '@tanstack/react-router'
@@ -61,7 +61,7 @@ function MiniPie({
     { key: 'official', n: officialOnly, fill: CATEGORY_INNER_HEX.official_only },
     { key: 'osm', n: osmOnly, fill: CATEGORY_INNER_HEX.osm_only },
     { key: 'ambig', n: matchAmbiguous, fill: CATEGORY_INNER_HEX.match_ambiguous },
-    { key: 'nocoord', n: officialNoCoord, fill: OFFICIAL_NO_COORD_INNER_HEX },
+    { key: 'nocoord', n: officialNoCoord, fill: CATEGORY_INNER_HEX.official_no_coord },
   ]
 
   let cum = 0
@@ -110,7 +110,7 @@ function MiniPie({
           {de.land.categoryLabel.official_only} {formatDeInteger(officialOnly)},{' '}
           {de.land.categoryLabel.osm_only} {formatDeInteger(osmOnly)},{' '}
           {de.land.categoryLabel.match_ambiguous} {formatDeInteger(matchAmbiguous)},{' '}
-          {de.land.officialNoCoordKpi} {formatDeInteger(officialNoCoord)}
+          {de.land.categoryLabel.official_no_coord} {formatDeInteger(officialNoCoord)}
         </title>
         {paths}
       </svg>
@@ -150,7 +150,8 @@ export function HomeLandList({ byCode }: { byCode: Map<string, LandSummaryLike> 
                         {formatDeInteger(land.counts.official_only)} ·{' '}
                         {de.land.categoryLabel.osm_only} {formatDeInteger(land.counts.osm_only)} ·{' '}
                         {de.land.categoryLabel.match_ambiguous}{' '}
-                        {formatDeInteger(land.counts.ambiguous)} · {de.land.officialNoCoordKpi}{' '}
+                        {formatDeInteger(land.counts.ambiguous)} ·{' '}
+                        {de.land.categoryLabel.official_no_coord}{' '}
                         {formatDeInteger(land.counts.official_no_coord)}
                         {land.osmSource === 'cached' ? ' · OSM-Cache' : ''}
                       </div>

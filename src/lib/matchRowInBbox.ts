@@ -190,3 +190,14 @@ export function matchRowInLandMapBbox(
   if (!p) return false
   return pointInLandMapBbox(p[0], p[1], bbox)
 }
+
+/** Bbox filter for list + KPI: no-coordinate rows are never inside a map window — always keep them. */
+export function matchRowIncludedWhenLandMapBboxActive(
+  row: Row,
+  bbox: LandMapBbox | null,
+  officialLonLatIndex: Map<string, [number, number]> | null,
+): boolean {
+  if (!bbox) return true
+  if (row.category === 'official_no_coord') return true
+  return matchRowInLandMapBbox(row, bbox, officialLonLatIndex)
+}

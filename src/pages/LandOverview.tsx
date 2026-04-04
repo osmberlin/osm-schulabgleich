@@ -7,8 +7,9 @@ import { landHistoryFromRuns } from '../lib/matchHistoryFromRuns'
 import {
   buildOfficialSchoolLonLatIndex,
   matchesToOverviewMapPoints,
-  matchRowInLandMapBbox,
+  matchRowIncludedWhenLandMapBboxActive,
 } from '../lib/matchRowInBbox'
+import { mergeSyntheticOfficialNoCoordRows } from '../lib/mergeSyntheticOfficialNoCoordRows'
 import {
   landBoundaryUrl,
   landMatchesUrl,
@@ -75,7 +76,11 @@ export function LandOverview() {
         osmRes.json(),
         mRes.json(),
       ])
-      const matches = schoolsMatchesFileSchema.parse(matchesRaw)
+      const matchesParsed = schoolsMatchesFileSchema.parse(matchesRaw)
+      const matches = mergeSyntheticOfficialNoCoordRows(
+        matchesParsed,
+        official as FeatureCollection,
+      )
       return {
         official,
         osm,
@@ -116,7 +121,9 @@ export function LandOverview() {
 
   const matchesForCatCounts = useMemo(() => {
     if (!listBbox) return matches
-    return matches.filter((r) => matchRowInLandMapBbox(r, listBbox, officialLonLatIndex))
+    return matches.filter((r) =>
+      matchRowIncludedWhenLandMapBboxActive(r, listBbox, officialLonLatIndex),
+    )
   }, [matches, listBbox, officialLonLatIndex])
 
   const catCounts = useMemo(() => {
@@ -125,6 +132,7 @@ export function LandOverview() {
       official_only: 0,
       osm_only: 0,
       match_ambiguous: 0,
+      official_no_coord: 0,
     }
     for (const r of matchesForCatCounts) {
       z[r.category]++
@@ -139,7 +147,9 @@ export function LandOverview() {
 
   const listMatches = useMemo(() => {
     if (!listBbox) return visibleMatches
-    return visibleMatches.filter((r) => matchRowInLandMapBbox(r, listBbox, officialLonLatIndex))
+    return visibleMatches.filter((r) =>
+      matchRowIncludedWhenLandMapBboxActive(r, listBbox, officialLonLatIndex),
+    )
   }, [visibleMatches, listBbox, officialLonLatIndex])
 
   const mapMatchPoints = useMemo(
@@ -172,7 +182,6 @@ export function LandOverview() {
 
       <LandOverviewStats
         catCounts={catCounts}
-        officialNoCoord={landSummary?.counts.official_no_coord ?? 0}
         statsInputId={statsInputId}
         isCategoryEnabled={isCategoryEnabled}
         setCategoryEnabled={setCategoryEnabled}

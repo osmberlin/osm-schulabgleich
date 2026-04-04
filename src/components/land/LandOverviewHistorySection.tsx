@@ -1,5 +1,4 @@
 import { de } from '../../i18n/de'
-import { MATCH_CHART_LABELS } from '../../lib/matchChartLabels'
 import type { MatchHistoryStackPoint } from '../../lib/matchHistoryFromRuns'
 import { type LandCode, STATE_LABEL_DE } from '../../lib/stateConfig'
 import { MatchCountsHistoryChart } from '../MatchCountsHistoryChart'
@@ -32,7 +31,7 @@ export function LandOverviewHistorySection({
         <div className="rounded-lg border border-zinc-700 bg-zinc-900/40 p-4 shadow-none outline outline-zinc-100/10">
           <MatchCountsHistoryChart
             points={points}
-            categoryLabels={MATCH_CHART_LABELS}
+            categoryLabels={de.land.categoryLabel}
             chartDescription={`${STATE_LABEL_DE[code as LandCode] ?? code} · ${de.land.historyHeading}`}
           />
         </div>

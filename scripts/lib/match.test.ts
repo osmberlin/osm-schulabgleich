@@ -556,7 +556,8 @@ describe('matchSchools', () => {
       'NI-no-a',
       'NI-no-b',
     ])
-    expect(officialNoCoordCount).toBe(2)
+    expect(rows.filter((r) => r.category === 'official_no_coord')).toHaveLength(0)
+    expect(officialNoCoordCount).toBe(0)
   })
 })
 

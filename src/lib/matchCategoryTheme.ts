@@ -1,11 +1,12 @@
 import type { LandMatchCategory } from './landMatchCategories'
 
 /**
- * Single source of truth for the four match categories (Legende, Karte, Listen, Detail).
+ * Match categories (Legende, Karte, Listen, Detail).
  * — matched: emerald — in beiden Daten
  * — official_only: amber — nur offiziell
  * — osm_only: blue — nur OSM
  * — match_ambiguous: violet — uneindeutig
+ * — official_no_coord: Paul-Tol-Bordeaux (#882255) — amtlich ohne Koordinaten (keine Kartepunkte)
  */
 const theme = {
   matched: {
@@ -45,17 +46,15 @@ const theme = {
     twInner: 'bg-violet-500',
     twPolygonSwatch: 'inline-block h-2 w-4 shrink-0 rounded-sm bg-violet-500/80',
   },
-} as const
-
-/**
- * Amtliche Schulen ohne verwertbare Punktkoordinaten — nicht im räumlichen Abgleich.
- * Paul Tol–ähnliches Bordeaux, von Grün (matched) im Kreisdiagramm durch andere Slices getrennt.
- */
-export const OFFICIAL_NO_COORD_INNER_HEX = '#882255'
-
-export const OFFICIAL_NO_COORD_SWATCH_CLASSES = {
-  outer: 'bg-[#882255]/25',
-  inner: 'bg-[#882255]',
+  official_no_coord: {
+    innerHex: '#882255',
+    haloRgba: 'rgba(136, 34, 85, 0.22)',
+    polygonFillRgba: 'rgba(136, 34, 85, 0.35)',
+    polygonOutlineHex: '#5c1839',
+    twOuter: 'bg-[#882255]/25',
+    twInner: 'bg-[#882255]',
+    twPolygonSwatch: 'inline-block h-2 w-4 shrink-0 rounded-sm bg-[#882255]/80',
+  },
 } as const
 
 export const CATEGORY_INNER_HEX: Record<LandMatchCategory, string> = {
@@ -63,6 +62,7 @@ export const CATEGORY_INNER_HEX: Record<LandMatchCategory, string> = {
   official_only: theme.official_only.innerHex,
   osm_only: theme.osm_only.innerHex,
   match_ambiguous: theme.match_ambiguous.innerHex,
+  official_no_coord: theme.official_no_coord.innerHex,
 }
 
 const CATEGORY_HALO_RGBA: Record<LandMatchCategory, string> = {
@@ -70,6 +70,7 @@ const CATEGORY_HALO_RGBA: Record<LandMatchCategory, string> = {
   official_only: theme.official_only.haloRgba,
   osm_only: theme.osm_only.haloRgba,
   match_ambiguous: theme.match_ambiguous.haloRgba,
+  official_no_coord: theme.official_no_coord.haloRgba,
 }
 
 /** Nested-circle legend (CategoryLegendSwatch). */
@@ -81,6 +82,10 @@ export const MATCH_CATEGORY_SWATCH_CLASSES: Record<
   official_only: { outer: theme.official_only.twOuter, inner: theme.official_only.twInner },
   osm_only: { outer: theme.osm_only.twOuter, inner: theme.osm_only.twInner },
   match_ambiguous: { outer: theme.match_ambiguous.twOuter, inner: theme.match_ambiguous.twInner },
+  official_no_coord: {
+    outer: theme.official_no_coord.twOuter,
+    inner: theme.official_no_coord.twInner,
+  },
 }
 
 /**
@@ -102,6 +107,8 @@ export const paintMatchCatHalo = [
   CATEGORY_HALO_RGBA.osm_only,
   'match_ambiguous',
   CATEGORY_HALO_RGBA.match_ambiguous,
+  'official_no_coord',
+  CATEGORY_HALO_RGBA.official_no_coord,
   CATEGORY_HALO_RGBA.osm_only,
 ] as unknown as string
 
@@ -117,6 +124,8 @@ export const paintMatchCatCore = [
   CATEGORY_INNER_HEX.osm_only,
   'match_ambiguous',
   CATEGORY_INNER_HEX.match_ambiguous,
+  'official_no_coord',
+  CATEGORY_INNER_HEX.official_no_coord,
   CATEGORY_INNER_HEX.osm_only,
 ] as unknown as string
 

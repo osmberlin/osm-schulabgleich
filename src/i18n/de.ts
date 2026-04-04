@@ -98,8 +98,9 @@ export const de = {
       official_only: 'Nur in offiziellen Daten',
       osm_only: 'Nur in OSM',
       match_ambiguous: 'Uneindeutig',
+      official_no_coord: 'Amtlich ohne Koordinaten',
     },
-    /** Summary-Zähler `official_no_coord` — kein Legendenfilter (keine Treffer-Zeilen). */
+    /** Kurzlabel / KPI — gleicher Text wie `categoryLabel.official_no_coord`. */
     officialNoCoordKpi: 'Amtlich ohne Koordinaten',
     officialNoCoordKpiInfoButton: 'Info zu amtlich ohne Koordinaten',
     officialNoCoordKpiInfoAlert:
@@ -140,6 +141,8 @@ export const de = {
     ambiguousNameNoGeoAlertTitle: 'Uneindeutig (Namensabgleich ohne Koordinaten)',
     ambiguousNameNoGeoAlertText:
       'Diese Uneindeutigkeit kommt aus einem reinen Namensabgleich mit amtlichen Datensätzen ohne Koordinaten. Nutze die Kandidatenliste unten und passe bei Bedarf nur OSM-Attribute an.',
+    officialNoCoordDetailLead:
+      'Amtlicher Datensatz ohne verwertbare Koordinaten, ohne eindeutige OSM-Zuordnung per Distanz oder Namensabgleich.',
     ambiguousNoLocalGeoTitle: 'Hinweis zur Karte',
     ambiguousNoLocalGeoText:
       'Bei mindestens einem Kandidaten fehlen nutzbare Koordinaten, daher erscheint nicht jeder Kandidat als Punkt auf der Karte. Vergleiche die Felder in der Tabelle und entscheide anhand der OSM-Daten, welche Tags angepasst werden sollen.',

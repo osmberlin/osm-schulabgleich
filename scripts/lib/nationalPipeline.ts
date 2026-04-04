@@ -501,7 +501,6 @@ export async function runMatchNational(projectRoot: string): Promise<MatchNation
   const finishedAt = new Date().toISOString()
   const durationMs = Math.round(performance.now() - t0)
 
-  const noCoordByLand = officialNoCoordUnmatchedByLand(officialFc, enriched)
   const osmHasData = (osmFc.features.length ?? 0) > 0
   const osmSrc: 'live' | 'cached' | 'missing' = osmMeta?.ok && osmHasData ? 'live' : 'missing'
 
@@ -516,7 +515,7 @@ export async function runMatchNational(projectRoot: string): Promise<MatchNation
         official_only: lr.filter((r) => r.category === 'official_only').length,
         osm_only: lr.filter((r) => r.category === 'osm_only').length,
         ambiguous: lr.filter((r) => r.category === 'match_ambiguous').length,
-        official_no_coord: noCoordByLand.get(code) ?? 0,
+        official_no_coord: lr.filter((r) => r.category === 'official_no_coord').length,
       },
     }
   })
@@ -536,33 +535,6 @@ export async function runMatchNational(projectRoot: string): Promise<MatchNation
 
   console.info(`[pipeline:match] ok in ${durationMs}ms`)
   return { errors, matchSkipped: false }
-}
-
-/** Distribute national official_no_coord by land (remaining unmatched after fallback). */
-function officialNoCoordUnmatchedByLand(
-  officialFc: FeatureCollection,
-  rows: Pick<MatchRowOut, 'officialId' | 'matchMode'>[],
-): Map<LandCode, number> {
-  const m = new Map<LandCode, number>()
-  for (const code of STATE_ORDER) m.set(code, 0)
-  for (const f of officialFc.features) {
-    const id = String(f.id ?? (f.properties as { id?: string })?.id ?? '')
-    const land = landCodeFromSchoolId(id)
-    if (!land) continue
-    const g = f.geometry
-    const has =
-      g?.type === 'Point' &&
-      Array.isArray(g.coordinates) &&
-      Number.isFinite((g.coordinates as number[])[0] + (g.coordinates as number[])[1])
-    if (!has) m.set(land, (m.get(land) ?? 0) + 1)
-  }
-  for (const row of rows) {
-    if (row.matchMode !== 'name' || !row.officialId) continue
-    const land = landCodeFromSchoolId(row.officialId)
-    if (!land) continue
-    m.set(land, Math.max(0, (m.get(land) ?? 0) - 1))
-  }
-  return m
 }
 
 async function setSkipSplit(projectRoot: string, skip: boolean) {
@@ -663,7 +635,6 @@ export async function runSplitLands(
   }
 
   const statByState = new Map(statRows.map((s) => [s.state, s.last_updated] as const))
-  const noCoordByLand = officialNoCoordUnmatchedByLand(officialFc, matchRows)
 
   const summaryUpdates = new Map<string, LandSummaryOut>()
   const osmMeta = await readJsonFile<PipelineSourceMeta>(
@@ -716,7 +687,7 @@ export async function runSplitLands(
       official_only: rowsLand.filter((r) => r.category === 'official_only').length,
       osm_only: rowsLand.filter((r) => r.category === 'osm_only').length,
       ambiguous: rowsLand.filter((r) => r.category === 'match_ambiguous').length,
-      official_no_coord: noCoordByLand.get(code) ?? 0,
+      official_no_coord: rowsLand.filter((r) => r.category === 'official_no_coord').length,
     }
 
     const osmSource: 'live' | 'cached' | 'missing' =

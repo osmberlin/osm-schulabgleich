@@ -31,7 +31,7 @@ const LAYER_MATCH_OVERVIEW_HALO = 'match-overview-halo'
 const BBOX_EPSILON = 0.0001
 
 function isLandMatchCategory(v: unknown): v is LandMatchCategory {
-  return v === 'matched' || v === 'official_only' || v === 'osm_only' || v === 'match_ambiguous'
+  return typeof v === 'string' && (LAND_MATCH_CATEGORIES as readonly string[]).includes(v)
 }
 
 function lngLatBoundsFromTurfBbox(

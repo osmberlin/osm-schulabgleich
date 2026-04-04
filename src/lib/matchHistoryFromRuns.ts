@@ -17,11 +17,9 @@ export type MatchHistoryStackPoint = {
 }
 
 /** Balken-Reihenfolge: gleiche Abgleich-Reihenfolge, zuletzt Bordeaux (CVD: nicht direkt neben Grün). */
-export const MATCH_HISTORY_STACK_KEYS = [...LAND_MATCH_CATEGORIES, 'official_no_coord'] as const
+export const MATCH_HISTORY_STACK_KEYS = [...LAND_MATCH_CATEGORIES] as const
 
-export type MatchHistoryChartLabels = Record<LandMatchCategory, string> & {
-  official_no_coord: string
-}
+export type MatchHistoryChartLabels = Record<LandMatchCategory, string>
 
 export type MatchHistorySegmentKey = (typeof MATCH_HISTORY_STACK_KEYS)[number]
 

@@ -816,7 +816,8 @@ export function SchuleDetail() {
         (matchCat === 'matched' ||
           matchCat === 'official_only' ||
           matchCat === 'osm_only' ||
-          matchCat === 'match_ambiguous')
+          matchCat === 'match_ambiguous' ||
+          matchCat === 'official_no_coord')
       ) {
         setHoveredMapLabel({ kind: 'osm-other', lon, lat, name, matchKey, matchCat })
       } else {
@@ -1242,6 +1243,12 @@ export function SchuleDetail() {
         licenceHash={licenceHash}
         osmLicenceCompatible={osmLicenceCompatible}
       />
+
+      {row.category === 'official_no_coord' && (
+        <p className="mb-6 text-sm leading-relaxed text-zinc-400">
+          {de.detail.officialNoCoordDetailLead}
+        </p>
+      )}
 
       {row.category === 'matched' && (
         <p className="mb-6 text-sm leading-relaxed text-zinc-400">

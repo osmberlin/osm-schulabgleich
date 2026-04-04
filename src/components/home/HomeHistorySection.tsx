@@ -1,5 +1,4 @@
 import { de } from '../../i18n/de'
-import { MATCH_CHART_LABELS } from '../../lib/matchChartLabels'
 import type { MatchHistoryStackPoint } from '../../lib/matchHistoryFromRuns'
 import { MatchCountsHistoryChart } from '../MatchCountsHistoryChart'
 
@@ -13,7 +12,7 @@ export function HomeHistorySection({ points }: { points: MatchHistoryStackPoint[
       <div className="rounded-lg border border-zinc-700 bg-zinc-900/40 p-4 shadow-none outline outline-zinc-100/10">
         <MatchCountsHistoryChart
           points={points}
-          categoryLabels={MATCH_CHART_LABELS}
+          categoryLabels={de.land.categoryLabel}
           chartDescription={de.home.historyHeading}
         />
       </div>

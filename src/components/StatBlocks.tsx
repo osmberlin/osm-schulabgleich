@@ -36,6 +36,7 @@ export function LayerToggleStatBlock({
   label,
   value,
   disabled = false,
+  labelAddon,
 }: {
   inputId: string
   checked: boolean
@@ -44,6 +45,8 @@ export function LayerToggleStatBlock({
   label: string
   value: ReactNode
   disabled?: boolean
+  /** e.g. info button beside the label (Land overview: amtlich ohne Koordinaten). */
+  labelAddon?: ReactNode
 }) {
   const interactive =
     'group flex h-full flex-col-reverse justify-end gap-y-2 transition-colors hover:bg-zinc-800/60 focus-within:bg-zinc-800/60'
@@ -78,7 +81,10 @@ export function LayerToggleStatBlock({
               onChange(e.target.checked)
             }}
           />
-          <span className="col-start-2 min-w-0 text-sm leading-snug">{label}</span>
+          <span className="col-start-2 flex min-w-0 flex-wrap items-center gap-1 text-sm leading-snug">
+            <span className="min-w-0">{label}</span>
+            {labelAddon ? <span className="shrink-0">{labelAddon}</span> : null}
+          </span>
         </label>
       </dt>
       <dd
@@ -99,7 +105,7 @@ export function LayerToggleStatBlock({
   )
 }
 
-/** Read-only KPI cell (Startseite, `official_no_coord`); Farbkreis bei der Zahl, Label darunter volle Breite. */
+/** Read-only KPI cell (Startseite); Farbkreis bei der Zahl, Label darunter volle Breite. */
 export function ReadOnlyStatBlock({
   swatch,
   label,

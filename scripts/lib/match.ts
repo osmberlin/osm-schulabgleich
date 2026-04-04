@@ -76,7 +76,7 @@ export type AmbiguousOfficialSnapshot = {
 
 export type MatchRowOut = {
   key: string
-  category: 'matched' | 'official_only' | 'osm_only' | 'match_ambiguous'
+  category: 'matched' | 'official_only' | 'osm_only' | 'match_ambiguous' | 'official_no_coord'
   matchMode?: 'distance' | 'distance_and_name' | 'name'
   officialId: string | null
   officialName: string | null
@@ -537,5 +537,30 @@ export function matchSchools(
     }
   }
 
-  return { rows, officialNoCoordCount: withoutCoord.length - noCoordMatched.size }
+  const officialIdsOnAmbiguousRows = new Set<string>()
+  for (const row of rows) {
+    for (const id of row.ambiguousOfficialIds ?? []) officialIdsOnAmbiguousRows.add(id)
+  }
+
+  for (const off of withoutCoord) {
+    if (noCoordMatched.has(off.id)) continue
+    if (officialIdsOnAmbiguousRows.has(off.id)) continue
+    rows.push({
+      key: `official-nocoord-${off.id}`,
+      category: 'official_no_coord',
+      officialId: off.id,
+      officialName: off.name,
+      officialProperties: off.properties,
+      osmId: null,
+      osmType: null,
+      osmCentroidLon: null,
+      osmCentroidLat: null,
+      distanceMeters: null,
+      osmName: null,
+      osmTags: null,
+    })
+  }
+
+  const officialNoCoordCount = rows.filter((r) => r.category === 'official_no_coord').length
+  return { rows, officialNoCoordCount }
 }

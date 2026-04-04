@@ -1,7 +1,6 @@
 import { berlinCalendarDateKey } from '../lib/berlinCalendarDateKey'
 import { formatDeInteger } from '../lib/formatNumber'
-import type { LandMatchCategory } from '../lib/landMatchCategories'
-import { CATEGORY_INNER_HEX, OFFICIAL_NO_COORD_INNER_HEX } from '../lib/matchCategoryTheme'
+import { CATEGORY_INNER_HEX } from '../lib/matchCategoryTheme'
 import {
   MATCH_HISTORY_STACK_KEYS,
   type MatchHistoryChartLabels,
@@ -24,8 +23,7 @@ import {
 type ChartRow = MatchHistoryStackPoint & { berlinDay: string }
 
 function stackSegmentFill(key: MatchHistorySegmentKey): string {
-  if (key === 'official_no_coord') return OFFICIAL_NO_COORD_INNER_HEX
-  return CATEGORY_INNER_HEX[key as LandMatchCategory]
+  return CATEGORY_INNER_HEX[key]
 }
 
 function stackTotal(p: MatchHistoryStackPoint): number {

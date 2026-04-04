@@ -1,6 +1,7 @@
+import { mergeSyntheticOfficialNoCoordRows } from './mergeSyntheticOfficialNoCoordRows'
 import { landBoundaryUrl, landMatchesUrl, landOfficialUrl, landOsmUrl } from './paths'
 import { schoolsMatchesFileSchema } from './schemas'
-import type { Feature, MultiPolygon, Polygon } from 'geojson'
+import type { Feature, FeatureCollection, MultiPolygon, Polygon } from 'geojson'
 
 /** Official + OSM GeoJSON + matches + optional Bundesland outline for one land (SchuleDetail / cache). */
 export async function fetchLandSchoolsBundle(code: string) {
@@ -18,7 +19,8 @@ export async function fetchLandSchoolsBundle(code: string) {
     osmRes.json(),
     mRes.json(),
   ])
-  const matches = schoolsMatchesFileSchema.parse(matchesRaw)
+  const matchesParsed = schoolsMatchesFileSchema.parse(matchesRaw)
+  const matches = mergeSyntheticOfficialNoCoordRows(matchesParsed, official as FeatureCollection)
   let boundary: Feature<Polygon | MultiPolygon> | null = null
   if (bRes.ok) {
     boundary = (await bRes.json()) as Feature<Polygon | MultiPolygon>

@@ -24,7 +24,13 @@ export const jedeschuleStatSchema = z.object({
   last_updated: z.string(),
 })
 
-const matchCategorySchema = z.enum(['matched', 'official_only', 'osm_only', 'match_ambiguous'])
+const matchCategorySchema = z.enum([
+  'matched',
+  'official_only',
+  'osm_only',
+  'match_ambiguous',
+  'official_no_coord',
+])
 
 const ambiguousOfficialSnapshotSchema = z.object({
   id: z.string(),
