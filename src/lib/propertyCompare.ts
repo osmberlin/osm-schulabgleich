@@ -2,7 +2,6 @@ import {
   addressCompareTargetsFromOsmParts,
   flattenOfficialForCompare,
   flattenOsmTagsForCompare,
-  normalizeAddressCompareString,
   normalizeAddressMatchKey,
 } from './compareMatchKeys'
 
