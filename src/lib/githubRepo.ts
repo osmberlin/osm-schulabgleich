@@ -1,7 +1,16 @@
 /** Public repo for “edit on GitHub” and issue links (aligned with AppFooter). */
 export const GITHUB_REPO_ROOT = 'https://github.com/osmberlin/osm-schul-abgleich'
 
+/** Deployed app + `public/datasets/` (must match Vite `base` in GitHub Pages builds). */
+export const GITHUB_PAGES_SITE_ROOT = 'https://osmberlin.github.io/osm-schul-abgleich'
+
 export const GITHUB_DEFAULT_BRANCH = 'main'
+
+/** Absolute URL to a file under `public/datasets/` on GitHub Pages (for OSM `source` etc.). */
+export function githubPagesDatasetUrl(pathUnderDatasets: string): string {
+  const p = pathUnderDatasets.replace(/^\/+/, '')
+  return `${GITHUB_PAGES_SITE_ROOT}/datasets/${p}`
+}
 
 /** Path to the crowd-sourced licence table (for PRs). */
 export const BUNDESLAND_OFFICIAL_SOURCES_FILE = 'src/lib/bundeslandOfficialSources.ts'

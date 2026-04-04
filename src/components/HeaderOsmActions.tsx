@@ -1,4 +1,5 @@
-import { de } from '../i18n/de'
+import { de, formatOsmReviewPendingObjectTooltip } from '../i18n/de'
+import { formatDeInteger } from '../lib/formatNumber'
 import { isOsmOAuthConfigured } from '../lib/osmOAuthConfig'
 import {
   useOsmAppActions,
@@ -8,6 +9,10 @@ import {
 } from '../stores/osmAppStore'
 import { Link } from '@tanstack/react-router'
 import { useCallback, useState } from 'react'
+
+/** Matches SchuleDetail / LandOverview headline total pills (light chip on dark header). */
+const HEADLINE_COUNT_PILL =
+  'inline-flex shrink-0 items-center rounded-full border border-zinc-300/90 bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold text-zinc-700 tabular-nums'
 
 export function HeaderOsmActions() {
   const authInitialized = useOsmAuthInitialized()
@@ -34,6 +39,8 @@ export function HeaderOsmActions() {
 
   const loggedIn = Boolean(displayName)
 
+  const reviewObjectTitle = formatOsmReviewPendingObjectTooltip(pendingCount)
+
   if (!authInitialized) {
     return <span className="shrink-0 text-xs text-zinc-500">{de.osm.authLoading}</span>
   }
@@ -43,9 +50,14 @@ export function HeaderOsmActions() {
       {pendingCount > 0 && (
         <Link
           to="/aenderungen"
-          className="text-sm font-medium text-amber-300 underline decoration-amber-300/40 underline-offset-2 hover:text-amber-200"
+          title={reviewObjectTitle}
+          aria-label={`${de.osm.reviewLink}. ${reviewObjectTitle}`}
+          className="inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-amber-300 hover:text-amber-200"
         >
-          {de.osm.reviewLink}
+          <span className="underline decoration-amber-300/40 underline-offset-2">
+            {de.osm.reviewLink}
+          </span>
+          <span className={HEADLINE_COUNT_PILL}>{formatDeInteger(pendingCount)}</span>
         </Link>
       )}
       {!isOsmOAuthConfigured() && (

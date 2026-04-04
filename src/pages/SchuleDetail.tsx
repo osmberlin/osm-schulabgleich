@@ -10,6 +10,7 @@ import { detailMapConnectorLines } from '../lib/detailMapConnectorLines'
 import { buildIdUrl, buildJosmLoadObject, buildOsmBrowseUrl } from '../lib/editorLinks'
 import { fetchLandSchoolsBundle } from '../lib/fetchLandSchoolsBundle'
 import { formatDeInteger } from '../lib/formatNumber'
+import { jedeschuleSchoolJsonUrl } from '../lib/jedeschuleUrls'
 import type { LandMatchCategory } from '../lib/landMatchCategories'
 import { boundsToBboxParam } from '../lib/mapBounds'
 import { DETAIL_MAP_OFFICIAL, DETAIL_MAP_OSM } from '../lib/matchCategoryTheme'
@@ -199,7 +200,7 @@ function AmbiguousCompareSummaryMeta({
           {'\u00B7'}
         </span>
         <a
-          href={`https://jedeschule.codefor.de/schools/${encodeURIComponent(officialId)}`}
+          href={jedeschuleSchoolJsonUrl(officialId)}
           target="_blank"
           rel="noreferrer"
           className="shrink-0 whitespace-nowrap text-emerald-300 underline"
@@ -929,7 +930,7 @@ export function SchuleDetail() {
   const osmBrowseUrl = buildOsmBrowseUrl(row.osmType, row.osmId)
   const jedeschuleItem =
     row.officialId && !(row.ambiguousOfficialIds && row.ambiguousOfficialIds.length > 0)
-      ? `https://jedeschule.codefor.de/schools/${encodeURIComponent(row.officialId)}`
+      ? jedeschuleSchoolJsonUrl(row.officialId)
       : null
 
   const { officialLicenceRow, licenceHash, osmLicenceCompatible } = getSchuleDetailLicenceInfo(code)

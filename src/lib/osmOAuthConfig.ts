@@ -1,6 +1,13 @@
-/** User-Agent for OSM API (required by policy). */
-export const OSM_API_USER_AGENT =
-  'osm-schul-abgleich/0.0.0 (https://github.com/osmberlin/osm-schul-abgleich)'
+import { APP_VERSION } from './appVersion'
+import { GITHUB_REPO_ROOT } from './githubRepo'
+
+/**
+ * OSM changeset `created_by` and HTTP User-Agent (required by API policy).
+ * Format: `name/version (repo URL)`.
+ */
+export const OSM_APP_EDITOR = `osm-schul-abgleich/${APP_VERSION} (${GITHUB_REPO_ROOT})`
+
+export const OSM_API_USER_AGENT = OSM_APP_EDITOR
 
 /** Must match `public/` filename and entries on https://www.openstreetmap.org/oauth2/applications */
 export const OSM_OAUTH_LAND_FILENAME = 'osm-oauth-land.html'

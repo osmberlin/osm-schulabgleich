@@ -24,6 +24,8 @@ export type PendingOsmEdit = {
   lon: number
   lat: number
   tags: Record<string, string>
+  /** Amtliche Schul-ID → jedeschule.codefor.de/schools/… JSON (changeset `source:n`). */
+  officialId?: string
 }
 
 function pendingKey(type: OsmElementType, id: string) {
@@ -125,6 +127,7 @@ const useOsmAppStore = create<OsmAppState>((set, get) => ({
               lon: partial.lon,
               lat: partial.lat,
               tags,
+              officialId: partial.officialId ?? prev?.officialId,
             },
           },
         }
@@ -169,6 +172,17 @@ export function usePendingEditCount() {
 
 export function usePendingEditsByKey() {
   return useOsmAppStore((s) => s.pendingByKey)
+}
+
+/** Pending staged edit for one OSM element, or undefined. Safe when type/id missing (detail placeholders). */
+export function usePendingEditForOsmObject(
+  osmType: OsmElementType | null | undefined,
+  osmId: string | null | undefined,
+) {
+  return useOsmAppStore((s) => {
+    if (osmType == null || osmId == null || osmId === '') return undefined
+    return s.pendingByKey[`${osmType}/${osmId}`]
+  })
 }
 
 /** For `beforeunload` and other non-React call sites. */

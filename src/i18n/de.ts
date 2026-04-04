@@ -1,3 +1,5 @@
+import { formatDeInteger } from '../lib/formatNumber'
+
 export const de = {
   appTitle: 'OSM Schulabgleich',
   navHome: 'Start',
@@ -28,10 +30,12 @@ export const de = {
     mapAria: 'Karte der betroffenen OSM-Objekte',
     grundschuleSectionTitle: 'Vorschlag aus amtlichen Daten (Grundschule)',
     grundschuleSectionLead:
-      'Für diese Schule deuten die offiziellen Daten auf eine Grundschule hin. Du kannst passende OSM-Tags vormerken.',
-    proposeSchoolPrimary: 'school=primary vormerken',
-    proposeIsced1: 'isced:level=1 vormerken',
+      'Für diese Schule deuten die offiziellen Daten auf eine Grundschule hin. Du kannst passende OSM-Tags taggen und im Hauptmenü hochladen.',
+    /** Shown after the monospace tag in Grundschule action buttons. */
+    proposeOsmTagVerb: 'taggen',
     tagAlreadySet: 'Bereits gesetzt',
+    /** Tag is in the local upload queue, not yet on OSM. */
+    tagStaged: 'Vorgemerkt',
     confirmTagChange: '{key}={from} wird zu {key}={to} geändert. Fortfahren?',
   },
 
@@ -294,4 +298,12 @@ export function formatOsmTagChangeConfirm(key: string, from: string, to: string)
     .replaceAll('{key}', key)
     .replaceAll('{from}', from)
     .replaceAll('{to}', to)
+}
+
+/** Tooltip / aria-label for the header link to `/aenderungen` (object count). */
+export function formatOsmReviewPendingObjectTooltip(objectCount: number): string {
+  if (objectCount === 1) {
+    return `${formatDeInteger(objectCount)} Objekt mit vorgemerkten Tag-Änderungen`
+  }
+  return `${formatDeInteger(objectCount)} Objekte mit vorgemerkten Tag-Änderungen`
 }
