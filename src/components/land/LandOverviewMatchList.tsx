@@ -16,7 +16,7 @@ type ListMatchRow = {
   officialName: string | null
   osmName: string | null
   officialProperties?: Record<string, unknown> | null
-  matchMode?: 'distance' | 'distance_and_name' | 'name' | 'website' | 'address'
+  matchMode?: 'distance' | 'distance_and_name' | 'name' | 'website' | 'address' | 'ref'
   distanceMeters: number | null
 }
 

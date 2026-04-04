@@ -84,7 +84,7 @@ export type AmbiguousOfficialSnapshot = {
 export type MatchRowOut = {
   key: string
   category: 'matched' | 'official_only' | 'osm_only' | 'match_ambiguous' | 'official_no_coord'
-  matchMode?: 'distance' | 'distance_and_name' | 'name' | 'website' | 'address'
+  matchMode?: 'distance' | 'distance_and_name' | 'name' | 'website' | 'address' | 'ref'
   officialId: string | null
   officialName: string | null
   officialProperties: Record<string, unknown> | null
@@ -109,6 +109,8 @@ export type MatchRowOut = {
   matchedByWebsiteNormalized?: string
   /** Normalized address string used for no-coord address fallback equality. */
   matchedByAddressNormalized?: string
+  /** OSM `ref` value used for JedeSchule id suffix match (`BE-07K12` ↔ `ref=07K12`). */
+  matchedByRefNormalized?: string
   /** Federal state code for national pipeline split (optional). */
   pipelineLand?: string
 }
@@ -133,11 +135,6 @@ function schoolKindFromOsmTags(
     schoolKindDe: r.canonicalDe,
     schoolKindDeSource: r.source === 'none' ? null : r.source,
   }
-}
-
-/** Name-based fallback only considers official IDs from the same federal state as the OSM school. */
-function officialsInSameLandAsOsm(officials: OfficialInput[], osmLand: LandCode): OfficialInput[] {
-  return officials.filter((off) => landCodeFromSchoolId(off.id) === osmLand)
 }
 
 function osmLandKey(o: OsmSchoolInput): string {
@@ -294,6 +291,111 @@ export type MatchSchoolsOptions = {
   osmLandByKey: Map<string, LandCode>
 }
 
+/** Map JedeSchule id suffix to keyed lookup: `BE-07K12` → `BE:07k12` (collisions dropped). */
+function buildOfficialRefMatchIndex(withCoord: OfficialInput[]): Map<string, OfficialInput> {
+  const seenTwice = new Set<string>()
+  const m = new Map<string, OfficialInput>()
+  for (const off of withCoord) {
+    const land = landCodeFromSchoolId(off.id)
+    if (!land) continue
+    const dash = off.id.indexOf('-')
+    if (dash < 0 || dash >= off.id.length - 1) continue
+    const suffix = off.id
+      .slice(dash + 1)
+      .trim()
+      .toLowerCase()
+    if (!suffix) continue
+    const key = `${land}:${suffix}`
+    if (m.has(key)) {
+      seenTwice.add(key)
+      continue
+    }
+    m.set(key, off)
+  }
+  for (const k of seenTwice) m.delete(k)
+  return m
+}
+
+function normalizeOsmRefTagForMatch(raw: string | undefined, land: LandCode): string | null {
+  if (raw == null || typeof raw !== 'string') return null
+  let t = raw.trim().toLowerCase()
+  if (!t) return null
+  t = t.split(/[;,]/)[0]?.trim() ?? ''
+  if (!t) return null
+  const prefixed = `${land.toLowerCase()}-`
+  if (t.startsWith(prefixed)) t = t.slice(prefixed.length).trim()
+  if (!t) return null
+  return `${land}:${t}`
+}
+
+function refMatchOsmSortKey(o: OsmSchoolInput): number {
+  if (o.osmType === 'relation') return 0
+  if (o.osmType === 'way') return 1
+  return 2
+}
+
+function extractRefMatches(
+  officials: OfficialInput[],
+  osmSchools: OsmSchoolInput[],
+  opts: MatchSchoolsOptions,
+): { refRows: MatchRowOut[]; consumedOsmKeys: Set<string>; reservedOfficialIds: Set<string> } {
+  const withCoord = officials.filter((o) => Number.isFinite(o.lon) && Number.isFinite(o.lat))
+  const index = buildOfficialRefMatchIndex(withCoord)
+  const consumedOsmKeys = new Set<string>()
+  const reservedOfficialIds = new Set<string>()
+  const refRows: MatchRowOut[] = []
+
+  const orderIdx = osmSchools
+    .map((_, i) => i)
+    .sort((i, j) => {
+      const a = osmSchools[i]!
+      const b = osmSchools[j]!
+      const rd = refMatchOsmSortKey(a) - refMatchOsmSortKey(b)
+      if (rd !== 0) return rd
+      return osmLandKey(a).localeCompare(osmLandKey(b), 'en')
+    })
+
+  for (const i of orderIdx) {
+    const o = osmSchools[i]!
+    const landKey = osmLandKey(o)
+    if (consumedOsmKeys.has(landKey)) continue
+    const osmLand = opts.osmLandByKey.get(landKey)
+    if (osmLand === undefined) {
+      throw new Error(`matchSchools: osmLandByKey missing entry "${landKey}"`)
+    }
+    const refKey = normalizeOsmRefTagForMatch(o.tags.ref, osmLand)
+    if (!refKey) continue
+    const off = index.get(refKey)
+    if (!off) continue
+    if (reservedOfficialIds.has(off.id)) continue
+
+    reservedOfficialIds.add(off.id)
+    consumedOsmKeys.add(landKey)
+    const [lon, lat] = o.centroid
+    const distKm = distance(point([off.lon, off.lat]), point([lon, lat]), { units: 'kilometers' })
+    const dM = Math.round(distKm * 1000)
+    refRows.push({
+      key: `match-${off.id}`,
+      category: 'matched',
+      matchMode: 'ref',
+      officialId: off.id,
+      officialName: off.name,
+      officialProperties: off.properties,
+      osmId: o.osmId,
+      osmType: o.osmType,
+      osmCentroidLon: lon,
+      osmCentroidLat: lat,
+      distanceMeters: dM,
+      osmName: o.name,
+      osmTags: o.tags,
+      ...schoolKindFromOsmTags(o.tags),
+      matchedByRefNormalized: o.tags.ref.trim(),
+    })
+  }
+
+  return { refRows, consumedOsmKeys, reservedOfficialIds }
+}
+
 export function matchSchools(
   officials: OfficialInput[],
   osmSchools: OsmSchoolInput[],
@@ -307,8 +409,13 @@ export function matchSchools(
   const ambiguousAllIds = new Set<string>()
   const rows: MatchRowOut[] = []
 
+  const refPass = extractRefMatches(officials, osmSchools, opts)
+  for (const id of refPass.reservedOfficialIds) reserved.add(id)
+  rows.push(...refPass.refRows)
+  const osmRemaining = osmSchools.filter((o) => !refPass.consumedOsmKeys.has(osmLandKey(o)))
+
   const fullCandsByOsm = new Map<string, OfficialInput[]>()
-  for (const o of osmSchools) {
+  for (const o of osmRemaining) {
     const landKey = osmLandKey(o)
     const osmLand = opts.osmLandByKey.get(landKey)
     if (osmLand === undefined) {
@@ -327,7 +434,7 @@ export function matchSchools(
     osmNameTag: OsmNameMatchTag | undefined
   }
   const phase1Proposals: Phase1Proposal[] = []
-  for (const o of osmSchools) {
+  for (const o of osmRemaining) {
     const landKey = osmLandKey(o)
     const full = fullCandsByOsm.get(landKey) ?? []
     if (full.length < 2) continue
@@ -378,7 +485,7 @@ export function matchSchools(
     })
   }
 
-  for (const o of osmSchools) {
+  for (const o of osmRemaining) {
     const [lon, lat] = o.centroid
     const landKey = osmLandKey(o)
     const osmLand = opts.osmLandByKey.get(landKey)

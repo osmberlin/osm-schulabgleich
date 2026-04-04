@@ -51,7 +51,9 @@ export const schoolsMatchRowSchema = z
     key: z.string(),
     category: matchCategorySchema.optional(),
     matchCategory: matchCategorySchema.optional(),
-    matchMode: z.enum(['distance', 'distance_and_name', 'name', 'website', 'address']).optional(),
+    matchMode: z
+      .enum(['distance', 'distance_and_name', 'name', 'website', 'address', 'ref'])
+      .optional(),
     officialId: z.string().nullable(),
     officialName: z.string().nullable(),
     officialProperties: z.record(z.string(), z.unknown()).nullable().optional(),
@@ -70,6 +72,7 @@ export const schoolsMatchRowSchema = z
     matchedByOsmNameTag: z.enum(OSM_SCHOOL_NAME_TAGS_IN_ORDER).optional(),
     matchedByWebsiteNormalized: z.string().optional(),
     matchedByAddressNormalized: z.string().optional(),
+    matchedByRefNormalized: z.string().optional(),
     pipelineLand: z.string().optional(),
     schoolKindDe: z.string().nullable().optional(),
     schoolKindDeSource: schoolKindDeSourceSchema.nullable().optional(),

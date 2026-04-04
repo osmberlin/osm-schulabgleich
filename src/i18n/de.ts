@@ -218,12 +218,15 @@ export const de = {
       'Zuordnung nur über Website-Gleichheit (amtlicher Datensatz ohne Koordinaten, normalisierte URL):',
     matchExplanationAddress:
       'Zuordnung nur über Adress-Gleichheit (amtlicher Datensatz ohne Koordinaten, normalisierte Adresse):',
+    matchExplanationRef:
+      'Zuordnung über OSM-Tag `ref` und amtliche Schul-ID (Suffix nach Bundesland-Präfix, z. B. `BE-07K12` ↔ `ref=07K12`):',
     matchModeLabel: {
       distance: 'Distanz',
       distance_and_name: 'Distanz + Name',
       name: 'Name',
       website: 'Website',
       address: 'Adresse',
+      ref: 'Referenz (ref)',
     },
     matchMatchedByOsmTag: {
       name: 'Abgleich über das OSM-Tag `name`.',

@@ -1304,6 +1304,13 @@ export function SchuleDetail() {
                 {row.matchedByAddressNormalized ?? '—'}
               </code>
             </>
+          ) : row.matchMode === 'ref' ? (
+            <>
+              {de.detail.matchExplanationRef}{' '}
+              <code className="rounded bg-zinc-900 px-1.5 py-0.5 font-mono text-[0.9em] text-zinc-200">
+                {row.matchedByRefNormalized ?? '—'}
+              </code>
+            </>
           ) : (
             de.detail.matchExplanationDistance
           )}

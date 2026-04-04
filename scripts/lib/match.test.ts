@@ -71,6 +71,37 @@ describe('matchSchools', () => {
     expect(officialNoCoordCount).toBe(0)
   })
 
+  it('matches JedeSchule id suffix to OSM ref (e.g. BE-07K12 ↔ ref=07K12)', () => {
+    const off: OfficialInput = {
+      id: 'BE-07K12',
+      name: 'Friedenauer Gemeinschaftsschule',
+      lon: 13.34407991,
+      lat: 52.46969054,
+      properties: { id: 'BE-07K12' },
+    }
+    const osmRel: OsmSchoolInput = {
+      osmType: 'relation',
+      osmId: '17475927',
+      name: 'Friedenauer Gemeinschaftsschule',
+      tags: {
+        amenity: 'school',
+        name: 'Friedenauer Gemeinschaftsschule',
+        ref: '07K12',
+        type: 'site',
+      },
+      geometry: { type: 'Point', coordinates: [13.3449, 52.469] },
+      centroid: [13.3449, 52.469],
+    }
+    const { rows } = matchSchools([off], [osmRel], landOpts(osmRel, 'BE'))
+    const m = rows.filter((r) => r.category === 'matched')
+    expect(m).toHaveLength(1)
+    expect(m[0].officialId).toBe('BE-07K12')
+    expect(m[0].matchMode).toBe('ref')
+    expect(m[0].osmType).toBe('relation')
+    expect(m[0].osmId).toBe('17475927')
+    expect(m[0].matchedByRefNormalized).toBe('07K12')
+  })
+
   it('respects MATCH_RADIUS_KM notionally', () => {
     const far: OsmSchoolInput = {
       ...osmNear,

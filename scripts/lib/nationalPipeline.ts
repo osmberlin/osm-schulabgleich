@@ -259,6 +259,7 @@ function rowsToJson(rows: MatchRowOut[]) {
     matchedByOsmNameTag: r.matchedByOsmNameTag,
     matchedByWebsiteNormalized: r.matchedByWebsiteNormalized,
     matchedByAddressNormalized: r.matchedByAddressNormalized,
+    matchedByRefNormalized: r.matchedByRefNormalized,
     pipelineLand: r.pipelineLand,
     schoolKindDe: r.schoolKindDe,
     schoolKindDeSource: r.schoolKindDeSource,

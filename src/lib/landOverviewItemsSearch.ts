@@ -16,6 +16,7 @@ export const LAND_FACET_MATCH_MODES = [
   'name',
   'website',
   'address',
+  'ref',
   LAND_MATCH_FACET_MATCH_MODE_NONE,
 ] as const
 
