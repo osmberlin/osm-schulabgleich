@@ -32,6 +32,9 @@ jobs:
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
+        env:
+          # Skip Husky in CI; snapshot commits must not run `bun run format`.
+          HUSKY: '0'
       - name: Validate committed snapshot baseline
         run: |
           test -f public/datasets/summary.json
