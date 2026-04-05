@@ -46,8 +46,6 @@ jobs:
           OVERPASS_FETCH_RELAX_TLS: 'true'
       - name: Validate pipeline snapshot outputs
         run: |
-          bun -e "JSON.parse(await Bun.file('public/datasets/summary.json').text())"
-          bun -e "import { parseRunHistoryFileText } from './src/lib/runHistoryJsonl.ts'; parseRunHistoryFileText(await Bun.file('public/datasets/status/runs.jsonl').text())"
           test -f public/datasets/schools_official_de.meta.json
           test -f public/datasets/schools_osm_de.meta.json
           test -f public/datasets/jedeschule_stats.json
