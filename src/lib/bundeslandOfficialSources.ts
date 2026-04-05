@@ -67,7 +67,14 @@ export const BUNDESLAND_OFFICIAL_SOURCES = {
     },
   ),
   HB: seed('https://www.bildung.bremen.de/detail.php?template=35_schulsuche_stufe2_d'),
-  HH: seed('https://metaver.de/trefferanzeige?docuuid=BDEB9B13-0C2B-42A3-B248-A31B01B454BA'),
+  HH: seed('https://metaver.de/trefferanzeige?docuuid=BDEB9B13-0C2B-42A3-B248-A31B01B454BA', {
+    officialLicense: 'DL-DE BY 2.0',
+    osmCompatible: 'no',
+    likelyNote:
+      'Quellenvermerk: Freie und Hansestadt Hamburg, Behörde für Schule und Berufsausbildung. Für OSM liegt keine bekannte Zusatzvereinbarung (Waiver) vor.',
+    lastCheckedAt: '2026-04-05',
+    lastCheckedByGithub: 'vizsim',
+  }),
   HE: seed('https://schul-db.bildung.hessen.de/schul_db.html'),
   MV: seed('https://www.laiv-mv.de/Statistik/Ver%C3%B6ffentlichungen/Verzeichnisse/'),
   NI: seed('https://schulen.nibis.de/search/advanced'),
