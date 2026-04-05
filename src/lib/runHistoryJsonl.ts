@@ -1,0 +1,84 @@
+/**
+ * Pipeline run history as JSON Lines (JSONL): one minified JSON object per line, UTF-8.
+ * {@link stringifyRunHistoryJsonl} sorts records deterministically so git diffs stay stable.
+ *
+ * Also supports the legacy single JSON document `{"runs":[...]}` for one-off migration.
+ */
+
+export function compareRunRecordsStable(a: unknown, b: unknown): number {
+  const ka = runSortKey(a)
+  const kb = runSortKey(b)
+  for (let i = 0; i < ka.length; i++) {
+    if (ka[i] < kb[i]) return -1
+    if (ka[i] > kb[i]) return 1
+  }
+  return 0
+}
+
+export function sortRunRecordsStable(runs: readonly unknown[]): unknown[] {
+  return [...runs].sort(compareRunRecordsStable)
+}
+
+function runSortKey(r: unknown): [string, string, string, string] {
+  if (typeof r !== 'object' || r === null) return ['', '', '', '']
+  const o = r as Record<string, unknown>
+  const startedAt = typeof o.startedAt === 'string' ? o.startedAt : ''
+  const finishedAt = typeof o.finishedAt === 'string' ? o.finishedAt : ''
+  const gitSha = typeof o.gitSha === 'string' ? o.gitSha : ''
+  const tieBreak = JSON.stringify(r)
+  return [startedAt, finishedAt, gitSha, tieBreak]
+}
+
+/**
+ * Parse JSONL: non-empty lines must each be one JSON value (typically an object).
+ * Returns records sorted with {@link sortRunRecordsStable}.
+ */
+export function parseRunHistoryJsonl(text: string): unknown[] {
+  const raw = text.replace(/\r\n/g, '\n')
+  const lines = raw.split('\n')
+  const out: unknown[] = []
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim()
+    if (line === '') continue
+    try {
+      out.push(JSON.parse(line))
+    } catch {
+      throw new Error(`run history JSONL: invalid JSON on line ${i + 1}`)
+    }
+  }
+  return sortRunRecordsStable(out)
+}
+
+/**
+ * Load run records from committed file text: JSONL (one object per line), or legacy
+ * single JSON document `{"runs":[...]}` (detected only when full-file parse succeeds
+ * and `runs` is an array — avoids mis-detecting JSONL lines that also start with `{`).
+ */
+export function parseRunHistoryFileText(text: string): unknown[] {
+  const t = text.trim()
+  if (t === '') return []
+  try {
+    const o = JSON.parse(t) as { runs?: unknown }
+    if (typeof o === 'object' && o !== null && Array.isArray(o.runs)) {
+      return sortRunRecordsStable(o.runs)
+    }
+  } catch {
+    /* whole body is not one JSON value → JSONL */
+  }
+  return parseRunHistoryJsonl(text)
+}
+
+/** Shape expected by `runsFileSchema` in `./schemas`. */
+export function runsPayloadFromHistoryText(text: string): { runs: unknown[] } {
+  return { runs: parseRunHistoryFileText(text) }
+}
+
+/**
+ * Serialize to JSONL: records are sorted with {@link sortRunRecordsStable}, one compact JSON per line.
+ * Ends with a newline when there is at least one record.
+ */
+export function stringifyRunHistoryJsonl(runs: readonly unknown[]): string {
+  const sorted = sortRunRecordsStable(runs)
+  if (sorted.length === 0) return ''
+  return `${sorted.map((r) => JSON.stringify(r)).join('\n')}\n`
+}

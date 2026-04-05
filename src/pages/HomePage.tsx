@@ -5,7 +5,8 @@ import { HomeLandList } from '../components/home/HomeLandList'
 import { HomeOfficialSourcesSection } from '../components/home/HomeOfficialSourcesSection'
 import { de } from '../i18n/de'
 import { germanyHistoryFromRuns } from '../lib/matchHistoryFromRuns'
-import { runsJsonUrl, summaryJsonUrl } from '../lib/paths'
+import { runsJsonlUrl, summaryJsonUrl } from '../lib/paths'
+import { runsPayloadFromHistoryText } from '../lib/runHistoryJsonl'
 import { runsFileSchema, summaryFileSchema } from '../lib/schemas'
 import { STATE_ORDER } from '../lib/stateConfig'
 import { useQuery } from '@tanstack/react-query'
@@ -25,9 +26,9 @@ export function HomePage() {
   const runsQ = useQuery({
     queryKey: ['runs'],
     queryFn: async () => {
-      const r = await fetch(runsJsonUrl())
+      const r = await fetch(runsJsonlUrl())
       if (!r.ok) throw new Error(String(r.status))
-      return runsFileSchema.parse(await r.json())
+      return runsFileSchema.parse(runsPayloadFromHistoryText(await r.text()))
     },
     retry: 1,
   })

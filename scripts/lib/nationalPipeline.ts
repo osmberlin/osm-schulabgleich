@@ -1,5 +1,6 @@
 import { berlinCalendarDateKey } from '../../src/lib/berlinCalendarDateKey'
 import { centroidFromOsmGeometry } from '../../src/lib/osmGeometryCentroid'
+import { parseRunHistoryFileText, stringifyRunHistoryJsonl } from '../../src/lib/runHistoryJsonl'
 import { schoolsMatchesFileSchema } from '../../src/lib/schemas'
 import {
   type LandCode,
@@ -43,6 +44,7 @@ import path from 'node:path'
 
 function envScopedJsonFileName(fileName: string): string {
   if (process.env.GITHUB_ACTIONS === 'true') return fileName
+  if (fileName.endsWith('.jsonl')) return fileName.replace(/\.jsonl$/, '.dev.jsonl')
   return fileName.replace(/\.json$/, '.dev.json')
 }
 
@@ -553,15 +555,19 @@ async function appendRunRecord(
   record: Record<string, unknown>,
 ): Promise<void> {
   await mkdir(statusDir(projectRoot), { recursive: true })
-  const runsFileName = envScopedJsonFileName('runs.json')
+  const runsFileName = envScopedJsonFileName('runs.jsonl')
   const runsPath = path.join(statusDir(projectRoot), runsFileName)
-  const prev = (await readJsonFile<{ runs: unknown[] }>(runsPath)) ?? { runs: [] }
+  let prior: unknown[] = []
+  const runsFile = Bun.file(runsPath)
+  if (await runsFile.exists()) {
+    const text = await runsFile.text()
+    if (text.trim() !== '') prior = parseRunHistoryFileText(text)
+  }
   const gitSha = process.env.GITHUB_SHA ?? 'local'
   const newRun = { ...record, gitSha }
   const startedAt = record.startedAt
   const dayKey =
     typeof startedAt === 'string' && startedAt.trim() !== '' ? berlinCalendarDateKey(startedAt) : ''
-  const prior = Array.isArray(prev.runs) ? prev.runs : []
   const filtered =
     dayKey === ''
       ? prior
@@ -571,8 +577,8 @@ async function appendRunRecord(
           if (typeof s !== 'string' || s.trim() === '') return true
           return berlinCalendarDateKey(s) !== dayKey
         })
-  prev.runs = [...filtered, newRun].slice(-90)
-  await writeJson(runsPath, prev)
+  const nextRuns = [...filtered, newRun].slice(-90)
+  await Bun.write(runsPath, stringifyRunHistoryJsonl(nextRuns))
 }
 
 export type RunSplitLandsOptions = {

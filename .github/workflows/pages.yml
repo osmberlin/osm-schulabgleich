@@ -38,7 +38,7 @@ jobs:
       - name: Validate committed snapshot baseline
         run: |
           test -f public/datasets/summary.json
-          test -f public/datasets/status/runs.json
+          test -f public/datasets/status/runs.jsonl
       - run: bun run pipeline
         env:
           GITHUB_SHA: ${{ github.sha }}
@@ -47,14 +47,14 @@ jobs:
       - name: Validate pipeline snapshot outputs
         run: |
           bun -e "JSON.parse(await Bun.file('public/datasets/summary.json').text())"
-          bun -e "JSON.parse(await Bun.file('public/datasets/status/runs.json').text())"
+          bun -e "import { parseRunHistoryFileText } from './src/lib/runHistoryJsonl.ts'; parseRunHistoryFileText(await Bun.file('public/datasets/status/runs.jsonl').text())"
           test -f public/datasets/schools_official_de.meta.json
           test -f public/datasets/schools_osm_de.meta.json
           test -f public/datasets/jedeschule_stats.json
       - name: Commit snapshot files to main
         run: |
           git add public/datasets/summary.json
-          git add public/datasets/status/runs.json
+          git add public/datasets/status/runs.jsonl
           git add public/datasets/schools_official_de.meta.json
           git add public/datasets/schools_osm_de.meta.json
           git add public/datasets/jedeschule_stats.json

@@ -3,12 +3,13 @@ const base = () => import.meta.env.BASE_URL.replace(/\/$/, '')
 const datasetsUrl = (path: string) => `${base()}${path.startsWith('/') ? path : `/${path}`}`
 function envScopedJsonFileName(fileName: string): string {
   if (!import.meta.env.DEV) return fileName
+  if (fileName.endsWith('.jsonl')) return fileName.replace(/\.jsonl$/, '.dev.jsonl')
   return fileName.replace(/\.json$/, '.dev.json')
 }
 
 export const summaryJsonUrl = () => datasetsUrl('/datasets/summary.json')
-export const runsJsonUrl = () =>
-  datasetsUrl(`/datasets/status/${envScopedJsonFileName('runs.json')}`)
+export const runsJsonlUrl = () =>
+  datasetsUrl(`/datasets/status/${envScopedJsonFileName('runs.jsonl')}`)
 export const nationalOfficialMetaUrl = () =>
   datasetsUrl(`/datasets/${envScopedJsonFileName('schools_official_de.meta.json')}`)
 export const nationalOsmMetaUrl = () =>

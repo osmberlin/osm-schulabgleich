@@ -11,8 +11,9 @@ schools_osm_de.meta.dev.json
 
 # Local-only run history; keep committed CI history.
 status/*
-!status/runs.json
+!status/runs.jsonl
 status/runs.dev.json
+status/runs.dev.jsonl
 
 # Per-state generated artifacts.
 **/schools_official.geojson

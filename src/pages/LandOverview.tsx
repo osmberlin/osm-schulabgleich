@@ -22,9 +22,10 @@ import {
   landOfficialUrl,
   landOsmMetaUrl,
   landOsmUrl,
-  runsJsonUrl,
+  runsJsonlUrl,
   summaryJsonUrl,
 } from '../lib/paths'
+import { runsPayloadFromHistoryText } from '../lib/runHistoryJsonl'
 import { runsFileSchema, schoolsMatchesFileSchema, summaryFileSchema } from '../lib/schemas'
 import { useLandCategoryFilter } from '../lib/useLandCategoryFilter'
 import { useLandMapBbox } from '../lib/useLandMapBbox'
@@ -55,9 +56,9 @@ export function LandOverview() {
   const runsQ = useQuery({
     queryKey: ['runs'],
     queryFn: async () => {
-      const r = await fetch(runsJsonUrl())
+      const r = await fetch(runsJsonlUrl())
       if (!r.ok) throw new Error(String(r.status))
-      return runsFileSchema.parse(await r.json())
+      return runsFileSchema.parse(runsPayloadFromHistoryText(await r.text()))
     },
   })
 
