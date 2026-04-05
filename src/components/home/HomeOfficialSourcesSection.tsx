@@ -10,6 +10,7 @@ import {
 } from '../../lib/githubRepo'
 import { STATE_LABEL_DE, STATE_ORDER } from '../../lib/stateConfig'
 import { ScaleIcon } from '@heroicons/react/20/solid'
+import { Link } from '@tanstack/react-router'
 import { format, isValid, parseISO } from 'date-fns'
 import { de as deLocale } from 'date-fns/locale/de'
 
@@ -95,7 +96,14 @@ export function HomeOfficialSourcesSection() {
                     title={`${code} — ${name}`}
                     className="px-3 py-2 align-top font-medium text-zinc-200"
                   >
-                    {name}
+                    <Link
+                      to="/bundesland/$code"
+                      params={{ code }}
+                      className="text-emerald-400/90 underline decoration-emerald-600/40 underline-offset-2 hover:text-emerald-300 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400"
+                      aria-label={`${de.home.toLand}: ${name}`}
+                    >
+                      {name}
+                    </Link>
                   </th>
                   <td className="px-3 py-2 align-top">
                     <div className="flex flex-col gap-1">
