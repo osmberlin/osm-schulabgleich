@@ -2,6 +2,7 @@ import { substantivesFromNames } from './nameSubstantivesDe'
 import { OSM_SCHOOL_NAME_TAGS_IN_ORDER } from './osmNameMatchTags'
 import { canonicalSchoolKindDe } from './osmSchoolKindDe'
 import { schoolsMatchRowSchema } from './schemas'
+import { parseErrorOutsideBoundaryFromOfficialProps } from './zodGeo'
 import itemsjs from 'itemsjs'
 import type { z } from 'zod'
 
@@ -47,6 +48,15 @@ export function effectiveSchoolKindDeForMatchRow(row: LandMatchRow): string {
   return r.canonicalDe ?? LAND_MATCH_FACET_SCHOOL_KIND_NONE
 }
 
+/** Pipeline `_error_outside_boundary` on amtliche Daten (voided Point outside declared Bundesland). */
+export function hasOfficialGeoOutsideBoundaryFlag(row: LandMatchRow): boolean {
+  if (parseErrorOutsideBoundaryFromOfficialProps(row.officialProperties ?? null)) return true
+  for (const s of row.ambiguousOfficialSnapshots ?? []) {
+    if (parseErrorOutsideBoundaryFromOfficialProps(s.properties ?? null)) return true
+  }
+  return false
+}
+
 export function matchRowToItemsJsDoc(row: LandMatchRow) {
   const hasIsced = !!row.osmTags?.['isced:level']?.trim()
   return {
@@ -57,6 +67,7 @@ export function matchRowToItemsJsDoc(row: LandMatchRow) {
     schoolKindDe: effectiveSchoolKindDeForMatchRow(row),
     hasOfficial: row.officialId ? 'yes' : 'no',
     hasOsm: row.osmId ? 'yes' : 'no',
+    geoBoundaryIssue: hasOfficialGeoOutsideBoundaryFlag(row) ? 'yes' : 'no',
   }
 }
 
@@ -70,6 +81,7 @@ export function createLandMatchItemsJsEngine(rows: LandMatchRow[]) {
     aggregations: {
       matchMode: { title: 'Modus', size: 12 },
       iscedLevel: { title: 'ISCED', size: 3 },
+      geoBoundaryIssue: { title: 'Amtliche Geoposition', size: 3 },
       schoolKindDe: {
         title: 'Schulart',
         size: 80,
@@ -86,6 +98,7 @@ export type ExplorerFilterState = {
   nameScope: 'both' | 'official' | 'osm'
   matchModes: string[]
   iscedLevels: string[]
+  geoBoundaryIssues: string[]
   schoolKinds: string[]
 }
 
@@ -96,6 +109,7 @@ export function searchLandMatchesWithExplorer(
   const filters: Record<string, string[]> = {}
   if (state.matchModes.length > 0) filters.matchMode = state.matchModes
   if (state.iscedLevels.length > 0) filters.iscedLevel = state.iscedLevels
+  if (state.geoBoundaryIssues.length > 0) filters.geoBoundaryIssue = state.geoBoundaryIssues
   if (state.schoolKinds.length > 0) filters.schoolKindDe = state.schoolKinds
 
   return engine.search({

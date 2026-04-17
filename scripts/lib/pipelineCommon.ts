@@ -2,7 +2,7 @@ import { landCodeFromSchoolId } from '../../src/lib/stateConfig'
 import type { JedeschuleSchool } from './jedeschuleCsv'
 import path from 'node:path'
 
-export const PIPELINE_VERSION = 1 as const
+export const PIPELINE_VERSION = 2 as const
 
 export function datasetsDir(projectRoot: string) {
   return path.join(projectRoot, 'public', 'datasets')

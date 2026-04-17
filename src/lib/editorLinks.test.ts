@@ -1,4 +1,4 @@
-import { buildIdUrl, buildJosmLoadObject } from './editorLinks'
+import { buildIdUrl, buildJosmLoadObject, buildOpenStreetMapOrgPinUrl } from './editorLinks'
 import { describe, expect, it } from 'vitest'
 
 describe('buildIdUrl', () => {
@@ -19,6 +19,15 @@ describe('buildIdUrl', () => {
     expect(url).toContain('lat=52.50000')
     expect(url).toContain('lon=13.42000')
     expect(url).toContain('zoom=')
+  })
+})
+
+describe('buildOpenStreetMapOrgPinUrl', () => {
+  it('sets mlat, mlon and map hash', () => {
+    const url = buildOpenStreetMapOrgPinUrl(52.52, 13.405, 17)
+    expect(url).toContain('mlat=52.52')
+    expect(url).toContain('mlon=13.405')
+    expect(url).toContain('#map=17/52.52/13.405')
   })
 })
 

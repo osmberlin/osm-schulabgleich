@@ -11,6 +11,7 @@ import {
 } from '../../src/lib/stateConfig'
 import { initBundeslandBoundaries, landCodeForPoint } from './bundeslandBoundaries'
 import { dedupeOfficialInputs } from './dedupeOfficialInputs'
+import { gateOfficialFeatureCollection } from './officialCoordsBundeslandGate'
 import {
   buildJedeschuleStatsFromDump,
   computeCsvMaxUpdateTimestamp,
@@ -500,7 +501,8 @@ export async function runMatchNational(projectRoot: string): Promise<MatchNation
     return { errors, matchSkipped: false }
   }
 
-  const officials = officialsFromNationalOfficialFc(officialFc)
+  const gatedOfficialFc = gateOfficialFeatureCollection(officialFc)
+  const officials = officialsFromNationalOfficialFc(gatedOfficialFc)
   const deduped = dedupeOfficialInputs(officials)
   console.info(
     `[pipeline:match] jedeschule dedupe: with-coord ${deduped.stats.withCoordBefore}→${deduped.stats.withCoordAfter} (−${deduped.stats.removedCount}), duplicate groups ${deduped.stats.groupsWithDuplicates}`,
@@ -659,7 +661,8 @@ export async function runSplitLands(
     nationalPath(projectRoot, envScopedJsonFileName(NATIONAL.schoolsOsmMeta)),
   )
 
-  const allOfficials = officialsFromNationalOfficialFc(officialFc)
+  const gatedOfficialFc = gateOfficialFeatureCollection(officialFc)
+  const allOfficials = officialsFromNationalOfficialFc(gatedOfficialFc)
   const canonicalOfficialIds = new Set(
     dedupeOfficialInputs(allOfficials).officials.map((o) => o.id),
   )
@@ -668,7 +671,7 @@ export async function runSplitLands(
     await mkdir(path.join(datasetsDir(projectRoot), code), { recursive: true })
     const officialLand: FeatureCollection = {
       type: 'FeatureCollection',
-      features: officialFc.features
+      features: gatedOfficialFc.features
         .filter((f) => {
           const fid = String(f.id ?? (f.properties as { id?: string })?.id ?? '')
           if (!canonicalOfficialIds.has(fid)) return false

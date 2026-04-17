@@ -35,3 +35,17 @@ export function parseMatchRowOsmCentroidLonLat(row: {
   const r = matchRowOsmCentroidLonLatSchema.safeParse(row)
   return r.success ? [r.data.osmCentroidLon, r.data.osmCentroidLat] : null
 }
+
+const errorOutsideBoundarySchema = z.object({
+  latitude: zFinite,
+  longitude: zFinite,
+})
+
+/** Pipeline `officialProperties._error_outside_boundary` when coords were outside declared Bundesland. */
+export function parseErrorOutsideBoundaryFromOfficialProps(
+  props: Record<string, unknown> | null | undefined,
+): { latitude: number; longitude: number } | null {
+  if (!props) return null
+  const r = errorOutsideBoundarySchema.safeParse(props._error_outside_boundary)
+  return r.success ? r.data : null
+}

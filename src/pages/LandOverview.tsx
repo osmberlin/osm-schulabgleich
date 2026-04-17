@@ -142,6 +142,7 @@ export function LandOverview() {
         explorer.nameScope,
         [...explorer.matchModes].sort().join('|'),
         [...explorer.iscedLevels].sort().join('|'),
+        [...explorer.geoBoundaryIssues].sort().join('|'),
         JSON.stringify([...explorer.schoolKinds].sort()),
       ].join('\n'),
     [
@@ -149,6 +150,7 @@ export function LandOverview() {
       explorer.nameScope,
       explorer.matchModes,
       explorer.iscedLevels,
+      explorer.geoBoundaryIssues,
       explorer.schoolKinds,
     ],
   )
@@ -165,6 +167,7 @@ export function LandOverview() {
       nameScope: explorer.nameScope,
       matchModes: explorer.matchModes,
       iscedLevels: explorer.iscedLevels,
+      geoBoundaryIssues: explorer.geoBoundaryIssues,
       schoolKinds: explorer.schoolKinds,
     })
   }, [itemsEngine, matchesAfterBbox, explorerKey])
@@ -238,6 +241,8 @@ export function LandOverview() {
         toggleMatchMode={explorer.toggleMatchMode}
         iscedLevels={explorer.iscedLevels}
         toggleIscedLevel={explorer.toggleIscedLevel}
+        geoBoundaryIssues={explorer.geoBoundaryIssues}
+        toggleGeoBoundaryIssue={explorer.toggleGeoBoundaryIssue}
         schoolKinds={explorer.schoolKinds}
         toggleSchoolKind={explorer.toggleSchoolKind}
         resetExplorer={explorer.resetExplorer}

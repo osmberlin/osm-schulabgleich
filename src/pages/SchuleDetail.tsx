@@ -7,7 +7,12 @@ import {
 } from '../components/schule/SchuleDetailLicence'
 import { de } from '../i18n/de'
 import { detailMapConnectorLines } from '../lib/detailMapConnectorLines'
-import { buildIdUrl, buildJosmLoadObject, buildOsmBrowseUrl } from '../lib/editorLinks'
+import {
+  buildIdUrl,
+  buildJosmLoadObject,
+  buildOpenStreetMapOrgPinUrl,
+  buildOsmBrowseUrl,
+} from '../lib/editorLinks'
 import { fetchLandSchoolsBundle } from '../lib/fetchLandSchoolsBundle'
 import { formatDeInteger } from '../lib/formatNumber'
 import { JEDESCHULE_DUPLICATE_GROUP_SIZE_KEY } from '../lib/jedeschuleDuplicateGroup'
@@ -35,8 +40,18 @@ import { osmGeometryCentroidLonLat } from '../lib/osmGeometryCentroid'
 import { comparePropertySections, normalizeAddressCompareString } from '../lib/propertyCompare'
 import { useDetailMapMask } from '../lib/useDetailMapMask'
 import type { LandMapBbox } from '../lib/useLandMapBbox'
-import { parseJedeschuleLonLatFromRecord, parseMatchRowOsmCentroidLonLat } from '../lib/zodGeo'
-import { ChevronRightIcon, InformationCircleIcon, MapPinIcon } from '@heroicons/react/20/solid'
+import {
+  parseErrorOutsideBoundaryFromOfficialProps,
+  parseJedeschuleLonLatFromRecord,
+  parseMatchRowOsmCentroidLonLat,
+} from '../lib/zodGeo'
+import { STATE_LABEL_DE, STATE_ORDER, type LandCode } from '../lib/stateConfig'
+import {
+  ChevronRightIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+  MapPinIcon,
+} from '@heroicons/react/20/solid'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import bbox from '@turf/bbox'
@@ -505,6 +520,20 @@ export function SchuleDetail() {
     const raw = row?.officialProperties?.[JEDESCHULE_DUPLICATE_GROUP_SIZE_KEY]
     return typeof raw === 'number' && raw > 1 ? raw : null
   }, [row])
+
+  const errorOutsideBoundary = useMemo(() => {
+    if (!row) return null
+    const fromMain = parseErrorOutsideBoundaryFromOfficialProps(row.officialProperties ?? null)
+    if (fromMain) return fromMain
+    for (const s of row.ambiguousOfficialSnapshots ?? []) {
+      const p = parseErrorOutsideBoundaryFromOfficialProps(s.properties ?? null)
+      if (p) return p
+    }
+    return null
+  }, [row])
+
+  const landLabelDe =
+    code && STATE_ORDER.includes(code as LandCode) ? STATE_LABEL_DE[code as LandCode] : code
 
   /**
    * Karten-Schwerpunkt: zuerst OSM (wie Matcher), sonst OSM-Geometrie, sonst amtliche
@@ -1285,6 +1314,50 @@ export function SchuleDetail() {
         licenceHash={licenceHash}
         osmLicenceCompatible={osmLicenceCompatible}
       />
+
+      {errorOutsideBoundary != null && (
+        <section
+          className="mb-6 rounded-md bg-amber-500/10 p-4 outline outline-amber-500/25"
+          aria-labelledby="schule-detail-outside-boundary-alert-title"
+        >
+          <div className="flex">
+            <div className="shrink-0">
+              <ExclamationTriangleIcon aria-hidden className="size-5 text-amber-400" />
+            </div>
+            <div className="ml-3 min-w-0">
+              <h3
+                id="schule-detail-outside-boundary-alert-title"
+                className="text-sm font-medium text-amber-100"
+              >
+                {de.detail.officialCoordsOutsideBoundaryTitle}
+              </h3>
+              <div className="mt-2 text-sm text-amber-100/85">
+                <p className="leading-relaxed">
+                  {de.detail.officialCoordsOutsideBoundaryBody.replace('{land}', landLabelDe ?? '—')}
+                </p>
+                <p className="mt-2 leading-relaxed">
+                  <span>{de.detail.officialCoordsOutsideBoundaryCoordsIntro} </span>
+                  <span className="tabular-nums">
+                    {errorOutsideBoundary.latitude.toFixed(6)} / {errorOutsideBoundary.longitude.toFixed(6)}
+                  </span>
+                  {' · '}
+                  <a
+                    href={buildOpenStreetMapOrgPinUrl(
+                      errorOutsideBoundary.latitude,
+                      errorOutsideBoundary.longitude,
+                    )}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-amber-200 underline"
+                  >
+                    {de.detail.officialCoordsOutsideBoundaryOsmPinLinkLabel}
+                  </a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {row.category === 'official_no_coord' && (
         <p className="mb-6 text-sm leading-relaxed text-zinc-400">

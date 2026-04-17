@@ -142,6 +142,9 @@ export const de = {
       iscedHeading: 'OSM-Tag isced:level',
       iscedYes: 'Vorhanden',
       iscedNo: 'Nicht vorhanden',
+      geoBoundaryHeading: 'Amtliche Geoposition (Bundesland)',
+      geoBoundaryYes: 'Außerhalb — als ohne Koordinaten behandelt',
+      geoBoundaryNo: 'Kein Rand-Hinweis',
       schoolKindHeading: 'Schulart (OSM school / school:de)',
       schoolKindNone: 'Keine Schulart ermittelbar',
       reset: 'Zurücksetzen',
@@ -192,6 +195,11 @@ export const de = {
       'Dieser Abgleich darf daher nur als Basis für eine eigene Recherche genutzt werden.',
     abstand: 'Abstand',
     officialCoordsMissing: 'Koordinaten fehlen',
+    officialCoordsOutsideBoundaryTitle: 'Amtliche Geoposition außerhalb des Bundeslandes',
+    officialCoordsOutsideBoundaryBody:
+      'Die Geoposition dieser Schule in den amtlichen Daten wirkte fehlerhaft — sie lag außerhalb der Grenze von {land}. Wir behandeln diese Schule daher wie eine ohne verwertbare Geodaten.',
+    officialCoordsOutsideBoundaryCoordsIntro: 'Ursprüngliche amtliche Koordinaten:',
+    officialCoordsOutsideBoundaryOsmPinLinkLabel: 'Auf OpenStreetMap mit Stecknadel',
     ambiguousAlertTitle: 'Uneindeutig',
     ambiguousIntro:
       'Mehrere amtliche Schuldatensätze kommen als Treffer für dieses OSM-Objekt infrage. Prüfe und korrigiere bei Bedarf die Daten in OSM.',

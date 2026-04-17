@@ -52,6 +52,15 @@ export function buildJosmLoadObject(
   return u.toString()
 }
 
+/** openstreetmap.org map centered on a pin (mlat/mlon + hash). */
+export function buildOpenStreetMapOrgPinUrl(lat: number, lon: number, zoom = 17): string {
+  const u = new URL('https://www.openstreetmap.org/')
+  u.searchParams.set('mlat', String(lat))
+  u.searchParams.set('mlon', String(lon))
+  u.hash = `map=${zoom}/${lat}/${lon}`
+  return u.toString()
+}
+
 /** openstreetmap.org object page (read-only), not the iD editor. */
 export function buildOsmBrowseUrl(
   osmType: 'way' | 'relation' | 'node' | null,

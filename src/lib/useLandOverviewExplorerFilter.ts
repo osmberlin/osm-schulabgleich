@@ -18,6 +18,12 @@ const iscedLevelsParser = parseAsArrayOf(iscedItemParser)
   .withDefault([])
   .withOptions({ history: 'replace' })
 
+const geoBoundaryItemParser = parseAsStringLiteral(['yes', 'no'])
+
+const geoBoundaryIssuesParser = parseAsArrayOf(geoBoundaryItemParser)
+  .withDefault([])
+  .withOptions({ history: 'replace' })
+
 /** Free-form bucket keys (Schulart strings may contain `;`). */
 const schoolKindsParser = parseAsArrayOf(parseAsString)
   .withDefault([])
@@ -33,6 +39,7 @@ export function useLandOverviewExplorerFilter() {
   const [nameScope, setNameScope] = useQueryState('lscope', nameScopeParser)
   const [matchModes, setMatchModes] = useQueryState('lmm', matchModesParser)
   const [iscedLevels, setIscedLevels] = useQueryState('lisc', iscedLevelsParser)
+  const [geoBoundaryIssues, setGeoBoundaryIssues] = useQueryState('lgeo', geoBoundaryIssuesParser)
   const [schoolKinds, setSchoolKinds] = useQueryState('lsk', schoolKindsParser)
 
   const toggleMatchMode = useCallback(
@@ -63,6 +70,20 @@ export function useLandOverviewExplorerFilter() {
     [setIscedLevels],
   )
 
+  const toggleGeoBoundaryIssue = useCallback(
+    (v: 'yes' | 'no', on: boolean) => {
+      void setGeoBoundaryIssues((prev) => {
+        const cur = prev ?? []
+        const next = new Set(cur)
+        if (on) next.add(v)
+        else next.delete(v)
+        const arr = [...next]
+        return arr.length === 0 ? [] : arr
+      })
+    },
+    [setGeoBoundaryIssues],
+  )
+
   const toggleSchoolKind = useCallback(
     (kind: string, on: boolean) => {
       void setSchoolKinds((prev) => {
@@ -82,8 +103,9 @@ export function useLandOverviewExplorerFilter() {
     void setNameScope('both')
     void setMatchModes([])
     void setIscedLevels([])
+    void setGeoBoundaryIssues([])
     void setSchoolKinds([])
-  }, [setExploreQ, setNameScope, setMatchModes, setIscedLevels, setSchoolKinds])
+  }, [setExploreQ, setNameScope, setMatchModes, setIscedLevels, setGeoBoundaryIssues, setSchoolKinds])
 
   return {
     exploreQ: exploreQ ?? '',
@@ -94,6 +116,8 @@ export function useLandOverviewExplorerFilter() {
     toggleMatchMode,
     iscedLevels: iscedLevels ?? [],
     toggleIscedLevel,
+    geoBoundaryIssues: geoBoundaryIssues ?? [],
+    toggleGeoBoundaryIssue,
     schoolKinds: schoolKinds ?? [],
     toggleSchoolKind,
     resetExplorer,

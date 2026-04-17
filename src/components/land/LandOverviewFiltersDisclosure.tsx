@@ -39,6 +39,8 @@ export function LandOverviewFiltersDisclosure({
   toggleMatchMode,
   iscedLevels,
   toggleIscedLevel,
+  geoBoundaryIssues,
+  toggleGeoBoundaryIssue,
   schoolKinds,
   toggleSchoolKind,
   resetExplorer,
@@ -54,6 +56,8 @@ export function LandOverviewFiltersDisclosure({
   toggleMatchMode: (mode: LandFacetMatchMode, on: boolean) => void
   iscedLevels: string[]
   toggleIscedLevel: (level: 'yes' | 'no', on: boolean) => void
+  geoBoundaryIssues: string[]
+  toggleGeoBoundaryIssue: (v: 'yes' | 'no', on: boolean) => void
   schoolKinds: string[]
   toggleSchoolKind: (kind: string, on: boolean) => void
   resetExplorer: () => void
@@ -76,6 +80,7 @@ export function LandOverviewFiltersDisclosure({
 
   const matchBuckets = sortBuckets(aggregations?.matchMode?.buckets ?? [])
   const iscedBuckets = aggregations?.iscedLevel?.buckets ?? []
+  const geoBoundaryBuckets = aggregations?.geoBoundaryIssue?.buckets ?? []
   const schoolBuckets = sortBuckets(aggregations?.schoolKindDe?.buckets ?? [])
 
   const hasActiveExplorer =
@@ -83,6 +88,7 @@ export function LandOverviewFiltersDisclosure({
     nameScope !== 'both' ||
     matchModes.length > 0 ||
     iscedLevels.length > 0 ||
+    geoBoundaryIssues.length > 0 ||
     schoolKinds.length > 0
 
   return (
@@ -207,6 +213,38 @@ export function LandOverviewFiltersDisclosure({
                       className="rounded border-zinc-500 text-emerald-600 focus:ring-emerald-500"
                     />
                     {level === 'yes' ? de.land.explorer.iscedYes : de.land.explorer.iscedNo}
+                  </span>
+                  <span className="text-zinc-400 tabular-nums">{formatDeInteger(count)}</span>
+                </label>
+              )
+            })}
+          </div>
+        </fieldset>
+
+        <fieldset className="mb-5">
+          <legend className="mb-2 text-xs font-medium text-zinc-300">
+            {de.land.explorer.geoBoundaryHeading}
+          </legend>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            {(['yes', 'no'] as const).map((level) => {
+              const bucket = geoBoundaryBuckets.find((b) => String(b.key) === level)
+              const count = bucket?.doc_count ?? 0
+              const checked = geoBoundaryIssues.includes(level)
+              return (
+                <label
+                  key={level}
+                  className="flex flex-1 cursor-pointer items-center justify-between gap-3 rounded-md border border-zinc-700/80 bg-zinc-950/60 px-3 py-2 text-xs has-[:checked]:border-emerald-800"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => toggleGeoBoundaryIssue(level, e.target.checked)}
+                      className="rounded border-zinc-500 text-emerald-600 focus:ring-emerald-500"
+                    />
+                    {level === 'yes'
+                      ? de.land.explorer.geoBoundaryYes
+                      : de.land.explorer.geoBoundaryNo}
                   </span>
                   <span className="text-zinc-400 tabular-nums">{formatDeInteger(count)}</span>
                 </label>
