@@ -10,6 +10,7 @@ import {
   OPENFREEMAP_STYLE,
 } from '../../lib/openFreeMapStyle'
 import type { StateMatchCategory } from '../../lib/stateMatchCategories'
+import { useDetailMapMask } from '../../lib/useDetailMapMask'
 import type { StateMapBbox } from '../../lib/useStateMapBbox'
 import { MapPointHoverPanel } from '../MapPointHoverPanel'
 import { featureCollection } from '@turf/helpers'
@@ -117,7 +118,6 @@ export function SchoolDetailMap({
   hoveredMapLabel,
   currentSchoolCategory,
   osmReferenceName,
-  showMapMask,
   renderData,
   onMapBboxChange,
   onHoveredMapLabelChange,
@@ -129,7 +129,6 @@ export function SchoolDetailMap({
   hoveredMapLabel: HoveredMapLabel | null
   currentSchoolCategory: StateMatchCategory
   osmReferenceName: string
-  showMapMask: boolean
   renderData: SchoolDetailMapRenderData
   onMapBboxChange: (bbox: StateMapBbox) => void
   onHoveredMapLabelChange: (next: HoveredMapLabel | null) => void
@@ -137,6 +136,7 @@ export function SchoolDetailMap({
   onOfficialPointClick: (officialId: string) => void
   onMoveEnd: (e: ViewStateChangeEvent) => void
 }) {
+  const { showMapMask } = useDetailMapMask()
   const {
     detailMapMaskFeature,
     detailMapPolygonFeatures,
@@ -455,14 +455,11 @@ export function SchoolDetailMap({
 export function SchoolDetailMapLegend({
   mapOsmCentroid,
   allOtherSchoolPointFeatures,
-  showMapMask,
-  onShowMapMaskChange,
 }: {
   mapOsmCentroid: readonly [number, number] | null
   allOtherSchoolPointFeatures: Feature[]
-  showMapMask: boolean
-  onShowMapMaskChange: (nextValue: boolean) => void
 }) {
+  const { showMapMask, setShowMapMask } = useDetailMapMask()
   return (
     <div className="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-2">
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 text-xs leading-snug text-zinc-400">
@@ -528,7 +525,7 @@ export function SchoolDetailMapLegend({
             checked={showMapMask}
             aria-label={`${de.detail.mapMask}, ${formatDeInteger(MATCH_RADIUS_M)} m`}
             className="peer sr-only"
-            onChange={(e) => onShowMapMaskChange(e.target.checked)}
+            onChange={(e) => setShowMapMask(e.target.checked)}
           />
           <span className="peer-checked:ring-brand-500/50 absolute inset-0 rounded-full bg-brand-950/90 ring-1 ring-brand-800/60 transition-colors duration-200 ease-in-out ring-inset peer-checked:bg-brand-800 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-emerald-500" />
           <span className="pointer-events-none absolute top-0.5 left-0.5 size-4 rounded-full bg-brand-50 shadow-sm ring-1 ring-brand-900/35 transition-transform duration-200 ease-in-out peer-checked:translate-x-4" />

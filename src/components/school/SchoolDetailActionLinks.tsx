@@ -1,4 +1,9 @@
 import { de } from '../../i18n/de'
+import { buildIdUrl, buildJosmLoadObject, buildOsmBrowseUrl } from '../../lib/editorLinks'
+import { fetchStateSchoolsBundle } from '../../lib/fetchStateSchoolsBundle'
+import { jedeschuleSchoolJsonUrl } from '../../lib/jedeschuleUrls'
+import { computeSchoolDetailMapActionBounds } from '../../lib/schoolDetailMapActionBounds'
+import { resolveSchoolMapOsmCentroid } from '../../lib/schoolDetailMapOsmCentroid'
 import { useSchoolDetailRoute } from '../../lib/useSchoolDetailRoute'
 import {
   getSchoolDetailLicenceInfo,
@@ -8,21 +13,29 @@ import {
 const EDIT_LINK_CLASS_NAME =
   'inline-flex items-center rounded-md bg-brand-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-900'
 
-type ExternalLink = string | null
+type StateSchoolsBundle = Awaited<ReturnType<typeof fetchStateSchoolsBundle>>
+type StateSchoolMatchRow = StateSchoolsBundle['matches'][number]
 
 export function SchoolDetailActionLinks({
-  idUrl,
-  josmUrl,
-  jedeschuleItemUrl,
-  osmBrowseUrl,
+  data,
+  matchRow,
 }: {
-  idUrl: ExternalLink
-  josmUrl: ExternalLink
-  jedeschuleItemUrl: ExternalLink
-  osmBrowseUrl: ExternalLink
+  data: StateSchoolsBundle
+  matchRow: StateSchoolMatchRow
 }) {
   const { code } = useSchoolDetailRoute()
   const { osmLicenceCompatible, licenceHash } = getSchoolDetailLicenceInfo(code)
+
+  const mapOsmCentroid = resolveSchoolMapOsmCentroid(data, matchRow)
+  const bounds = computeSchoolDetailMapActionBounds(data, matchRow, mapOsmCentroid)
+  const idUrl = buildIdUrl(matchRow.osmType, matchRow.osmId, bounds)
+  const josmUrl = buildJosmLoadObject(matchRow.osmType, matchRow.osmId, bounds)
+  const jedeschuleItemUrl =
+    matchRow.officialId &&
+    !(matchRow.ambiguousOfficialIds && matchRow.ambiguousOfficialIds.length > 0)
+      ? jedeschuleSchoolJsonUrl(matchRow.officialId)
+      : null
+  const osmBrowseUrl = buildOsmBrowseUrl(matchRow.osmType, matchRow.osmId)
 
   return (
     <div className="mb-6 flex flex-wrap items-center gap-2">
