@@ -81,9 +81,11 @@ export function LayerToggleStatBlock({
               onChange(e.target.checked)
             }}
           />
-          <span className="col-start-2 flex min-w-0 flex-wrap items-center gap-1 text-sm leading-snug">
-            <span className="min-w-0">{label}</span>
-            {labelAddon ? <span className="shrink-0">{labelAddon}</span> : null}
+          <span className="col-start-2 min-w-0 text-sm leading-snug">
+            {label}
+            {labelAddon ? (
+              <span className="ml-1 inline-flex shrink-0 align-middle">{labelAddon}</span>
+            ) : null}
           </span>
         </label>
       </dt>
