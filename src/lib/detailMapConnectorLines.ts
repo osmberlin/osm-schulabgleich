@@ -1,18 +1,10 @@
+import { findOfficialSchoolFeature } from './findOfficialSchoolFeature'
 import { schoolsMatchRowSchema } from './schemas'
 import { parseJedeschuleLonLatFromRecord } from './zodGeo'
 import type { Feature, FeatureCollection } from 'geojson'
 import type { z } from 'zod'
 
 export type SchoolsMatchRow = z.infer<typeof schoolsMatchRowSchema>
-
-function findOfficialSchoolFeature(fc: FeatureCollection, schoolId: string): Feature | null {
-  for (const x of fc.features) {
-    const pid = x.properties?.id as string | undefined
-    if (pid === schoolId) return x
-    if (typeof x.id === 'string' && x.id === schoolId) return x
-  }
-  return null
-}
 
 /**
  * LineStrings from an OSM Schwerpunkt to each amtliche Koordinate for a match row

@@ -27,6 +27,7 @@ export function stateCodeFromSchoolId(id: string): StateCode | null {
   return null
 }
 
+/** Canonical German state names; keys are exactly `STATE_ORDER` / `StateCode`. */
 export const STATE_LABEL_DE: Record<StateCode, string> = {
   BW: 'Baden-Württemberg',
   BY: 'Bayern',
@@ -44,6 +45,22 @@ export const STATE_LABEL_DE: Record<StateCode, string> = {
   ST: 'Sachsen-Anhalt',
   SH: 'Schleswig-Holstein',
   TH: 'Thüringen',
+}
+
+/**
+ * Optional display overrides for a Bundesland (same keys as {@link STATE_LABEL_DE}). Empty by default;
+ * use when UI needs a shorter or alternate label without changing the canonical table.
+ */
+export const STATE_LABEL_DE_OVERRIDES: Partial<Record<StateCode, string>> = {}
+
+/**
+ * German label for `params.code` on `/bundesland/$code/...`. The state route’s `beforeLoad` only
+ * allows codes in {@link STATE_ORDER}, aligned with {@link STATE_LABEL_DE}. Override via
+ * {@link STATE_LABEL_DE_OVERRIDES} when the UI needs a different string than the canonical name.
+ */
+export function stateLabelDeFromRouteCode(code: string): string {
+  const c = code as StateCode
+  return STATE_LABEL_DE_OVERRIDES[c] ?? STATE_LABEL_DE[c] ?? code
 }
 
 /**

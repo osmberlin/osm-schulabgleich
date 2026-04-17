@@ -253,10 +253,6 @@ export function StateMap({
           applyFlatMapRotationLocks(map)
           hideVectorBasemapBuildings(map)
           setCurrentBbox(boundsToBboxParam(map.getBounds()))
-          if (onMapCameraChange) {
-            const c = map.getCenter()
-            onMapCameraChange([map.getZoom(), c.lat, c.lng])
-          }
         }}
         onMove={handleMove}
         onMoveEnd={handleMoveEnd}

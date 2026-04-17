@@ -5,6 +5,7 @@ import {
   type BundeslandOfficialSourceRow,
 } from '../../lib/bundeslandOfficialSources'
 import { type StateCode, STATE_ORDER } from '../../lib/stateConfig'
+import { useSchoolDetailRoute } from '../../lib/useSchoolDetailRoute'
 import { ExclamationTriangleIcon, ShieldCheckIcon } from '@heroicons/react/20/solid'
 import { Link } from '@tanstack/react-router'
 
@@ -52,15 +53,10 @@ export function SchuleDetailLicenceCompatibleInline({
   )
 }
 
-export function SchuleDetailLicenceWarnings({
-  officialLicenceRow,
-  licenceHash,
-  osmLicenceCompatible,
-}: {
-  officialLicenceRow: BundeslandOfficialSourceRow | null
-  licenceHash: string
-  osmLicenceCompatible: boolean
-}) {
+export function SchuleDetailLicenceWarnings() {
+  const { code } = useSchoolDetailRoute()
+  const { officialLicenceRow, licenceHash, osmLicenceCompatible } = getSchuleDetailLicenceInfo(code)
+
   return (
     <>
       {officialLicenceRow != null &&

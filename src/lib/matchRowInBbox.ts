@@ -13,7 +13,8 @@ function trimNonEmptyString(v: string | null | undefined): string | null {
   return t.length ? t : null
 }
 
-function nameFromOfficialProperties(
+/** Non-empty trimmed `name` from JedeSchule-style `official` feature properties (unknown JSON shape). */
+export function nameFromOfficialProperties(
   props: Record<string, unknown> | null | undefined,
 ): string | null {
   if (!props) return null

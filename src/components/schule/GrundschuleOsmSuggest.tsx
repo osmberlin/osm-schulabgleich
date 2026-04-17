@@ -49,14 +49,15 @@ function tryStageTag(
 
 type Props = {
   row: SchoolsMatchRow
-  lon: number
-  lat: number
+  lon: number | null
+  lat: number | null
 }
 
 export function GrundschuleOsmSuggest({ row, lon, lat }: Props) {
   const { addPendingTags } = useOsmAppActions()
   const pendingForObject = usePendingEditForOsmObject(row.osmType, row.osmId)
 
+  if (lon == null || lat == null) return null
   if (!row.osmType || !row.osmId) return null
   if (
     !isOfficialGrundschule({

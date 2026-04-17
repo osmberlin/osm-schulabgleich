@@ -9,7 +9,7 @@ import { validateStateRouteSearch } from './lib/stateRouteSearch'
 import { AenderungenPage } from './pages/AenderungenPage'
 import { HomePage } from './pages/HomePage'
 import { NotFoundPage } from './pages/NotFoundPage'
-import { SchuleDetail } from './pages/SchuleDetail'
+import { SchoolDetail } from './pages/SchoolDetail'
 import { StateLayout } from './pages/StateLayout'
 import { StateOverview } from './pages/StateOverview'
 import { StatusPage } from './pages/StatusPage'
@@ -135,17 +135,17 @@ const stateIndexRoute = createRoute({
   component: StateOverview,
 })
 
-const schuleRoute = createRoute({
+const schoolRoute = createRoute({
   getParentRoute: () => stateRoute,
   path: 'schule/$matchKey',
-  component: SchuleDetail,
+  component: SchoolDetail,
 })
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
   statusRoute,
   aenderungenRoute,
-  stateRoute.addChildren([stateIndexRoute, schuleRoute]),
+  stateRoute.addChildren([stateIndexRoute, schoolRoute]),
 ])
 
 export const queryClient = new QueryClient({

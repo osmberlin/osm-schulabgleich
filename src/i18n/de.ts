@@ -196,6 +196,8 @@ export const de = {
     keysBoth: 'Gemeinsame Attribute',
     officialOnly: 'Nur in offiziellen Daten',
     osmOnly: 'Nur in OSM',
+    /** Landmark für Tastatur-/Screenreader-Sprünge zu den „nur in einer Quelle“-Tabellen. */
+    compareExclusiveSectionsNavAria: 'Sprünge zu Attributen nur in einer Quelle',
     editId: 'In iD bearbeiten',
     editJosm: 'In JOSM laden',
     jedeschuleApi: 'Auf JedeSchule öffnen (JSON)',
