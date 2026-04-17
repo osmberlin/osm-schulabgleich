@@ -105,7 +105,14 @@ export function useLandOverviewExplorerFilter() {
     void setIscedLevels([])
     void setGeoBoundaryIssues([])
     void setSchoolKinds([])
-  }, [setExploreQ, setNameScope, setMatchModes, setIscedLevels, setGeoBoundaryIssues, setSchoolKinds])
+  }, [
+    setExploreQ,
+    setNameScope,
+    setMatchModes,
+    setIscedLevels,
+    setGeoBoundaryIssues,
+    setSchoolKinds,
+  ])
 
   return {
     exploreQ: exploreQ ?? '',

@@ -16,7 +16,7 @@
     "pipeline:match:forcesplit-lands": "bun run scripts/pipeline-match-forcesplit-lands.ts",
     "pipeline:split-lands": "bun run scripts/pipeline-split-lands.ts",
     "pipeline:rebuild": "bun run scripts/pipeline-rebuild.ts",
-    "pipeline": "bun run pipeline:download && bun run pipeline:match && bun run pipeline:split-lands",
+    "pipeline": "bun run pipeline:download && bun run pipeline:rebuild",
     "stats:user-facing": "bun run scripts/report-user-facing-dataset-sizes.ts",
     "analysis:jedeschule": "bun run analysis/scripts/jedeschule-official-analysis.ts && bun run format",
     "analysis:osm-school-tags": "bun run analysis/scripts/osm-school-tags-analysis.ts && bun run format",

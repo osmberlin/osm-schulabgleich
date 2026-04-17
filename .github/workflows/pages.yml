@@ -71,10 +71,7 @@ jobs:
       - name: Remove processing-only artifacts before build
         run: |
           rm -f public/datasets/jedeschule-latest.csv
-          rm -f public/datasets/schools_official_de.geojson
-          rm -f public/datasets/schools_osm_de.geojson
-          rm -f public/datasets/schools_matches_de.json
-          rm -f public/datasets/.pipeline_skip_split
+          rm -rf public/datasets/.pipeline
       - run: bun run build
       - name: Create gzip/brotli sidecars in dist (experiment)
         run: bun run build:compress

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * Reads nationwide OSM schools GeoJSON (`schools_osm_de.geojson`) and writes
+ * Reads pipeline OSM schools GeoJSON (`public/datasets/.pipeline/schools_osm_de.geojson`) and writes
  * `analysis/out/05-osm-school-schoolde.md` plus optional Taginfo reference tables.
  *
  * @see package.json → `analysis:osm-school-tags`
@@ -83,7 +83,7 @@ function isSchoolRelevantRaw(schoolRaw: string | null): boolean {
 
 async function main() {
   const geoPath =
-    process.env.OSM_SCHOOLS_GEOJSON?.trim() || nationalPath(ROOT, NATIONAL.schoolsOsmGeojson)
+    process.env.OSM_SCHOOLS_GEOJSON?.trim() || nationalPath(ROOT, NATIONAL.pipelineOsmGeojson)
 
   const raw = await Bun.file(geoPath).json()
   if (raw?.type !== 'FeatureCollection' || !Array.isArray(raw.features)) {

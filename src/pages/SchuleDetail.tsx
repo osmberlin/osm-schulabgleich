@@ -38,6 +38,7 @@ import { promoteClosedLineStringsToPolygons } from '../lib/osmClosedRingsToPolyg
 import { findOsmFeature } from '../lib/osmFeatureLookup'
 import { osmGeometryCentroidLonLat } from '../lib/osmGeometryCentroid'
 import { comparePropertySections, normalizeAddressCompareString } from '../lib/propertyCompare'
+import { STATE_LABEL_DE, STATE_ORDER, type LandCode } from '../lib/stateConfig'
 import { useDetailMapMask } from '../lib/useDetailMapMask'
 import type { LandMapBbox } from '../lib/useLandMapBbox'
 import {
@@ -45,7 +46,6 @@ import {
   parseJedeschuleLonLatFromRecord,
   parseMatchRowOsmCentroidLonLat,
 } from '../lib/zodGeo'
-import { STATE_LABEL_DE, STATE_ORDER, type LandCode } from '../lib/stateConfig'
 import {
   ChevronRightIcon,
   ExclamationTriangleIcon,
@@ -1333,12 +1333,16 @@ export function SchuleDetail() {
               </h3>
               <div className="mt-2 text-sm text-amber-100/85">
                 <p className="leading-relaxed">
-                  {de.detail.officialCoordsOutsideBoundaryBody.replace('{land}', landLabelDe ?? '—')}
+                  {de.detail.officialCoordsOutsideBoundaryBody.replace(
+                    '{land}',
+                    landLabelDe ?? '—',
+                  )}
                 </p>
                 <p className="mt-2 leading-relaxed">
                   <span>{de.detail.officialCoordsOutsideBoundaryCoordsIntro} </span>
                   <span className="tabular-nums">
-                    {errorOutsideBoundary.latitude.toFixed(6)} / {errorOutsideBoundary.longitude.toFixed(6)}
+                    {errorOutsideBoundary.latitude.toFixed(6)} /{' '}
+                    {errorOutsideBoundary.longitude.toFixed(6)}
                   </span>
                   {' · '}
                   <a

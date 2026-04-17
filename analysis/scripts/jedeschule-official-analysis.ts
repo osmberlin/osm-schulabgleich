@@ -1,8 +1,10 @@
 #!/usr/bin/env bun
-import { NATIONAL, nationalPath } from '../../scripts/lib/nationalDatasetPaths'
+import { parseSchoolsFromCsvText } from '../../scripts/lib/jedeschuleCsv'
+import { jedeschuleDumpAbsolutePath } from '../../scripts/lib/jedeschuleDumpConfig'
+import { officialGeojsonNational } from '../../scripts/lib/pipelineCommon'
 import { landCodeFromSchoolId, STATE_ORDER } from '../../src/lib/stateConfig'
 /**
- * Reads nationwide official schools GeoJSON (`schools_official_de.geojson`) and writes
+ * Reads `public/datasets/jedeschule-latest.csv` (or `JEDESCHULE_CSV`) and writes
  * markdown reports under `analysis/out/`.
  *
  * @see package.json → `analysis:jedeschule`
@@ -174,14 +176,13 @@ function landFromProps(p: Record<string, unknown>): string {
 }
 
 async function main() {
-  const geoPath =
-    process.env.JEDESCHULE_OFFICIAL_GEOJSON?.trim() ||
-    nationalPath(ROOT, NATIONAL.schoolsOfficialGeojson)
+  const csvPath =
+    process.env.JEDESCHULE_CSV?.trim() || jedeschuleDumpAbsolutePath(ROOT)
 
-  const raw = await Bun.file(geoPath).json()
-  if (raw?.type !== 'FeatureCollection' || !Array.isArray(raw.features)) {
-    throw new Error(`Expected FeatureCollection at ${geoPath}`)
-  }
+  const text = await Bun.file(csvPath).text()
+  const schoolRows = parseSchoolsFromCsvText(text, 'jedeschule')
+  const raw = officialGeojsonNational(schoolRows)
+  const geoPath = csvPath
 
   const schools: SchoolRow[] = []
   for (const f of raw.features as Array<{

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { type LandCode, STATE_LABEL_DE, STATE_ORDER } from '../src/lib/stateConfig'
-import { type RunSplitLandsOptions, runMatchNational, runSplitLands } from './lib/nationalPipeline'
+import { type RunSplitLandsOptions, runStateFirstPipeline } from './lib/nationalPipeline'
 import { cancel, intro, isCancel, outro, select } from '@clack/prompts'
 import path from 'node:path'
 
@@ -31,14 +31,11 @@ const splitOpts: RunSplitLandsOptions | undefined =
 
 process.env.PIPELINE_FORCE_MATCH = '1'
 
-const m = await runMatchNational(ROOT)
+const m = await runStateFirstPipeline(ROOT, splitOpts)
 if (m.errors.length) console.warn(m.errors.join('\n'))
 
 if (m.matchSkipped) {
-  outro('Match übersprungen – Split nicht ausgeführt.')
+  outro('Match übersprungen – keine Ausgabe.')
   process.exit(0)
 }
-
-const s = await runSplitLands(ROOT, splitOpts)
-if (s.errors.length) console.warn(s.errors.join('\n'))
 outro('Fertig.')

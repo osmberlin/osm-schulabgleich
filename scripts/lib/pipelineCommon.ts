@@ -1,8 +1,9 @@
-import { landCodeFromSchoolId } from '../../src/lib/stateConfig'
+import { type LandCode, landCodeFromSchoolId } from '../../src/lib/stateConfig'
 import type { JedeschuleSchool } from './jedeschuleCsv'
+import type { FeatureCollection } from 'geojson'
 import path from 'node:path'
 
-export const PIPELINE_VERSION = 2 as const
+export const PIPELINE_VERSION = 3 as const
 
 export function datasetsDir(projectRoot: string) {
   return path.join(projectRoot, 'public', 'datasets')
@@ -21,6 +22,12 @@ export function schoolToOfficialProps(s: Record<string, unknown>): Record<string
     out[k] = v
   }
   return out
+}
+
+/** Per-Bundesland slice of the JedeSchule dump (same geometry rules as nationwide). */
+export function officialGeojsonForLand(schools: JedeschuleSchool[], land: LandCode): FeatureCollection {
+  const filtered = schools.filter((s) => landCodeFromSchoolId(s.id) === land)
+  return officialGeojsonNational(filtered)
 }
 
 /** Nationwide FeatureCollection; `properties.land` from school id prefix when valid. */

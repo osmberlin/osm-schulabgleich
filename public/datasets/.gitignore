@@ -1,9 +1,12 @@
+# Pipeline internal cache (Overpass output for match step).
+.pipeline/
+
 # Downloaded / pipeline-generated artifacts.
 jedeschule-latest.csv
+# Legacy national aggregates (no longer produced; ignore if present locally).
 schools_official_de.geojson
 schools_osm_de.geojson
 schools_matches_de.json
-.pipeline_skip_split
 
 # Local-only national metadata snapshots.
 schools_official_de.meta.dev.json

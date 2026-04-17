@@ -1,11 +1,11 @@
-import type { Feature } from 'geojson'
-import path from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
 import { initBundeslandBoundaries, resetBundeslandBoundariesCache } from './bundeslandBoundaries'
 import {
   gateOfficialFeatureCollection,
   voidOfficialPointOutsideDeclaredLand,
 } from './officialCoordsBundeslandGate'
+import type { Feature } from 'geojson'
+import path from 'node:path'
+import { afterEach, describe, expect, it } from 'vitest'
 
 const PROJECT_ROOT = path.join(import.meta.dirname, '../..')
 
@@ -13,7 +13,12 @@ afterEach(() => {
   resetBundeslandBoundariesCache()
 })
 
-function pointFeature(id: string, lon: number, lat: number, extraProps: Record<string, unknown> = {}) {
+function pointFeature(
+  id: string,
+  lon: number,
+  lat: number,
+  extraProps: Record<string, unknown> = {},
+) {
   return {
     type: 'Feature',
     id,

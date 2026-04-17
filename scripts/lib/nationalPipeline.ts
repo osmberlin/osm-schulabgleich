@@ -2,7 +2,6 @@ import { berlinCalendarDateKey } from '../../src/lib/berlinCalendarDateKey'
 import { promoteClosedLineStringsToPolygons } from '../../src/lib/osmClosedRingsToPolygons'
 import { centroidFromOsmGeometry } from '../../src/lib/osmGeometryCentroid'
 import { parseRunHistoryFileText, stringifyRunHistoryJsonl } from '../../src/lib/runHistoryJsonl'
-import { schoolsMatchesFileSchema } from '../../src/lib/schemas'
 import {
   type LandCode,
   landCodeFromSchoolId,
@@ -11,7 +10,6 @@ import {
 } from '../../src/lib/stateConfig'
 import { initBundeslandBoundaries, landCodeForPoint } from './bundeslandBoundaries'
 import { dedupeOfficialInputs } from './dedupeOfficialInputs'
-import { gateOfficialFeatureCollection } from './officialCoordsBundeslandGate'
 import {
   buildJedeschuleStatsFromDump,
   computeCsvMaxUpdateTimestamp,
@@ -27,10 +25,11 @@ import {
   type OfficialInput,
 } from './match'
 import { NATIONAL, nationalPath } from './nationalDatasetPaths'
+import { gateOfficialFeatureCollection } from './officialCoordsBundeslandGate'
 import { fetchSchoolsOsmOverpassGermanyWithRetries } from './overpassFetch'
 import {
   datasetsDir,
-  officialGeojsonNational,
+  officialGeojsonForLand,
   PIPELINE_VERSION,
   readJsonFile,
   schoolToOfficialProps,
@@ -42,7 +41,7 @@ import type { PipelineSourceMeta } from './pipelineMeta'
 import simplify from '@turf/simplify'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import { createHash } from 'node:crypto'
-import { mkdir, unlink } from 'node:fs/promises'
+import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 
 function envScopedJsonFileName(fileName: string): string {
@@ -243,35 +242,6 @@ function enrichRowsWithPipelineLand(
   })
 }
 
-function rowsToJson(rows: MatchRowOut[]) {
-  return rows.map((r) => ({
-    key: r.key,
-    category: r.category,
-    matchCategory: r.category,
-    matchMode: r.matchMode,
-    officialId: r.officialId,
-    officialName: r.officialName,
-    officialProperties: r.officialProperties,
-    osmId: r.osmId,
-    osmType: r.osmType,
-    osmCentroidLon: r.osmCentroidLon,
-    osmCentroidLat: r.osmCentroidLat,
-    distanceMeters: r.distanceMeters,
-    osmName: r.osmName,
-    osmTags: r.osmTags,
-    ambiguousOfficialIds: r.ambiguousOfficialIds,
-    ambiguousOfficialSnapshots: r.ambiguousOfficialSnapshots,
-    matchedByOsmNameNormalized: r.matchedByOsmNameNormalized,
-    matchedByOsmNameTag: r.matchedByOsmNameTag,
-    matchedByWebsiteNormalized: r.matchedByWebsiteNormalized,
-    matchedByAddressNormalized: r.matchedByAddressNormalized,
-    matchedByRefNormalized: r.matchedByRefNormalized,
-    pipelineLand: r.pipelineLand,
-    schoolKindDe: r.schoolKindDe,
-    schoolKindDeSource: r.schoolKindDeSource,
-  }))
-}
-
 export function officialsFromNationalOfficialFc(fc: FeatureCollection): OfficialInput[] {
   const out: OfficialInput[] = []
   for (const f of fc.features) {
@@ -300,21 +270,8 @@ export function officialsFromNationalOfficialFc(fc: FeatureCollection): Official
   return out
 }
 
-function rowLandCode(r: {
-  officialId: string | null
-  pipelineLand?: string
-  ambiguousOfficialIds?: string[]
-}): LandCode | null {
-  if (r.pipelineLand && STATE_ORDER.includes(r.pipelineLand as LandCode))
-    return r.pipelineLand as LandCode
-  if (r.officialId) return landCodeFromSchoolId(r.officialId)
-  if (r.ambiguousOfficialIds?.length) return landCodeFromSchoolId(r.ambiguousOfficialIds[0])
-  return null
-}
-
 export async function runDownloadJedeschuleNational(projectRoot: string): Promise<void> {
   const outCsv = jedeschuleDumpAbsolutePath(projectRoot)
-  const pathOfficial = nationalPath(projectRoot, NATIONAL.schoolsOfficialGeojson)
   const pathMeta = nationalPath(projectRoot, envScopedJsonFileName(NATIONAL.schoolsOfficialMeta))
   const pathStats = nationalPath(projectRoot, NATIONAL.jedeschuleStats)
   const generatedAt = new Date().toISOString()
@@ -338,9 +295,7 @@ export async function runDownloadJedeschuleNational(projectRoot: string): Promis
       httpLastModified,
       csvMaxUpdateTimestamp,
     })
-    const fc = officialGeojsonNational(schools)
     const stats = buildJedeschuleStatsFromDump(schools)
-    await writeJson(pathOfficial, fc)
     await Bun.write(pathStats, serializeJedeschuleStatsCompact(generatedAt, stats))
     const meta: PipelineSourceMeta = {
       pipelineStep: 'pipeline:download:jedeschule',
@@ -373,10 +328,10 @@ export async function runDownloadJedeschuleNational(projectRoot: string): Promis
 
 export async function runDownloadOsmNational(projectRoot: string): Promise<void> {
   initBundeslandBoundaries(projectRoot)
-  const pathGeo = nationalPath(projectRoot, NATIONAL.schoolsOsmGeojson)
+  const pathGeo = nationalPath(projectRoot, NATIONAL.pipelineOsmGeojson)
   const pathMeta = nationalPath(projectRoot, envScopedJsonFileName(NATIONAL.schoolsOsmMeta))
   const generatedAt = new Date().toISOString()
-  await mkdir(datasetsDir(projectRoot), { recursive: true })
+  await mkdir(path.dirname(pathGeo), { recursive: true })
 
   try {
     console.info('[pipeline:download:osm] Overpass Germany …')
@@ -412,7 +367,30 @@ type MatchNationResult = {
   matchSkipReason?: string
 }
 
-export async function runMatchNational(projectRoot: string): Promise<MatchNationResult> {
+export type RunStateFirstOptions = {
+  /** Only rewrite `datasets/{code}/` and patch that land in `summary.json`. Needs a complete existing `summary.json` (falls back to full run). */
+  onlyLands?: LandCode[]
+}
+
+export type RunSplitLandsOptions = RunStateFirstOptions
+
+const JEDESCHULE_CSV_SOURCE_LABEL = 'jedeschule-latest.csv' as const
+
+async function loadSchoolsFromDump(projectRoot: string) {
+  const csvPath = jedeschuleDumpAbsolutePath(projectRoot)
+  const f = Bun.file(csvPath)
+  if (!(await f.exists())) {
+    return { ok: false as const, error: `Fehlend: ${csvPath} (zuerst pipeline:download:jedeschule)` }
+  }
+  const text = await f.text()
+  const schools = parseSchoolsFromCsvText(text, 'jedeschule')
+  return { ok: true as const, schools }
+}
+
+export async function runStateFirstPipeline(
+  projectRoot: string,
+  opts?: RunStateFirstOptions,
+): Promise<MatchNationResult & { errors: string[] }> {
   initBundeslandBoundaries(projectRoot)
   const errors: string[] = []
   const startedAt = new Date().toISOString()
@@ -423,9 +401,8 @@ export async function runMatchNational(projectRoot: string): Promise<MatchNation
     envScopedJsonFileName(NATIONAL.schoolsOfficialMeta),
   )
   const pathOsmMeta = nationalPath(projectRoot, envScopedJsonFileName(NATIONAL.schoolsOsmMeta))
-  const pathOfficial = nationalPath(projectRoot, NATIONAL.schoolsOfficialGeojson)
-  const pathOsm = nationalPath(projectRoot, NATIONAL.schoolsOsmGeojson)
-  const pathMatches = nationalPath(projectRoot, NATIONAL.schoolsMatchesJson)
+  const pathOsmFc = nationalPath(projectRoot, NATIONAL.pipelineOsmGeojson)
+  const pathOsmFcLegacy = nationalPath(projectRoot, 'schools_osm_de.geojson')
 
   const officialMeta = await readJsonFile<PipelineSourceMeta>(pathOfficialMeta)
   const osmMeta = await readJsonFile<PipelineSourceMeta>(pathOsmMeta)
@@ -447,8 +424,6 @@ export async function runMatchNational(projectRoot: string): Promise<MatchNation
     },
   }
 
-  await setSkipSplit(projectRoot, false)
-
   const forceMatch =
     process.env.PIPELINE_FORCE_MATCH === '1' || process.env.PIPELINE_FORCE_MATCH === 'true'
   if (forceMatch) {
@@ -459,7 +434,6 @@ export async function runMatchNational(projectRoot: string): Promise<MatchNation
     const reason =
       'Match übersprungen: JedeSchule- und OSM-Download müssen beide erfolgreich sein (Meta `ok: true`).'
     console.warn(`[pipeline:match] ${reason}`)
-    await setSkipSplit(projectRoot, true)
     const finishedAt = new Date().toISOString()
     await appendRunRecord(projectRoot, {
       startedAt,
@@ -475,18 +449,21 @@ export async function runMatchNational(projectRoot: string): Promise<MatchNation
     return { errors: [], matchSkipped: true, matchSkipReason: reason }
   }
 
-  const officialFc = await readJsonFile<FeatureCollection>(pathOfficial)
-  const osmFc = await readJsonFile<FeatureCollection>(pathOsm)
-
-  if (!officialFc || officialFc.type !== 'FeatureCollection') {
-    errors.push(`Fehlend: ${NATIONAL.schoolsOfficialGeojson}`)
+  const loaded = await loadSchoolsFromDump(projectRoot)
+  if (!loaded.ok) {
+    errors.push(loaded.error)
+  }
+  let osmFc = await readJsonFile<FeatureCollection>(pathOsmFc)
+  if (!osmFc || osmFc.type !== 'FeatureCollection') {
+    osmFc = await readJsonFile<FeatureCollection>(pathOsmFcLegacy)
   }
   if (!osmFc || osmFc.type !== 'FeatureCollection') {
-    errors.push(`Fehlend: ${NATIONAL.schoolsOsmGeojson}`)
+    errors.push(
+      `Fehlend: OSM-GeoJSON unter ${NATIONAL.pipelineOsmGeojson} (pipeline:download:osm); optional Migration: alte Datei schools_osm_de.geojson im datasets-Ordner.`,
+    )
   }
 
-  if (errors.length) {
-    await setSkipSplit(projectRoot, true)
+  if (errors.length || !loaded.ok || !osmFc || osmFc.type !== 'FeatureCollection') {
     const finishedAt = new Date().toISOString()
     await appendRunRecord(projectRoot, {
       startedAt,
@@ -501,40 +478,180 @@ export async function runMatchNational(projectRoot: string): Promise<MatchNation
     return { errors, matchSkipped: false }
   }
 
-  const gatedOfficialFc = gateOfficialFeatureCollection(officialFc)
-  const officials = officialsFromNationalOfficialFc(gatedOfficialFc)
-  const deduped = dedupeOfficialInputs(officials)
-  console.info(
-    `[pipeline:match] jedeschule dedupe: with-coord ${deduped.stats.withCoordBefore}→${deduped.stats.withCoordAfter} (−${deduped.stats.removedCount}), duplicate groups ${deduped.stats.groupsWithDuplicates}`,
-  )
-  const osmSchools = buildOsmSchoolsFromGeoJson(osmFc)
-  const osmLandByKey = buildOsmLandMap(osmFc)
-  const { rows } = matchSchools(deduped.officials, osmSchools, { osmLandByKey })
-  const enriched = enrichRowsWithPipelineLand(rows, osmLandByKey)
+  const schools = loaded.schools
+  const pathStats = nationalPath(projectRoot, NATIONAL.jedeschuleStats)
+  const statsRaw = await readJsonFile<unknown>(pathStats)
+  let statRows: ReturnType<typeof parseJedeschuleStatsJson> = []
+  try {
+    if (statsRaw != null) statRows = parseJedeschuleStatsJson(statsRaw)
+  } catch {
+    statRows = []
+  }
+  const statByState = new Map(statRows.map((s) => [s.state, s.last_updated] as const))
 
-  await writeJson(pathMatches, rowsToJson(enriched))
+  const summaryPath = path.join(datasetsDir(projectRoot), 'summary.json')
+
+  let codesToProcess: LandCode[] = [...STATE_ORDER]
+  const requested = opts?.onlyLands?.filter((c): c is LandCode =>
+    STATE_ORDER.includes(c as LandCode),
+  )
+  if (requested?.length) {
+    const uniq = [...new Set(requested)]
+    if (uniq.length < STATE_ORDER.length) {
+      const prev = await readJsonFile<SummaryFileOut>(summaryPath)
+      const prevCodes = new Set((prev?.lands ?? []).map((l) => l.code))
+      const complete = STATE_ORDER.every((c) => prevCodes.has(c))
+      if (complete) {
+        codesToProcess = uniq
+      } else {
+        console.info(
+          '[pipeline:match] summary.json fehlt oder unvollständig – Verarbeitung für alle Bundesländer.',
+        )
+      }
+    } else {
+      codesToProcess = uniq
+    }
+  }
+
+  let dedupeRemovedTotal = 0
+  const landRunEntriesForRecord: {
+    code: string
+    osmSource: 'live' | 'cached' | 'missing'
+    osmSnapshotAt?: string
+    counts: {
+      matched: number
+      official_only: number
+      osm_only: number
+      ambiguous: number
+      official_no_coord: number
+    }
+  }[] = []
+
+  const summaryUpdates = new Map<string, LandSummaryOut>()
+
+  for (const code of codesToProcess) {
+    const officialFcLand = officialGeojsonForLand(schools, code)
+    const gated = gateOfficialFeatureCollection(officialFcLand)
+    const officials = officialsFromNationalOfficialFc(gated)
+    const deduped = dedupeOfficialInputs(officials)
+    dedupeRemovedTotal += deduped.stats.removedCount
+
+    const osmLand: FeatureCollection = {
+      type: 'FeatureCollection',
+      features: osmFc.features.filter((f) => assignPipelineLandToOsmFeature(f) === code),
+    }
+    const osmSchools = buildOsmSchoolsFromGeoJson(osmLand)
+    const osmLandByKey = buildOsmLandMap(osmLand)
+    const { rows } = matchSchools(deduped.officials, osmSchools, { osmLandByKey })
+    const enriched = enrichRowsWithPipelineLand(rows, osmLandByKey)
+
+    const canonicalOfficialIds = new Set(deduped.officials.map((o) => o.id))
+    const officialLandOut: FeatureCollection = {
+      type: 'FeatureCollection',
+      features: gated.features
+        .filter((f) => {
+          const fid = String(f.id ?? (f.properties as { id?: string })?.id ?? '')
+          return canonicalOfficialIds.has(fid)
+        })
+        .map(optimizeOfficialFeatureForUserOutput),
+    }
+    const osmLandUser: FeatureCollection = {
+      type: 'FeatureCollection',
+      features: osmLand.features.map(optimizeOsmFeatureForUserOutput),
+    }
+    const rowsLandUser = enriched.map((r) =>
+      optimizeMatchRowForUserOutput(
+        r as Record<string, unknown> & {
+          osmCentroidLon?: number | null
+          osmCentroidLat?: number | null
+        },
+      ),
+    )
+
+    await mkdir(path.join(datasetsDir(projectRoot), code), { recursive: true })
+    await writeJson(
+      path.join(datasetsDir(projectRoot), code, 'schools_official.geojson'),
+      officialLandOut,
+    )
+    await writeJson(path.join(datasetsDir(projectRoot), code, 'schools_osm.geojson'), osmLandUser)
+    await writeJson(path.join(datasetsDir(projectRoot), code, 'schools_matches.json'), rowsLandUser)
+
+    const osmMetaLand: Record<string, unknown> = {
+      overpassQueriedAt: osmMeta?.generatedAt,
+      overpassResponseTimestamp: osmMeta?.overpassResponseTimestamp,
+      interpreterUrl: osmMeta?.interpreterUrl,
+      osmSource: osmMeta?.ok ? 'live' : 'missing',
+    }
+    await writeJson(path.join(datasetsDir(projectRoot), code, 'schools_osm.meta.json'), osmMetaLand)
+
+    const counts = {
+      matched: enriched.filter((r) => r.category === 'matched').length,
+      official_only: enriched.filter((r) => r.category === 'official_only').length,
+      osm_only: enriched.filter((r) => r.category === 'osm_only').length,
+      ambiguous: enriched.filter((r) => r.category === 'match_ambiguous').length,
+      official_no_coord: enriched.filter((r) => r.category === 'official_no_coord').length,
+    }
+
+    const osmSource: 'live' | 'cached' | 'missing' =
+      osmMeta?.ok && osmLand.features.length > 0 ? 'live' : 'missing'
+
+    summaryUpdates.set(code, {
+      code,
+      osmSource,
+      overpassError: osmMeta?.ok ? undefined : osmMeta?.errorMessage,
+      osmSnapshotAt: osmMeta?.overpassResponseTimestamp,
+      overpassQueriedAt: osmMeta?.generatedAt,
+      counts,
+      jedeschuleLastUpdated: statByState.get(code),
+    })
+
+    landRunEntriesForRecord.push({
+      code,
+      osmSource,
+      osmSnapshotAt: osmMeta?.overpassResponseTimestamp ?? osmMeta?.generatedAt,
+      counts,
+    })
+  }
+
+  console.info(
+    `[pipeline:match] jedeschule dedupe (summiert über ${codesToProcess.length} Länder): −${dedupeRemovedTotal} with-coord Duplikate entfernt`,
+  )
+
+  let merged: SummaryFileOut
+  if (codesToProcess.length === STATE_ORDER.length) {
+    merged = {
+      generatedAt: new Date().toISOString(),
+      pipelineVersion: PIPELINE_VERSION,
+      jedeschuleCsvSource: JEDESCHULE_CSV_SOURCE_LABEL,
+      lands: STATE_ORDER.flatMap((c) => {
+        const row = summaryUpdates.get(c)
+        return row ? [row] : []
+      }),
+    }
+  } else {
+    const prev = await readJsonFile<SummaryFileOut>(summaryPath)
+    const byCode = new Map((prev?.lands ?? []).map((l) => [l.code, l] as const))
+    for (const c of codesToProcess) {
+      const row = summaryUpdates.get(c)
+      if (row) byCode.set(c, row)
+    }
+    const lands = STATE_ORDER.map((c) => byCode.get(c)).filter(
+      (row): row is LandSummaryOut => row != null,
+    )
+    if (lands.length !== STATE_ORDER.length) {
+      errors.push('pipeline:match: summary-Zusammenführung unvollständig')
+    }
+    merged = {
+      generatedAt: new Date().toISOString(),
+      pipelineVersion: PIPELINE_VERSION,
+      jedeschuleCsvSource: JEDESCHULE_CSV_SOURCE_LABEL,
+      lands,
+    }
+  }
+  await writeJson(summaryPath, merged)
 
   const finishedAt = new Date().toISOString()
   const durationMs = Math.round(performance.now() - t0)
-
-  const osmHasData = (osmFc.features.length ?? 0) > 0
-  const osmSrc: 'live' | 'cached' | 'missing' = osmMeta?.ok && osmHasData ? 'live' : 'missing'
-
-  const landRunEntries = STATE_ORDER.map((code) => {
-    const lr = enriched.filter((r) => rowLandCode(r) === code)
-    return {
-      code,
-      osmSource: osmSrc,
-      osmSnapshotAt: osmMeta?.overpassResponseTimestamp ?? osmMeta?.generatedAt,
-      counts: {
-        matched: lr.filter((r) => r.category === 'matched').length,
-        official_only: lr.filter((r) => r.category === 'official_only').length,
-        osm_only: lr.filter((r) => r.category === 'osm_only').length,
-        ambiguous: lr.filter((r) => r.category === 'match_ambiguous').length,
-        official_no_coord: lr.filter((r) => r.category === 'official_no_coord').length,
-      },
-    }
-  })
 
   await appendRunRecord(projectRoot, {
     startedAt,
@@ -542,21 +659,36 @@ export async function runMatchNational(projectRoot: string): Promise<MatchNation
     durationMs,
     overallOk: errors.length === 0,
     errors,
-    lands: landRunEntries,
+    lands: landRunEntriesForRecord,
     matchSkipped: false,
     downloads: downloadSnapshot,
   })
 
-  await setSkipSplit(projectRoot, false)
-
-  console.info(`[pipeline:match] ok in ${durationMs}ms`)
+  if (codesToProcess.length < STATE_ORDER.length) {
+    console.info(`[pipeline:match] ok in ${durationMs}ms (nur ${codesToProcess.join(', ')})`)
+  } else {
+    console.info(`[pipeline:match] ok in ${durationMs}ms`)
+  }
   return { errors, matchSkipped: false }
 }
 
-async function setSkipSplit(projectRoot: string, skip: boolean) {
-  const p = nationalPath(projectRoot, NATIONAL.skipSplitMarker)
-  if (skip) await Bun.write(p, `${new Date().toISOString()}\n`)
-  else await unlink(p).catch(() => {})
+/** @deprecated Use {@link runStateFirstPipeline}; kept for scripts that still import this name. */
+export async function runMatchNational(projectRoot: string): Promise<MatchNationResult> {
+  const r = await runStateFirstPipeline(projectRoot)
+  return {
+    errors: r.errors,
+    matchSkipped: r.matchSkipped,
+    matchSkipReason: r.matchSkipReason,
+  }
+}
+
+/** @deprecated Split is integrated into {@link runStateFirstPipeline}. */
+export async function runSplitLands(
+  projectRoot: string,
+  opts?: RunSplitLandsOptions,
+): Promise<{ errors: string[] }> {
+  const r = await runStateFirstPipeline(projectRoot, opts)
+  return { errors: r.errors }
 }
 
 async function appendRunRecord(
@@ -590,191 +722,7 @@ async function appendRunRecord(
   await Bun.write(runsPath, stringifyRunHistoryJsonl(nextRuns))
 }
 
-export type RunSplitLandsOptions = {
-  /** Only rewrite `datasets/{code}/` and patch that land in `summary.json`. Needs a complete existing `summary.json` (falls back to full split). */
-  onlyLands?: LandCode[]
-}
-
-export async function runSplitLands(
-  projectRoot: string,
-  opts?: RunSplitLandsOptions,
-): Promise<{ errors: string[] }> {
-  const errors: string[] = []
-  const marker = nationalPath(projectRoot, NATIONAL.skipSplitMarker)
-  if (await Bun.file(marker).exists()) {
-    console.info('[pipeline:split-lands] übersprungen (kein neuer Match)')
-    return { errors: [] }
-  }
-
-  const pathOfficial = nationalPath(projectRoot, NATIONAL.schoolsOfficialGeojson)
-  const pathOsm = nationalPath(projectRoot, NATIONAL.schoolsOsmGeojson)
-  const pathMatches = nationalPath(projectRoot, NATIONAL.schoolsMatchesJson)
-  const pathStats = nationalPath(projectRoot, NATIONAL.jedeschuleStats)
-  const summaryPath = path.join(datasetsDir(projectRoot), 'summary.json')
-
-  const officialFc = await readJsonFile<FeatureCollection>(pathOfficial)
-  const osmFc = await readJsonFile<FeatureCollection>(pathOsm)
-  const rawMatches = await readJsonFile(pathMatches)
-  const matchParsed = schoolsMatchesFileSchema.safeParse(rawMatches ?? [])
-
-  const statsRaw = await readJsonFile<unknown>(pathStats)
-  const statRows = parseJedeschuleStatsJson(statsRaw)
-
-  if (!officialFc?.features || !osmFc?.features) {
-    errors.push('split-lands: nationale GeoJSON fehlt')
-    return { errors }
-  }
-  if (!matchParsed.success) {
-    errors.push('split-lands: schools_matches_de.json fehlt oder ungültig')
-    return { errors }
-  }
-  const matchRows = matchParsed.data
-
-  initBundeslandBoundaries(projectRoot)
-
-  let codesToProcess: LandCode[] = [...STATE_ORDER]
-  const requested = opts?.onlyLands?.filter((c): c is LandCode =>
-    STATE_ORDER.includes(c as LandCode),
-  )
-  if (requested?.length) {
-    const uniq = [...new Set(requested)]
-    if (uniq.length < STATE_ORDER.length) {
-      const prev = await readJsonFile<SummaryFileOut>(summaryPath)
-      const prevCodes = new Set((prev?.lands ?? []).map((l) => l.code))
-      const complete = STATE_ORDER.every((c) => prevCodes.has(c))
-      if (complete) {
-        codesToProcess = uniq
-      } else {
-        console.info(
-          '[pipeline:split-lands] summary.json fehlt oder unvollständig – Split für alle Bundesländer.',
-        )
-      }
-    } else {
-      codesToProcess = uniq
-    }
-  }
-
-  const statByState = new Map(statRows.map((s) => [s.state, s.last_updated] as const))
-
-  const summaryUpdates = new Map<string, LandSummaryOut>()
-  const osmMeta = await readJsonFile<PipelineSourceMeta>(
-    nationalPath(projectRoot, envScopedJsonFileName(NATIONAL.schoolsOsmMeta)),
-  )
-
-  const gatedOfficialFc = gateOfficialFeatureCollection(officialFc)
-  const allOfficials = officialsFromNationalOfficialFc(gatedOfficialFc)
-  const canonicalOfficialIds = new Set(
-    dedupeOfficialInputs(allOfficials).officials.map((o) => o.id),
-  )
-
-  for (const code of codesToProcess) {
-    await mkdir(path.join(datasetsDir(projectRoot), code), { recursive: true })
-    const officialLand: FeatureCollection = {
-      type: 'FeatureCollection',
-      features: gatedOfficialFc.features
-        .filter((f) => {
-          const fid = String(f.id ?? (f.properties as { id?: string })?.id ?? '')
-          if (!canonicalOfficialIds.has(fid)) return false
-          const p = f.properties as { land?: string } | null
-          return p?.land === code || landCodeFromSchoolId(fid) === code
-        })
-        .map(optimizeOfficialFeatureForUserOutput),
-    }
-    const osmLand: FeatureCollection = {
-      type: 'FeatureCollection',
-      features: osmFc.features
-        .filter((f) => assignPipelineLandToOsmFeature(f) === code)
-        .map(optimizeOsmFeatureForUserOutput),
-    }
-    const rowsLand = matchRows.filter((r) => rowLandCode(r) === code)
-    const rowsLandUser = rowsLand.map((r) =>
-      optimizeMatchRowForUserOutput(
-        r as Record<string, unknown> & {
-          osmCentroidLon?: number | null
-          osmCentroidLat?: number | null
-        },
-      ),
-    )
-    await writeJson(
-      path.join(datasetsDir(projectRoot), code, 'schools_official.geojson'),
-      officialLand,
-    )
-    await writeJson(path.join(datasetsDir(projectRoot), code, 'schools_osm.geojson'), osmLand)
-    await writeJson(path.join(datasetsDir(projectRoot), code, 'schools_matches.json'), rowsLandUser)
-
-    const osmMetaLand: Record<string, unknown> = {
-      overpassQueriedAt: osmMeta?.generatedAt,
-      overpassResponseTimestamp: osmMeta?.overpassResponseTimestamp,
-      interpreterUrl: osmMeta?.interpreterUrl,
-      osmSource: osmMeta?.ok ? 'live' : 'missing',
-    }
-    await writeJson(path.join(datasetsDir(projectRoot), code, 'schools_osm.meta.json'), osmMetaLand)
-
-    const counts = {
-      matched: rowsLand.filter((r) => r.category === 'matched').length,
-      official_only: rowsLand.filter((r) => r.category === 'official_only').length,
-      osm_only: rowsLand.filter((r) => r.category === 'osm_only').length,
-      ambiguous: rowsLand.filter((r) => r.category === 'match_ambiguous').length,
-      official_no_coord: rowsLand.filter((r) => r.category === 'official_no_coord').length,
-    }
-
-    const osmSource: 'live' | 'cached' | 'missing' =
-      osmMeta?.ok && osmLand.features.length > 0 ? 'live' : 'missing'
-
-    summaryUpdates.set(code, {
-      code,
-      osmSource,
-      overpassError: osmMeta?.ok ? undefined : osmMeta?.errorMessage,
-      osmSnapshotAt: osmMeta?.overpassResponseTimestamp,
-      overpassQueriedAt: osmMeta?.generatedAt,
-      counts,
-      jedeschuleLastUpdated: statByState.get(code),
-    })
-  }
-
-  let merged: SummaryFileOut
-  if (codesToProcess.length === STATE_ORDER.length) {
-    merged = {
-      generatedAt: new Date().toISOString(),
-      pipelineVersion: PIPELINE_VERSION,
-      jedeschuleCsvSource: NATIONAL.schoolsOfficialGeojson,
-      lands: STATE_ORDER.flatMap((c) => {
-        const row = summaryUpdates.get(c)
-        return row ? [row] : []
-      }),
-    }
-  } else {
-    const prev = await readJsonFile<SummaryFileOut>(summaryPath)
-    const byCode = new Map((prev?.lands ?? []).map((l) => [l.code, l] as const))
-    for (const c of codesToProcess) {
-      const row = summaryUpdates.get(c)
-      if (row) byCode.set(c, row)
-    }
-    const lands = STATE_ORDER.map((c) => byCode.get(c)).filter(
-      (row): row is LandSummaryOut => row != null,
-    )
-    if (lands.length !== STATE_ORDER.length) {
-      errors.push('split-lands: summary-Zusammenführung unvollständig')
-    }
-    merged = {
-      generatedAt: new Date().toISOString(),
-      pipelineVersion: PIPELINE_VERSION,
-      jedeschuleCsvSource: NATIONAL.schoolsOfficialGeojson,
-      lands,
-    }
-  }
-  await writeJson(summaryPath, merged)
-  if (codesToProcess.length < STATE_ORDER.length) {
-    console.info(`[pipeline:split-lands] ok (nur ${codesToProcess.join(', ')})`)
-  } else {
-    console.info('[pipeline:split-lands] ok')
-  }
-  return { errors }
-}
-
 export async function runPipelineRebuild(projectRoot: string): Promise<{ errors: string[] }> {
-  const m = await runMatchNational(projectRoot)
-  if (m.matchSkipped) return { errors: m.errors }
-  const s = await runSplitLands(projectRoot)
-  return { errors: [...m.errors, ...s.errors] }
+  const r = await runStateFirstPipeline(projectRoot)
+  return { errors: r.errors }
 }
