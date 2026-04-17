@@ -248,7 +248,6 @@ export function buildOsmSchoolsFromGeoJson(fc: FeatureCollection): OsmSchoolInpu
     }
     const name = primaryOsmDisplayNameFromTags(tags)
     const c = centroidFromOsmGeometry(f.geometry)
-    if (!c) continue
     if (!osmId && p.id != null) osmId = String(p.id)
     if (!osmId) continue
     out.push({

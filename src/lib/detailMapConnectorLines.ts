@@ -1,6 +1,7 @@
 import { findOfficialSchoolFeature } from './findOfficialSchoolFeature'
 import { schoolsMatchRowSchema } from './schemas'
 import { parseJedeschuleLonLatFromRecord } from './zodGeo'
+import { lineString } from '@turf/helpers'
 import type { Feature, FeatureCollection } from 'geojson'
 import type { z } from 'zod'
 
@@ -24,17 +25,15 @@ export function detailMapConnectorLines(args: {
   const add = (id: string, lon: number, lat: number) => {
     if (seen.has(id)) return
     seen.add(id)
-    out.push({
-      type: 'Feature',
-      properties: { _mapDetail: mapDetail },
-      geometry: {
-        type: 'LineString',
-        coordinates: [
+    out.push(
+      lineString(
+        [
           [fromLon, fromLat],
           [lon, lat],
         ],
-      },
-    })
+        { _mapDetail: mapDetail },
+      ),
+    )
   }
 
   if (matchRow.ambiguousOfficialIds && matchRow.ambiguousOfficialIds.length > 0) {

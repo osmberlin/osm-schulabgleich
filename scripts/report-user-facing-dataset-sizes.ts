@@ -22,6 +22,7 @@ const LAND_CODES = [
 const USER_FACING_FILES = [
   'schools_official.geojson',
   'schools_osm.geojson',
+  'schools_osm_areas.json',
   'schools_matches.json',
   'schools_osm.meta.json',
 ] as const

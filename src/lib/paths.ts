@@ -17,6 +17,8 @@ export const nationalOsmMetaUrl = () =>
 export const stateOfficialUrl = (code: string) =>
   datasetsUrl(`/datasets/${code}/schools_official.geojson`)
 export const stateOsmUrl = (code: string) => datasetsUrl(`/datasets/${code}/schools_osm.geojson`)
+export const stateOsmAreasUrl = (code: string) =>
+  datasetsUrl(`/datasets/${code}/schools_osm_areas.json`)
 export const stateOsmMetaUrl = (code: string) =>
   datasetsUrl(`/datasets/${code}/schools_osm.meta.json`)
 export const stateMatchesUrl = (code: string) =>

@@ -24,6 +24,7 @@ import {
   type SchoolDetailMapRenderData,
   SchoolDetailMapLegend,
 } from './SchoolDetailMap'
+import { point } from '@turf/helpers'
 import type { Feature, FeatureCollection } from 'geojson'
 import { useState } from 'react'
 import { MapProvider, type ViewStateChangeEvent } from 'react-map-gl/maplibre'
@@ -62,6 +63,7 @@ export function SchoolDetailMapSection({
   data,
   matchRow,
   matchKey,
+  osmAreasByKey,
   onNavigateToOtherSchool,
 }: {
   isLoading: boolean
@@ -69,6 +71,8 @@ export function SchoolDetailMapSection({
   data: StateSchoolsBundle | undefined
   matchRow: StateSchoolMatchRow | null
   matchKey: string
+  /** Deferred full OSM outlines (`schools_osm_areas.json`), keyed `way/id` / `relation/id`. */
+  osmAreasByKey: Record<string, Feature> | undefined
   onNavigateToOtherSchool: (nextKey: string) => void
 }) {
   const { map: detailMapSearch, setMap: setDetailMapSearch } = useDetailMapParam()
@@ -95,7 +99,7 @@ export function SchoolDetailMapSection({
     detailMapMaskFeature,
     connectorLineFeatures,
     hoverRelationLineFeatures,
-  } = deriveSchoolDetailMapFeatures(data, matchRow, mapOsmCentroid, hoveredMapLabel)
+  } = deriveSchoolDetailMapFeatures(data, matchRow, mapOsmCentroid, hoveredMapLabel, osmAreasByKey)
 
   const allOtherSchoolPointFeatures: Feature[] = (() => {
     const features: Feature[] = []
@@ -111,15 +115,13 @@ export function SchoolDetailMapSection({
       const lonLat = matchRowMapLonLat(match, officialLonLatIndex)
       if (!lonLat) continue
       const [lon, lat] = lonLat
-      features.push({
-        type: 'Feature',
-        properties: {
+      features.push(
+        point([lon, lat], {
           matchKey: match.key,
           name: matchRowDisplayName(match),
           matchCat: match.matchCategory ?? match.category,
-        },
-        geometry: { type: 'Point', coordinates: [lon, lat] },
-      })
+        }),
+      )
     }
     return features
   })()

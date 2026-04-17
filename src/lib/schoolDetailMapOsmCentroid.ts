@@ -1,7 +1,7 @@
 import { fetchStateSchoolsBundle } from './fetchStateSchoolsBundle'
 import { findOfficialSchoolFeature } from './findOfficialSchoolFeature'
 import { findOsmFeature } from './osmFeatureLookup'
-import { osmGeometryCentroidLonLat } from './osmGeometryCentroid'
+import { centroidFromOsmGeometry } from './osmGeometryCentroid'
 import { parseJedeschuleLonLatFromRecord, parseMatchRowOsmCentroidLonLat } from './zodGeo'
 
 type StateSchoolsBundle = Awaited<ReturnType<typeof fetchStateSchoolsBundle>>
@@ -22,8 +22,7 @@ export function resolveSchoolMapOsmCentroid(
 
   const fromOsmFeature = findOsmFeature(data.osm, matchRow.osmType, matchRow.osmId)
   if (fromOsmFeature?.geometry) {
-    const centroid = osmGeometryCentroidLonLat(fromOsmFeature.geometry)
-    if (centroid) return centroid
+    return centroidFromOsmGeometry(fromOsmFeature.geometry)
   }
 
   const fromOfficialProps = parseJedeschuleLonLatFromRecord(
@@ -38,5 +37,5 @@ export function resolveSchoolMapOsmCentroid(
     const [lon, lat] = officialFeature.geometry.coordinates
     return [lon, lat] as const
   }
-  return osmGeometryCentroidLonLat(officialFeature.geometry)
+  return centroidFromOsmGeometry(officialFeature.geometry)
 }

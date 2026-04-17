@@ -1,6 +1,6 @@
 import { CategoryLegendSwatch } from '../components/CategoryLegendSwatch'
 import { de } from '../i18n/de'
-import { fetchStateSchoolsBundle } from '../lib/fetchStateSchoolsBundle'
+import { fetchStateOverviewBundle } from '../lib/fetchStateOverviewBundle'
 import { formatDeInteger } from '../lib/formatNumber'
 import { formatSchoolWhereSubtitle } from '../lib/schoolWhere'
 import { type StateCode, STATE_LABEL_DE } from '../lib/stateConfig'
@@ -26,7 +26,7 @@ export function StateLayout() {
 
   const schuleQ = useQuery({
     queryKey: ['schule-detail', code, schuleKeyDecoded],
-    queryFn: () => fetchStateSchoolsBundle(code),
+    queryFn: () => fetchStateOverviewBundle(code),
     enabled: !!code && !!schuleKeyDecoded,
   })
 

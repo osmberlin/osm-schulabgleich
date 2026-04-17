@@ -2,6 +2,26 @@ import { centroidFromOsmGeometry } from './osmGeometryCentroid'
 import { describe, expect, it } from 'vitest'
 
 describe('centroidFromOsmGeometry', () => {
+  it('returns a point for any valid closed polygon (centroid-like, never null)', () => {
+    const g = {
+      type: 'Polygon' as const,
+      coordinates: [
+        [
+          [9, 48],
+          [9.01, 48],
+          [9.01, 48.01],
+          [9, 48],
+        ],
+      ],
+    }
+    const c = centroidFromOsmGeometry(g)
+    expect(c).not.toBeNull()
+    expect(c![0]).toBeGreaterThan(8.9)
+    expect(c![0]).toBeLessThan(9.02)
+    expect(c![1]).toBeGreaterThan(47.99)
+    expect(c![1]).toBeLessThan(48.02)
+  })
+
   it('averages nested geometries (site relation style GeometryCollection)', () => {
     const g = {
       type: 'GeometryCollection' as const,

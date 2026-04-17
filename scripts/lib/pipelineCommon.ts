@@ -1,10 +1,10 @@
 import { type StateCode, stateCodeFromSchoolId } from '../../src/lib/stateConfig'
 import type { JedeschuleSchool } from './jedeschuleCsv'
-import { featureCollection } from '@turf/helpers'
+import { feature, featureCollection, point } from '@turf/helpers'
 import type { FeatureCollection } from 'geojson'
 import path from 'node:path'
 
-export const PIPELINE_VERSION = 3 as const
+export const PIPELINE_VERSION = 4 as const
 
 export function datasetsDir(projectRoot: string) {
   return path.join(projectRoot, 'public', 'datasets')
@@ -42,14 +42,11 @@ export function officialGeojsonNational(schools: JedeschuleSchool[]) {
       const lon = s.longitude ?? null
       const state = stateCodeFromSchoolId(s.id)
       const has = typeof lat === 'number' && typeof lon === 'number' && Number.isFinite(lat + lon)
-      return {
-        type: 'Feature' as const,
-        id: s.id,
-        properties: { ...schoolToOfficialProps({ ...s }), ...(state ? { state } : {}) },
-        geometry: has
-          ? { type: 'Point' as const, coordinates: [lon as number, lat as number] }
-          : null,
+      const props = { ...schoolToOfficialProps({ ...s }), ...(state ? { state } : {}) }
+      if (has) {
+        return point([lon as number, lat as number], props, { id: s.id })
       }
+      return feature(null, props, { id: s.id })
     }),
   )
 }

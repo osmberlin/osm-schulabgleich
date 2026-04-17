@@ -4,24 +4,16 @@ import { StateOverviewMatchList } from '../components/state/StateOverviewMatchLi
 import { StateOverviewStats } from '../components/state/StateOverviewStats'
 import { StateMap } from '../components/StateMap'
 import { de } from '../i18n/de'
+import { fetchStateOverviewBundle } from '../lib/fetchStateOverviewBundle'
 import { stateHistoryFromRuns } from '../lib/matchHistoryFromRuns'
 import {
   buildOfficialSchoolLonLatIndex,
   matchesToOverviewMapPoints,
   matchRowIncludedWhenStateMapBboxActive,
 } from '../lib/matchRowInBbox'
-import { mergeSyntheticOfficialNoCoordRows } from '../lib/mergeSyntheticOfficialNoCoordRows'
-import {
-  stateBoundaryUrl,
-  stateMatchesUrl,
-  stateOfficialUrl,
-  stateOsmMetaUrl,
-  stateOsmUrl,
-  runsJsonlUrl,
-  summaryJsonUrl,
-} from '../lib/paths'
+import { stateBoundaryUrl, stateOsmMetaUrl, runsJsonlUrl, summaryJsonUrl } from '../lib/paths'
 import { runsPayloadFromHistoryText } from '../lib/runHistoryJsonl'
-import { runsFileSchema, schoolsMatchesFileSchema, summaryFileSchema } from '../lib/schemas'
+import { runsFileSchema, summaryFileSchema } from '../lib/schemas'
 import {
   collectFilteredIdsFromSearchResult,
   createStateMatchItemsJsEngine,
@@ -74,31 +66,7 @@ export function StateOverview() {
 
   const dataQ = useQuery({
     queryKey: ['state-data', code],
-    queryFn: async () => {
-      const [oRes, osmRes, mRes] = await Promise.all([
-        fetch(stateOfficialUrl(code)),
-        fetch(stateOsmUrl(code)),
-        fetch(stateMatchesUrl(code)),
-      ])
-      if (!oRes.ok || !osmRes.ok || !mRes.ok) {
-        throw new Error('land fetch')
-      }
-      const [official, osm, matchesRaw] = await Promise.all([
-        oRes.json(),
-        osmRes.json(),
-        mRes.json(),
-      ])
-      const matchesParsed = schoolsMatchesFileSchema.parse(matchesRaw)
-      const matches = mergeSyntheticOfficialNoCoordRows(
-        matchesParsed,
-        official as FeatureCollection,
-      )
-      return {
-        official,
-        osm,
-        matches,
-      }
-    },
+    queryFn: () => fetchStateOverviewBundle(code),
     enabled: !!code,
   })
 

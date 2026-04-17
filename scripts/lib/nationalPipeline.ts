@@ -38,7 +38,7 @@ import {
 } from './pipelineCommon'
 import { jedeschuleUpstreamDatasetChanged } from './pipelineFreshness'
 import type { PipelineSourceMeta } from './pipelineMeta'
-import { featureCollection } from '@turf/helpers'
+import { feature, featureCollection, point } from '@turf/helpers'
 import simplify from '@turf/simplify'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import { createHash } from 'node:crypto'
@@ -80,38 +80,51 @@ const USER_FACING_COORD_DECIMALS = 4 as const
 /** Douglas–Peucker tolerance in degrees (~N/S meters ≈ tolerance * 111_320). */
 const OSM_USER_GEOMETRY_SIMPLIFY_TOLERANCE_DEG = 10 / 111_320
 
+/** Deferred polygon/line geometries for detail map (`schools_osm_areas.json`): full outline, no DP simplify. */
+const OSM_AREAS_COORD_DECIMALS = 6 as const
+
 function roundToDecimals(value: number, decimals: number): number {
   if (!Number.isFinite(value)) return value
   const scale = 10 ** decimals
   return Math.round(value * scale) / scale
 }
 
-function roundGeoCoordinates(value: unknown): unknown {
-  if (typeof value === 'number') return roundToDecimals(value, USER_FACING_COORD_DECIMALS)
-  if (Array.isArray(value)) return value.map(roundGeoCoordinates)
+function roundGeoCoordinates(value: unknown, decimals: number): unknown {
+  if (typeof value === 'number') return roundToDecimals(value, decimals)
+  if (Array.isArray(value)) return value.map((v) => roundGeoCoordinates(v, decimals))
   return value
 }
 
-function roundFeatureGeometry(geometry: Feature['geometry'] | null): Feature['geometry'] | null {
+function roundFeatureGeometry(
+  geometry: Feature['geometry'] | null,
+  decimals: number,
+): Feature['geometry'] | null {
   if (!geometry) return geometry
   if (geometry.type === 'GeometryCollection') {
     return {
       ...geometry,
-      geometries: geometry.geometries.map((g) => roundFeatureGeometry(g) as NonNullable<typeof g>),
+      geometries: geometry.geometries.map(
+        (g) => roundFeatureGeometry(g, decimals) as NonNullable<typeof g>,
+      ),
     }
   }
   return {
     ...geometry,
-    coordinates: roundGeoCoordinates((geometry as { coordinates: unknown }).coordinates) as never,
+    coordinates: roundGeoCoordinates(
+      (geometry as { coordinates: unknown }).coordinates,
+      decimals,
+    ) as never,
   }
 }
 
 function optimizeOfficialFeatureForUserOutput(f: Feature): Feature {
   return {
     ...f,
-    geometry: roundFeatureGeometry(f.geometry),
+    geometry: roundFeatureGeometry(f.geometry, USER_FACING_COORD_DECIMALS),
   }
 }
+
+const R = USER_FACING_COORD_DECIMALS
 
 function simplifyOsmGeometryForUser(
   geometry: Feature['geometry'] | null,
@@ -125,29 +138,86 @@ function simplifyOsmGeometryForUser(
     }
   }
   if (geometry.type === 'Point' || geometry.type === 'MultiPoint') {
-    return roundFeatureGeometry(geometry)
+    return roundFeatureGeometry(geometry, R)
   }
   try {
-    const simplified = simplify(
-      { type: 'Feature', properties: {}, geometry },
-      {
-        tolerance: OSM_USER_GEOMETRY_SIMPLIFY_TOLERANCE_DEG,
-        highQuality: false,
-      },
-    )
+    const simplified = simplify(feature(geometry, {}), {
+      tolerance: OSM_USER_GEOMETRY_SIMPLIFY_TOLERANCE_DEG,
+      highQuality: false,
+    })
     const g = simplified.type === 'Feature' ? simplified.geometry : null
-    return roundFeatureGeometry(g ?? geometry)
+    return roundFeatureGeometry(g ?? geometry, R)
   } catch {
-    return roundFeatureGeometry(geometry)
+    return roundFeatureGeometry(geometry, R)
   }
 }
 
-function optimizeOsmFeatureForUserOutput(f: Feature): Feature {
+function geometryIsPointLikeOnly(g: Geometry | null): boolean {
+  if (!g) return false
+  return g.type === 'Point' || g.type === 'MultiPoint'
+}
+
+function osmRefKeyFromFeatureId(f: Feature): string | null {
+  const idRaw = f.id
+  if (typeof idRaw === 'string') {
+    if (idRaw.startsWith('way/') || idRaw.startsWith('relation/') || idRaw.startsWith('node/')) {
+      return idRaw
+    }
+  }
+  if (typeof idRaw === 'number') return `way/${idRaw}`
+  return null
+}
+
+/**
+ * Full campus geometry for `schools_osm_areas.json`: closed-ring promotion + coordinate rounding only
+ * (used by detail map `resolveOsmSchoolAreaOutline`; no Douglas–Peucker so outlines stay complete).
+ */
+function normalizeOsmGeometryForAreasFile(
+  geometry: Feature['geometry'] | null,
+): Feature['geometry'] | null {
+  if (!geometry) return geometry
+  let g = promoteClosedLineStringsToPolygons(geometry) ?? geometry
+  if (g.type === 'GeometryCollection') {
+    return {
+      type: 'GeometryCollection',
+      geometries: g.geometries.map((x) => normalizeOsmGeometryForAreasFile(x) as Geometry),
+    }
+  }
+  return roundFeatureGeometry(g, OSM_AREAS_COORD_DECIMALS)
+}
+
+/**
+ * Point-only layer for lists/maps + `schools_osm_areas.json` entry with **full** campus geometry
+ * whenever we have a non-point outline and an OSM ref key (no heavy geometry on the main file).
+ */
+function buildOsmUserPointFeatureAndArea(f: Feature): {
+  point: Feature
+  areaEntry: [string, Feature] | null
+} {
+  const geom = promoteClosedLineStringsToPolygons(f.geometry ?? null) ?? f.geometry
+  if (!geom || geometryIsPointLikeOnly(geom)) {
+    return {
+      point: feature(simplifyOsmGeometryForUser(geom), { hasPolygonGeometry: false }, { id: f.id }),
+      areaEntry: null,
+    }
+  }
+  const key = osmRefKeyFromFeatureId(f)
+  const areaFeature = feature(normalizeOsmGeometryForAreasFile(geom), null, { id: f.id })
+  if (!key) {
+    return {
+      point: feature(simplifyOsmGeometryForUser(geom), { hasPolygonGeometry: false }, { id: f.id }),
+      areaEntry: null,
+    }
+  }
+  const markerLonLat = centroidFromOsmGeometry(geom)
+  const [lon, lat] = markerLonLat
   return {
-    type: 'Feature',
-    id: f.id,
-    properties: null,
-    geometry: simplifyOsmGeometryForUser(f.geometry),
+    point: point(
+      [roundToDecimals(lon, R), roundToDecimals(lat, R)],
+      { hasPolygonGeometry: true },
+      { id: f.id },
+    ),
+    areaEntry: [key, areaFeature],
   }
 }
 
@@ -180,9 +250,7 @@ function nearestStateByCenter(lon: number, lat: number): StateCode {
 }
 
 function assignPipelineStateToOsmFeature(f: Feature): StateCode {
-  const c = centroidFromOsmGeometry(f.geometry ?? null)
-  if (!c) return nearestStateByCenter(10.45, 51.16)
-  const [lon, lat] = c
+  const [lon, lat] = centroidFromOsmGeometry(f.geometry ?? null)
   return stateCodeForPoint(lon, lat) ?? nearestStateByCenter(lon, lat)
 }
 
@@ -556,9 +624,15 @@ export async function runStateFirstPipeline(
         })
         .map(optimizeOfficialFeatureForUserOutput),
     )
-    const osmStateUser: FeatureCollection = featureCollection(
-      osmStateFc.features.map(optimizeOsmFeatureForUserOutput),
-    )
+    const osmPointsAndAreas = osmStateFc.features.map(buildOsmUserPointFeatureAndArea)
+    const osmStateUser: FeatureCollection = featureCollection(osmPointsAndAreas.map((x) => x.point))
+    const osmAreasByKey: Record<string, Feature> = {}
+    for (const { areaEntry } of osmPointsAndAreas) {
+      if (areaEntry) {
+        const [k, feat] = areaEntry
+        osmAreasByKey[k] = feat
+      }
+    }
     const rowsStateUser = enriched.map((r) =>
       optimizeMatchRowForUserOutput(
         r as Record<string, unknown> & {
@@ -574,6 +648,10 @@ export async function runStateFirstPipeline(
       officialStateOut,
     )
     await writeJson(path.join(datasetsDir(projectRoot), code, 'schools_osm.geojson'), osmStateUser)
+    await writeJson(
+      path.join(datasetsDir(projectRoot), code, 'schools_osm_areas.json'),
+      osmAreasByKey,
+    )
     await writeJson(
       path.join(datasetsDir(projectRoot), code, 'schools_matches.json'),
       rowsStateUser,

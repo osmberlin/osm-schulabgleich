@@ -1,16 +1,14 @@
 import { detailMapConnectorLines } from './detailMapConnectorLines'
-import { fetchStateSchoolsBundle } from './fetchStateSchoolsBundle'
+import type { StateSchoolsBundle, StateSchoolsMatchRow } from './fetchStateSchoolsBundle'
 import { findOfficialSchoolFeature } from './findOfficialSchoolFeature'
 import { buildMapDimMaskFeature } from './mapDimMask'
 import { MATCH_RADIUS_KM } from './matchRadius'
-import { promoteClosedLineStringsToPolygons } from './osmClosedRingsToPolygons'
 import { findOsmFeature } from './osmFeatureLookup'
+import { resolveOsmSchoolAreaOutline } from './osmSchoolDetailGeometry'
 import { parseMatchRowOsmCentroidLonLat } from './zodGeo'
 import circle from '@turf/circle'
-import type { Feature, FeatureCollection, Polygon } from 'geojson'
-
-type StateSchoolsBundle = Awaited<ReturnType<typeof fetchStateSchoolsBundle>>
-type StateSchoolMatchRow = StateSchoolsBundle['matches'][number]
+import { lineString, point } from '@turf/helpers'
+import type { Feature, Polygon } from 'geojson'
 
 type HoveredMapLabelLike =
   | { kind: 'osm-reference' }
@@ -20,9 +18,10 @@ type HoveredMapLabelLike =
 
 function resolveSchoolDetailMapFeatures(
   data: StateSchoolsBundle | undefined,
-  row: StateSchoolMatchRow | null,
+  row: StateSchoolsMatchRow | null,
   mapOsmCentroid: readonly [number, number] | null,
   hoveredMapLabel: HoveredMapLabelLike,
+  osmAreasByKey: Record<string, Feature> | undefined,
 ) {
   const detailFeatures: Feature[] = (() => {
     if (!data || !row) return []
@@ -36,18 +35,14 @@ function resolveSchoolDetailMapFeatures(
       const f = findOfficialSchoolFeature(data.official, row.officialId)
       if (f) features.push(f as Feature)
     }
-    const of = findOsmFeature(data.osm, row.osmType, row.osmId)
-    if (of) {
-      const g = promoteClosedLineStringsToPolygons(of.geometry ?? null) ?? of.geometry
-      features.push({ ...of, geometry: g })
+    const mainOsm = findOsmFeature(data.osm, row.osmType, row.osmId)
+    const osmArea = resolveOsmSchoolAreaOutline(mainOsm, row.osmType, row.osmId, osmAreasByKey)
+    if (osmArea) {
+      features.push(osmArea)
     }
     if (mapOsmCentroid) {
       const [clon, clat] = mapOsmCentroid
-      features.push({
-        type: 'Feature',
-        properties: { _mapDetail: 'osmCentroid' as const },
-        geometry: { type: 'Point', coordinates: [clon, clat] },
-      })
+      features.push(point([clon, clat], { _mapDetail: 'osmCentroid' as const }))
     }
     return features
   })()
@@ -66,7 +61,7 @@ function resolveSchoolDetailMapFeatures(
     !mapOsmCentroid || !data || !row
       ? []
       : detailMapConnectorLines({
-          officialFc: data.official as FeatureCollection,
+          officialFc: data.official,
           matchRow: row,
           fromLon: mapOsmCentroid[0],
           fromLat: mapOsmCentroid[1],
@@ -75,7 +70,7 @@ function resolveSchoolDetailMapFeatures(
 
   const hoverRelationLineFeatures: Feature[] = (() => {
     if (!data || !row || !hoveredMapLabel) return []
-    const officialFc = data.official as FeatureCollection
+    const officialFc = data.official
     if (hoveredMapLabel.kind === 'osm-other') {
       const match = data.matches.find((m) => m.key === hoveredMapLabel.matchKey)
       if (!match) return []
@@ -105,17 +100,13 @@ function resolveSchoolDetailMapFeatures(
       if (!mapOsmCentroid) return []
       const [clon, clat] = mapOsmCentroid
       return [
-        {
-          type: 'Feature',
-          properties: { _mapDetail: 'hoverRelation' as const },
-          geometry: {
-            type: 'LineString',
-            coordinates: [
-              [hoveredMapLabel.lon, hoveredMapLabel.lat],
-              [clon, clat],
-            ],
-          },
-        },
+        lineString(
+          [
+            [hoveredMapLabel.lon, hoveredMapLabel.lat],
+            [clon, clat],
+          ],
+          { _mapDetail: 'hoverRelation' as const },
+        ),
       ]
     }
     return []
@@ -132,9 +123,10 @@ function resolveSchoolDetailMapFeatures(
 
 export function deriveSchoolDetailMapFeatures(
   data: StateSchoolsBundle | undefined,
-  row: StateSchoolMatchRow | null,
+  row: StateSchoolsMatchRow | null,
   mapOsmCentroid: readonly [number, number] | null,
   hoveredMapLabel: HoveredMapLabelLike,
+  osmAreasByKey: Record<string, Feature> | undefined,
 ) {
-  return resolveSchoolDetailMapFeatures(data, row, mapOsmCentroid, hoveredMapLabel)
+  return resolveSchoolDetailMapFeatures(data, row, mapOsmCentroid, hoveredMapLabel, osmAreasByKey)
 }

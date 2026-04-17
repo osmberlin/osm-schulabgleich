@@ -1,7 +1,7 @@
 import type { schoolsMatchRowSchema } from './schemas'
 import type { StateMapBbox } from './useStateMapBbox'
 import { parseJedeschuleLonLatFromRecord, parseMatchRowOsmCentroidLonLat } from './zodGeo'
-import { featureCollection } from '@turf/helpers'
+import { featureCollection, point } from '@turf/helpers'
 import type { Feature, FeatureCollection, Point } from 'geojson'
 import type { z } from 'zod'
 
@@ -143,7 +143,7 @@ export function spreadCoincidentMapPointFeatures(features: Feature[]): Feature[]
       const [dlon, dlat] = offsetMetersAtLat(refLat, eastM, northM)
       spread.push({
         ...feat,
-        geometry: { type: 'Point', coordinates: [glon + dlon, glat + dlat] },
+        geometry: point([glon + dlon, glat + dlat]).geometry,
       })
     }
   }
@@ -165,15 +165,13 @@ export function matchesToOverviewMapPoints(
     seen.add(r.key)
     const ll = matchRowMapLonLat(r, officialLonLatIndex)
     if (!ll) continue
-    features.push({
-      type: 'Feature',
-      properties: {
+    features.push(
+      point(ll, {
         matchKey: r.key,
         name: matchRowDisplayName(r),
         matchCat: r.category,
-      },
-      geometry: { type: 'Point', coordinates: ll },
-    })
+      }),
+    )
   }
   return featureCollection(spreadCoincidentMapPointFeatures(features))
 }

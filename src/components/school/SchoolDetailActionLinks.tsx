@@ -9,6 +9,7 @@ import {
   getSchoolDetailLicenceInfo,
   SchoolDetailLicenceCompatibleInline,
 } from './SchoolDetailLicence'
+import type { Feature } from 'geojson'
 
 const EDIT_LINK_CLASS_NAME =
   'inline-flex items-center rounded-md bg-brand-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-900'
@@ -19,15 +20,17 @@ type StateSchoolMatchRow = StateSchoolsBundle['matches'][number]
 export function SchoolDetailActionLinks({
   data,
   matchRow,
+  osmAreasByKey,
 }: {
   data: StateSchoolsBundle
   matchRow: StateSchoolMatchRow
+  osmAreasByKey: Record<string, Feature> | undefined
 }) {
   const { code } = useSchoolDetailRoute()
   const { osmLicenceCompatible, licenceHash } = getSchoolDetailLicenceInfo(code)
 
   const mapOsmCentroid = resolveSchoolMapOsmCentroid(data, matchRow)
-  const bounds = computeSchoolDetailMapActionBounds(data, matchRow, mapOsmCentroid)
+  const bounds = computeSchoolDetailMapActionBounds(data, matchRow, mapOsmCentroid, osmAreasByKey)
   const idUrl = buildIdUrl(matchRow.osmType, matchRow.osmId, bounds)
   const josmUrl = buildJosmLoadObject(matchRow.osmType, matchRow.osmId, bounds)
   const jedeschuleItemUrl =

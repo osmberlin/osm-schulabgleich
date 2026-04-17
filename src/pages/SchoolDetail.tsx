@@ -12,8 +12,10 @@ import { SchoolDetailLicenceWarnings } from '../components/school/SchoolDetailLi
 import { SchoolDetailMapSection } from '../components/school/SchoolDetailMapSection'
 import { SchoolDetailMatchExplanation } from '../components/school/SchoolDetailMatchExplanation'
 import { de } from '../i18n/de'
+import { fetchStateOsmAreasLookup } from '../lib/fetchStateOsmAreasLookup'
 import { fetchStateSchoolsBundle } from '../lib/fetchStateSchoolsBundle'
 import { formatDeInteger } from '../lib/formatNumber'
+import { schoolMatchRowNeedsOsmAreasFetch } from '../lib/osmSchoolDetailGeometry'
 import { schoolDetailCompareSectionId } from '../lib/schoolDetailCompareSectionIds'
 import { resolveSchoolMapOsmCentroid } from '../lib/schoolDetailMapOsmCentroid'
 import { stateLabelDeFromRouteCode } from '../lib/stateConfig'
@@ -22,6 +24,7 @@ import { useSchoolDetailRoute } from '../lib/useSchoolDetailRoute'
 import { parseErrorOutsideBoundaryFromOfficialProps } from '../lib/zodGeo'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
+import { useMemo } from 'react'
 
 export function SchoolDetail() {
   const { code, matchKey, navigate } = useSchoolDetailRoute()
@@ -32,6 +35,23 @@ export function SchoolDetail() {
   })
 
   const matchRow = q.data?.matches.find((r) => r.key === matchKey) ?? null
+
+  const needsOsmAreas = useMemo(
+    () =>
+      q.data && matchRow
+        ? schoolMatchRowNeedsOsmAreasFetch(q.data.osm, matchRow.osmType, matchRow.osmId)
+        : false,
+    [q.data, matchRow],
+  )
+
+  const areasQ = useQuery({
+    queryKey: ['state-osm-areas', code],
+    queryFn: () => fetchStateOsmAreasLookup(code),
+    enabled: !!code && needsOsmAreas,
+    staleTime: Infinity,
+  })
+
+  const osmAreasByKey = areasQ.data
 
   let errorOutsideBoundary: ReturnType<typeof parseErrorOutsideBoundaryFromOfficialProps> = null
   if (matchRow) {
@@ -67,6 +87,7 @@ export function SchoolDetail() {
         data={q.data}
         matchRow={matchRow}
         matchKey={matchKey}
+        osmAreasByKey={osmAreasByKey}
         onNavigateToOtherSchool={(nextKey) => {
           void navigate({
             to: '/bundesland/$code/schule/$matchKey',
@@ -82,7 +103,11 @@ export function SchoolDetail() {
 
       {q.isSuccess && matchRow && (
         <>
-          <SchoolDetailActionLinks data={q.data} matchRow={matchRow} />
+          <SchoolDetailActionLinks
+            data={q.data}
+            matchRow={matchRow}
+            osmAreasByKey={osmAreasByKey}
+          />
 
           <SchoolDetailLicenceWarnings />
 
