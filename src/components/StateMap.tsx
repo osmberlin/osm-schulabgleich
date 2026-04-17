@@ -246,7 +246,6 @@ export function StateMap({
         id={STATE_MAP_ID}
         initialViewState={initialViewState}
         mapStyle={OPENFREEMAP_STYLE}
-        reuseMaps
         {...flatMapGlProps}
         onLoad={(e) => {
           const map = e.target
