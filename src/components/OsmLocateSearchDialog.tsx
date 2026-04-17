@@ -4,13 +4,14 @@ import { AppModal } from './AppModal'
 import { DialogTitle } from '@headlessui/react'
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import { useNavigate } from '@tanstack/react-router'
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 
 export function OsmLocateSearchDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const navigate = useNavigate()
   const [draft, setDraft] = useState('')
   const [localError, setLocalError] = useState<string | null>(null)
   const formId = useId()
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!open) return
@@ -35,7 +36,7 @@ export function OsmLocateSearchDialog({ open, onClose }: { open: boolean; onClos
   }
 
   return (
-    <AppModal open={open} onClose={onClose}>
+    <AppModal open={open} onClose={onClose} initialFocus={inputRef}>
       <form id={formId} onSubmit={onSubmit}>
         <div className="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
           <div className="sm:flex sm:items-start sm:gap-4">
@@ -52,6 +53,7 @@ export function OsmLocateSearchDialog({ open, onClose }: { open: boolean; onClos
                   OSM-Referenz
                 </label>
                 <input
+                  ref={inputRef}
                   id={`${formId}-input`}
                   type="search"
                   value={draft}

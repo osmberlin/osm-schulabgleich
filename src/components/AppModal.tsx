@@ -1,6 +1,6 @@
 import { cn } from '../lib/cn'
 import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react'
-import type { ReactNode } from 'react'
+import type { MutableRefObject, ReactNode } from 'react'
 
 const backdropClass =
   'fixed inset-0 bg-zinc-950/80 transition-opacity data-closed:opacity-0 data-enter:duration-200 data-enter:ease-out data-leave:duration-150 data-leave:ease-in'
@@ -17,15 +17,30 @@ export type AppModalProps = {
   panelClassName?: string
   /** Root z-index tier (backdrop/panel use consecutive values). */
   zIndex?: number
+  /** Element to focus when the dialog opens (Headless UI `Dialog` `initialFocus`). */
+  initialFocus?: MutableRefObject<HTMLElement | null>
 }
 
 /**
  * Shared Headless UI modal shell for this app (backdrop, centered panel, transitions).
  */
-export function AppModal({ open, onClose, children, panelClassName, zIndex = 70 }: AppModalProps) {
+export function AppModal({
+  open,
+  onClose,
+  children,
+  panelClassName,
+  zIndex = 70,
+  initialFocus,
+}: AppModalProps) {
   const z = zIndex
   return (
-    <Dialog open={open} onClose={onClose} className="relative" style={{ zIndex: z }}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      initialFocus={initialFocus}
+      className="relative"
+      style={{ zIndex: z }}
+    >
       <DialogBackdrop transition className={backdropClass} />
       <div className="fixed inset-0 w-screen overflow-y-auto" style={{ zIndex: z + 1 }}>
         <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
