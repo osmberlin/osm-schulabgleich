@@ -39,7 +39,7 @@ export function AppBreadcrumb({ appTitle, homeCurrent, items }: Props) {
     <nav aria-label={de.breadcrumb.navLabel} className="flex min-w-0 flex-1">
       <ol
         role="list"
-        className={`flex w-full min-w-0 flex-nowrap items-stretch overflow-x-auto ${rowClass}`}
+        className={`flex w-full min-w-0 flex-nowrap items-stretch ${rowClass}`}
       >
         <li className="flex shrink-0 items-stretch">
           <div className={`flex items-center ${rowClass}`}>
