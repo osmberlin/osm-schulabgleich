@@ -9,13 +9,13 @@ import { useSchoolDetailRoute } from '../../lib/useSchoolDetailRoute'
 import { ExclamationTriangleIcon, ShieldCheckIcon } from '@heroicons/react/20/solid'
 import { Link } from '@tanstack/react-router'
 
-export type SchuleDetailLicenceInfo = {
+export type SchoolDetailLicenceInfo = {
   officialLicenceRow: BundeslandOfficialSourceRow | null
   licenceHash: string
   osmLicenceCompatible: boolean
 }
 
-export function getSchuleDetailLicenceInfo(routeStateCode: string): SchuleDetailLicenceInfo {
+export function getSchoolDetailLicenceInfo(routeStateCode: string): SchoolDetailLicenceInfo {
   const licenceStateCode = STATE_ORDER.includes(routeStateCode as StateCode)
     ? (routeStateCode as StateCode)
     : null
@@ -28,7 +28,7 @@ export function getSchuleDetailLicenceInfo(routeStateCode: string): SchuleDetail
   return { officialLicenceRow, licenceHash, osmLicenceCompatible }
 }
 
-export function SchuleDetailLicenceCompatibleInline({
+export function SchoolDetailLicenceCompatibleInline({
   osmLicenceCompatible,
   showLeadingSeparator,
   licenceHash,
@@ -53,9 +53,9 @@ export function SchuleDetailLicenceCompatibleInline({
   )
 }
 
-export function SchuleDetailLicenceWarnings() {
+export function SchoolDetailLicenceWarnings() {
   const { code } = useSchoolDetailRoute()
-  const { officialLicenceRow, licenceHash, osmLicenceCompatible } = getSchuleDetailLicenceInfo(code)
+  const { officialLicenceRow, licenceHash, osmLicenceCompatible } = getSchoolDetailLicenceInfo(code)
 
   return (
     <>

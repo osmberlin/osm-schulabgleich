@@ -1,3 +1,4 @@
+import { PrimarySchoolOsmSuggest } from '../components/school/PrimarySchoolOsmSuggest'
 import { SchoolDetailActionLinks } from '../components/school/SchoolDetailActionLinks'
 import {
   SchoolDetailAmbiguousAlert,
@@ -7,6 +8,7 @@ import {
 } from '../components/school/SchoolDetailAlerts'
 import { SchoolDetailAmbiguousCandidateItem } from '../components/school/SchoolDetailAmbiguousCandidateItem'
 import { SchoolDetailCompareBody } from '../components/school/SchoolDetailCompareBody'
+import { SchoolDetailLicenceWarnings } from '../components/school/SchoolDetailLicence'
 import {
   type HoveredMapLabel,
   SchoolDetailMap,
@@ -14,8 +16,6 @@ import {
   SchoolDetailMapLegend,
 } from '../components/school/SchoolDetailMap'
 import { SchoolDetailMatchExplanation } from '../components/school/SchoolDetailMatchExplanation'
-import { GrundschuleOsmSuggest } from '../components/schule/GrundschuleOsmSuggest'
-import { SchuleDetailLicenceWarnings as SchoolDetailLicenceWarnings } from '../components/schule/SchuleDetailLicence'
 import { de } from '../i18n/de'
 import { buildIdUrl, buildJosmLoadObject, buildOsmBrowseUrl } from '../lib/editorLinks'
 import { fetchStateSchoolsBundle } from '../lib/fetchStateSchoolsBundle'
@@ -364,7 +364,7 @@ export function SchoolDetail() {
 
       <SchoolDetailMatchExplanation row={matchRow} />
 
-      <GrundschuleOsmSuggest
+      <PrimarySchoolOsmSuggest
         row={matchRow}
         lon={mapOsmCentroid?.[0] ?? null}
         lat={mapOsmCentroid?.[1] ?? null}

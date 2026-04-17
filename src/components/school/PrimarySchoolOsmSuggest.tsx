@@ -53,7 +53,7 @@ type Props = {
   lat: number | null
 }
 
-export function GrundschuleOsmSuggest({ row, lon, lat }: Props) {
+export function PrimarySchoolOsmSuggest({ row, lon, lat }: Props) {
   const { addPendingTags } = useOsmAppActions()
   const pendingForObject = usePendingEditForOsmObject(row.osmType, row.osmId)
 
@@ -83,9 +83,12 @@ export function GrundschuleOsmSuggest({ row, lon, lat }: Props) {
   return (
     <section
       className="mb-6 rounded-lg border border-emerald-500/25 bg-emerald-500/5 p-4"
-      aria-labelledby="grundschule-osm-suggest-title"
+      aria-labelledby="primary-school-osm-suggest-title"
     >
-      <h2 id="grundschule-osm-suggest-title" className="text-base font-semibold text-emerald-100">
+      <h2
+        id="primary-school-osm-suggest-title"
+        className="text-base font-semibold text-emerald-100"
+      >
         {de.osm.grundschuleSectionTitle}
       </h2>
       <p className="mt-2 text-sm text-zinc-300">{de.osm.grundschuleSectionLead}</p>

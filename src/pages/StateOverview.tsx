@@ -1,8 +1,8 @@
 import { StateOverviewFiltersDisclosure } from '../components/state/StateOverviewFiltersDisclosure'
 import { StateOverviewHistorySection } from '../components/state/StateOverviewHistorySection'
-import { StateOverviewMapSection } from '../components/state/StateOverviewMapSection'
 import { StateOverviewMatchList } from '../components/state/StateOverviewMatchList'
 import { StateOverviewStats } from '../components/state/StateOverviewStats'
+import { StateMap } from '../components/StateMap'
 import { de } from '../i18n/de'
 import { stateHistoryFromRuns } from '../lib/matchHistoryFromRuns'
 import {
@@ -31,12 +31,14 @@ import { useStateCategoryFilter } from '../lib/useStateCategoryFilter'
 import { useStateOverviewExplorerFilter } from '../lib/useStateOverviewExplorerFilter'
 import { useStateOverviewMapState } from '../lib/useStateOverviewMapState'
 import { useQuery } from '@tanstack/react-query'
-import { useParams } from '@tanstack/react-router'
+import { useNavigate, useParams } from '@tanstack/react-router'
 import type { Feature, FeatureCollection, MultiPolygon, Polygon } from 'geojson'
 import { useId, useMemo } from 'react'
+import { MapProvider } from 'react-map-gl/maplibre'
 
 export function StateOverview() {
   const { code } = useParams({ strict: false }) as { code: string }
+  const navigate = useNavigate()
   const statsInputId = useId()
   const historyHeadingId = useId()
   const { enabledSet, enabledCategories, setCategoryEnabled, isCategoryEnabled } =
@@ -259,18 +261,40 @@ export function StateOverview() {
         setCategoryEnabled={setCategoryEnabled}
       />
 
-      <StateOverviewMapSection
-        enabledCategories={enabledCategories}
-        enabledSet={enabledSet}
-        mapMatchPoints={mapMatchPoints}
-        stateCode={code}
-        boundary={boundaryQ.data ?? null}
-        mapCamera={mapCamera}
-        setMapCamera={setMapCamera}
-        bboxFilter={bboxFilter}
-        setBboxFilter={setBboxFilter}
-        clearBboxFilter={clearBboxFilter}
-      />
+      {enabledCategories.length === 0 ? (
+        <div
+          className="flex h-[440px] items-center justify-center rounded-lg border border-zinc-700 px-4 text-center"
+          role="status"
+        >
+          <p className="text-sm text-zinc-400">{de.state.mapNoVisibleCategories}</p>
+        </div>
+      ) : (
+        <MapProvider>
+          <StateMap
+            matchPoints={mapMatchPoints}
+            height={440}
+            enabledCategories={enabledSet}
+            stateCode={code}
+            stateBoundary={boundaryQ.data ?? null}
+            mapCamera={mapCamera}
+            onMapCameraChange={setMapCamera}
+            bboxFilter={bboxFilter}
+            onApplyBboxFilter={setBboxFilter}
+            onClearBboxFilter={clearBboxFilter}
+            onSchoolClick={(matchKey) =>
+              void navigate({
+                to: '/bundesland/$code/schule/$matchKey',
+                params: { code, matchKey },
+                search: (prev) => ({
+                  ...prev,
+                  map: undefined,
+                  bbox: undefined,
+                }),
+              })
+            }
+          />
+        </MapProvider>
+      )}
 
       <StateOverviewMatchList
         code={code}

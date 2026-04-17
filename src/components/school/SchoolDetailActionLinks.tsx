@@ -1,9 +1,9 @@
 import { de } from '../../i18n/de'
 import { useSchoolDetailRoute } from '../../lib/useSchoolDetailRoute'
 import {
-  getSchuleDetailLicenceInfo,
-  SchuleDetailLicenceCompatibleInline as SchoolDetailLicenceCompatibleInline,
-} from '../schule/SchuleDetailLicence'
+  getSchoolDetailLicenceInfo,
+  SchoolDetailLicenceCompatibleInline,
+} from './SchoolDetailLicence'
 
 const EDIT_LINK_CLASS_NAME =
   'inline-flex items-center rounded-md bg-brand-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-900'
@@ -22,7 +22,7 @@ export function SchoolDetailActionLinks({
   osmBrowseUrl: ExternalLink
 }) {
   const { code } = useSchoolDetailRoute()
-  const { osmLicenceCompatible, licenceHash } = getSchuleDetailLicenceInfo(code)
+  const { osmLicenceCompatible, licenceHash } = getSchoolDetailLicenceInfo(code)
 
   return (
     <div className="mb-6 flex flex-wrap items-center gap-2">
