@@ -11,6 +11,7 @@ import { SchoolDetailCompareBody } from '../components/school/SchoolDetailCompar
 import { SchoolDetailLicenceWarnings } from '../components/school/SchoolDetailLicence'
 import {
   type HoveredMapLabel,
+  type DetailMapInitialViewState,
   SchoolDetailMap,
   type SchoolDetailMapRenderData,
   SchoolDetailMapLegend,
@@ -50,7 +51,7 @@ import { Link } from '@tanstack/react-router'
 import bbox from '@turf/bbox'
 import { featureCollection } from '@turf/helpers'
 import type { Feature, FeatureCollection } from 'geojson'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { MapProvider, type ViewStateChangeEvent } from 'react-map-gl/maplibre'
 
 function scrollToSchoolDetailCompareSection(elementId: string) {
@@ -213,13 +214,6 @@ export function SchoolDetail() {
       ? null
       : (bbox(featureCollection(detailMapBoundsFeatures)) as [number, number, number, number])
 
-  const detailTargetViewState = detailMapSearch
-    ? (() => {
-        const [zoom, lat, lon] = detailMapSearch
-        return { latitude: lat, longitude: lon, zoom, pitch: 0, bearing: 0 }
-      })()
-    : { latitude: 51, longitude: 10, zoom: 14, pitch: 0, bearing: 0 }
-  const [detailMapViewState, setDetailMapViewState] = useState(detailTargetViewState)
   const detailMapFitBounds: [[number, number], [number, number]] | null = bounds
     ? ([
         [bounds[0], bounds[1]],
@@ -227,21 +221,17 @@ export function SchoolDetail() {
       ] as [[number, number], [number, number]])
     : null
 
-  useEffect(() => {
-    setDetailMapViewState((prev) => {
-      const sameZoom = Math.abs(prev.zoom - detailTargetViewState.zoom) < 0.0005
-      const sameLat = Math.abs(prev.latitude - detailTargetViewState.latitude) < 0.000001
-      const sameLon = Math.abs(prev.longitude - detailTargetViewState.longitude) < 0.000001
-      if (sameZoom && sameLat && sameLon) return prev
-      return detailTargetViewState
-    })
-  }, [
-    detailTargetViewState.zoom,
-    detailTargetViewState.latitude,
-    detailTargetViewState.longitude,
-    detailTargetViewState.pitch,
-    detailTargetViewState.bearing,
-  ])
+  const detailInitialViewState: DetailMapInitialViewState = detailMapSearch
+    ? (() => {
+        const [zoom, lat, lon] = detailMapSearch
+        return { latitude: lat, longitude: lon, zoom, pitch: 0, bearing: 0 }
+      })()
+    : detailMapFitBounds
+      ? {
+          bounds: detailMapFitBounds,
+          fitBoundsOptions: { padding: 64, maxZoom: 17 },
+        }
+      : { latitude: 51, longitude: 10, zoom: 14, pitch: 0, bearing: 0 }
 
   const handleDetailMapMoveEnd = (e: ViewStateChangeEvent) => {
     const { zoom, latitude, longitude } = e.viewState
@@ -302,25 +292,13 @@ export function SchoolDetail() {
           <div className="relative h-[360px] overflow-hidden rounded-lg border border-zinc-700">
             <MapProvider>
               <SchoolDetailMap
-                viewState={detailMapViewState}
+                initialViewState={detailInitialViewState}
                 hoveredMapLabel={hoveredMapLabel}
                 currentSchoolCategory={matchRow.matchCategory ?? matchRow.category}
                 osmReferenceName={matchRow.osmName ?? matchRow.key}
-                detailMapSearch={detailMapSearch}
-                detailMapFitBounds={detailMapFitBounds}
                 showMapMask={showMapMask}
                 renderData={mapRenderData}
-                fallbackViewKey={matchKey}
                 onMapBboxChange={setDetailMapBbox}
-                onMapViewStateChange={(next) => {
-                  setDetailMapViewState((prev) => {
-                    const sameZoom = Math.abs(prev.zoom - next.zoom) < 0.0005
-                    const sameLat = Math.abs(prev.latitude - next.latitude) < 0.000001
-                    const sameLon = Math.abs(prev.longitude - next.longitude) < 0.000001
-                    if (sameZoom && sameLat && sameLon) return prev
-                    return next
-                  })
-                }}
                 onHoveredMapLabelChange={setHoveredMapLabel}
                 onOtherSchoolClick={handleDetailOtherSchoolClick}
                 onOfficialPointClick={handleDetailOfficialPointClick}

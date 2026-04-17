@@ -42,6 +42,9 @@ export const DETAIL_MAP_INTERACTIVE_LAYERS_WITH_OTHERS: string[] = [
   OTHER_SCHOOLS_LAYER_HALO,
 ]
 
+/** Stable DOM id for MapGL (same idea as `state-map` in StateMap). */
+const DETAIL_MAP_ID = 'school-detail-map'
+
 const DETAIL_MAP_LEGEND_POINT_TILE =
   'inline-flex size-[18px] shrink-0 items-center justify-center rounded-sm bg-zinc-200 p-0 shadow-sm ring-1 ring-zinc-400/25'
 
@@ -52,6 +55,16 @@ export type DetailMapViewState = {
   pitch: number
   bearing: number
 }
+
+export type DetailMapInitialViewState =
+  | DetailMapViewState
+  | {
+      bounds: [[number, number], [number, number]]
+      fitBoundsOptions: {
+        padding: number
+        maxZoom: number
+      }
+    }
 
 export type HoveredMapLabel =
   | { kind: 'osm-reference'; lon: number; lat: number; name: string }
@@ -100,33 +113,25 @@ function DetailMapLegendPointDot({
 }
 
 export function SchoolDetailMap({
-  viewState,
+  initialViewState,
   hoveredMapLabel,
   currentSchoolCategory,
   osmReferenceName,
-  detailMapSearch,
-  detailMapFitBounds,
   showMapMask,
   renderData,
-  fallbackViewKey,
   onMapBboxChange,
-  onMapViewStateChange,
   onHoveredMapLabelChange,
   onOtherSchoolClick,
   onOfficialPointClick,
   onMoveEnd,
 }: {
-  viewState: DetailMapViewState
+  initialViewState: DetailMapInitialViewState
   hoveredMapLabel: HoveredMapLabel | null
   currentSchoolCategory: StateMatchCategory
   osmReferenceName: string
-  detailMapSearch: readonly [number, number, number] | null
-  detailMapFitBounds: [[number, number], [number, number]] | null
   showMapMask: boolean
   renderData: SchoolDetailMapRenderData
-  fallbackViewKey: string
   onMapBboxChange: (bbox: StateMapBbox) => void
-  onMapViewStateChange: (viewState: DetailMapViewState) => void
   onHoveredMapLabelChange: (next: HoveredMapLabel | null) => void
   onOtherSchoolClick: (matchKey: string) => void
   onOfficialPointClick: (officialId: string) => void
@@ -145,11 +150,6 @@ export function SchoolDetailMap({
     otherSchoolPointFeatures.length > 0
       ? DETAIL_MAP_INTERACTIVE_LAYERS_WITH_OTHERS
       : DETAIL_MAP_INTERACTIVE_LAYERS_BASE
-  const viewKey = detailMapSearch
-    ? `search:${detailMapSearch[0].toFixed(3)}/${detailMapSearch[1].toFixed(6)}/${detailMapSearch[2].toFixed(6)}`
-    : detailMapFitBounds
-      ? `fit:${detailMapFitBounds[0][0].toFixed(6)}/${detailMapFitBounds[0][1].toFixed(6)}/${detailMapFitBounds[1][0].toFixed(6)}/${detailMapFitBounds[1][1].toFixed(6)}`
-      : `default:${fallbackViewKey}`
   const handleMouseMove = (e: MapLayerMouseEvent) => {
     const hit = e.features?.[0]
     if (!hit || hit.geometry.type !== 'Point') {
@@ -230,14 +230,9 @@ export function SchoolDetailMap({
   return (
     <Fragment>
       <MapGL
-        key={viewKey}
-        longitude={viewState.longitude}
-        latitude={viewState.latitude}
-        zoom={viewState.zoom}
-        pitch={viewState.pitch}
-        bearing={viewState.bearing}
+        id={DETAIL_MAP_ID}
+        initialViewState={initialViewState}
         mapStyle={OPENFREEMAP_STYLE}
-        reuseMaps
         {...flatMapGlProps}
         interactiveLayerIds={interactiveLayerIds}
         cursor={
@@ -250,26 +245,9 @@ export function SchoolDetailMap({
         onLoad={(e) => {
           const map = e.target
           applyFlatMapRotationLocks(map)
-          if (!detailMapSearch && detailMapFitBounds) {
-            map.fitBounds(detailMapFitBounds, {
-              padding: 64,
-              duration: 0,
-              maxZoom: 17,
-            })
-            const c = map.getCenter()
-            onMapViewStateChange({
-              longitude: c.lng,
-              latitude: c.lat,
-              zoom: map.getZoom(),
-              pitch: 0,
-              bearing: 0,
-            })
-          }
           onMapBboxChange(boundsToBboxParam(map.getBounds()))
         }}
         onMove={(e) => {
-          const { longitude, latitude, zoom, pitch, bearing } = e.viewState
-          onMapViewStateChange({ longitude, latitude, zoom, pitch, bearing })
           onMapBboxChange(boundsToBboxParam(e.target.getBounds()))
         }}
         onMoveEnd={onMoveEnd}
