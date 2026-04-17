@@ -48,7 +48,6 @@
     "date-fns": "^4.1.0",
     "itemsjs": "^2.4.4",
     "maplibre-gl": "^5.17.0",
-    "nuqs": "^2.8.9",
     "osm-api": "^4.0.0",
     "osm2geojson-ultra": "^4.0.1",
     "react": "^19.2.4",

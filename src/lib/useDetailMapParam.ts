@@ -3,22 +3,26 @@ import {
   parseOsmStyleMapSearchParam,
   serializeOsmStyleMapSearchParam,
 } from './osmStyleMapQueryParam'
-import { createParser, useQueryState } from 'nuqs'
-
-export const osmStyleMapParamParser = createParser({
-  parse(value: string) {
-    return parseOsmStyleMapSearchParam(value)
-  },
-  serialize(value: OsmStyleMapTriple) {
-    return serializeOsmStyleMapSearchParam(value)
-  },
-}).withOptions({ history: 'replace' })
+import { stateRouteApi } from './stateRouteApi'
+import { useNavigate } from '@tanstack/react-router'
 
 /**
  * URL-synced camera for the school detail compare map (`?map=zoom/lat/lon`, OSM hash order).
  */
 export function useDetailMapParam() {
-  const [map, setMap] = useQueryState('map', osmStyleMapParamParser)
+  const search = stateRouteApi.useSearch()
+  const navigate = useNavigate({ from: '/bundesland/$code' })
+  const map = parseOsmStyleMapSearchParam(search.map)
+
+  const setMap = (nextMap: OsmStyleMapTriple | null) => {
+    void navigate({
+      replace: true,
+      search: (prev) => ({
+        ...prev,
+        map: nextMap ? serializeOsmStyleMapSearchParam(nextMap) : undefined,
+      }),
+    })
+  }
 
   return {
     map,

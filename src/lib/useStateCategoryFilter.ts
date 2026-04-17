@@ -1,35 +1,33 @@
 import { STATE_MATCH_CATEGORIES, type StateMatchCategory } from './stateMatchCategories'
-import { parseAsArrayOf, parseAsStringLiteral, useQueryState } from 'nuqs'
+import { stateRouteApi } from './stateRouteApi'
+import { useNavigate } from '@tanstack/react-router'
 import { useMemo } from 'react'
 
-/** Mutable full list + stable reference for nuqs default / “all categories” URL value. */
+/** Mutable full list + stable reference for default / “all categories” URL value. */
 const DEFAULT_STATE_MATCH_CATEGORIES: StateMatchCategory[] = [...STATE_MATCH_CATEGORIES]
 
-const categoryItemParser = parseAsStringLiteral(STATE_MATCH_CATEGORIES)
-
-const catsParser = parseAsArrayOf(categoryItemParser)
-  .withDefault(DEFAULT_STATE_MATCH_CATEGORIES)
-  .withOptions({ history: 'replace' })
-
-/**
- * URL-synced legend / filter for Bundesland map + Trefferliste (`?cats=matched&cats=osm_only` …).
- * Same idea as the OSM-Grenzabgleich `useAreaReportCategoryFilter`.
- */
+/** URL-synced legend / filter for Bundesland map + Trefferliste (`?cats=...`). */
 export function useStateCategoryFilter() {
-  const [cats, setCats] = useQueryState('cats', catsParser)
+  const search = stateRouteApi.useSearch()
+  const navigate = useNavigate({ from: '/bundesland/$code' })
+  const cats = search.cats ?? DEFAULT_STATE_MATCH_CATEGORIES
 
   const enabledSet = useMemo(() => new Set(cats), [cats])
 
   function setCategoryEnabled(c: StateMatchCategory, enabled: boolean) {
-    void setCats((prev) => {
-      const cur = prev ?? DEFAULT_STATE_MATCH_CATEGORIES
-      const next = new Set(cur)
-      if (enabled) next.add(c)
-      else next.delete(c)
-      const arr = DEFAULT_STATE_MATCH_CATEGORIES.filter((x) => next.has(x))
-      return arr.length === DEFAULT_STATE_MATCH_CATEGORIES.length
-        ? DEFAULT_STATE_MATCH_CATEGORIES
-        : arr
+    void navigate({
+      replace: true,
+      search: (prev) => {
+        const cur = prev.cats ?? DEFAULT_STATE_MATCH_CATEGORIES
+        const next = new Set(cur)
+        if (enabled) next.add(c)
+        else next.delete(c)
+        const arr = DEFAULT_STATE_MATCH_CATEGORIES.filter((x) => next.has(x))
+        return {
+          ...prev,
+          cats: arr.length === DEFAULT_STATE_MATCH_CATEGORIES.length ? undefined : arr,
+        }
+      },
     })
   }
 

@@ -1,7 +1,15 @@
 import type { OsmStyleMapTriple } from './osmStyleMapQueryParam'
-import { osmStyleMapParamParser } from './useDetailMapParam'
-import { stateMapBboxParser, type StateMapBbox } from './useStateMapBbox'
-import { useQueryStates } from 'nuqs'
+import {
+  parseOsmStyleMapSearchParam,
+  serializeOsmStyleMapSearchParam,
+} from './osmStyleMapQueryParam'
+import { stateRouteApi } from './stateRouteApi'
+import {
+  parseStateMapBboxSearchParam,
+  serializeStateMapBboxSearchParam,
+  type StateMapBbox,
+} from './useStateMapBbox'
+import { useNavigate } from '@tanstack/react-router'
 
 /**
  * Bundesland map URL state:
@@ -9,31 +17,40 @@ import { useQueryStates } from 'nuqs'
  * - `bbox` = explicit list filter snapshot (changes only when user applies/clears)
  */
 export function useStateOverviewMapState() {
-  const [state, setState] = useQueryStates(
-    {
-      mapCamera: osmStyleMapParamParser,
-      bboxFilter: stateMapBboxParser,
-    },
-    {
-      history: 'replace',
-      urlKeys: {
-        mapCamera: 'map',
-        bboxFilter: 'bbox',
-      },
-    },
-  )
+  const search = stateRouteApi.useSearch()
+  const navigate = useNavigate({ from: '/bundesland/$code' })
+  const mapCamera = parseOsmStyleMapSearchParam(search.map)
+  const bboxFilter = parseStateMapBboxSearchParam(search.bbox)
 
   return {
-    mapCamera: state.mapCamera as OsmStyleMapTriple | null,
-    bboxFilter: state.bboxFilter as StateMapBbox | null,
+    mapCamera,
+    bboxFilter,
     setMapCamera: (mapCamera: OsmStyleMapTriple | null) => {
-      void setState({ mapCamera })
+      void navigate({
+        replace: true,
+        search: (prev) => ({
+          ...prev,
+          map: mapCamera ? serializeOsmStyleMapSearchParam(mapCamera) : undefined,
+        }),
+      })
     },
     setBboxFilter: (bboxFilter: StateMapBbox | null) => {
-      void setState({ bboxFilter })
+      void navigate({
+        replace: true,
+        search: (prev) => ({
+          ...prev,
+          bbox: bboxFilter ? serializeStateMapBboxSearchParam(bboxFilter) : undefined,
+        }),
+      })
     },
     clearBboxFilter: () => {
-      void setState({ bboxFilter: null })
+      void navigate({
+        replace: true,
+        search: (prev) => ({
+          ...prev,
+          bbox: undefined,
+        }),
+      })
     },
   }
 }

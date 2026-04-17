@@ -14,7 +14,7 @@ export function OsmLocateErrBanner() {
   const err = useRouterState({
     select: (s): OsmLocateErrKey | null => {
       if (s.location.pathname !== '/') return null
-      const v = new URLSearchParams(s.location.search).get('osmLocateErr')
+      const v = s.location.search.osmLocateErr
       return v === 'invalid' || v === 'outside' || v === 'fetch' ? v : null
     },
   })

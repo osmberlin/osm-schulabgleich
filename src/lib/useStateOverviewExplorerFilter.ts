@@ -1,111 +1,135 @@
 import { STATE_FACET_MATCH_MODES } from './stateOverviewItemsSearch'
-import { parseAsArrayOf, parseAsString, parseAsStringLiteral, useQueryState } from 'nuqs'
-
-const nameScopeParser = parseAsStringLiteral(['both', 'official', 'osm'])
-  .withDefault('both')
-  .withOptions({ history: 'replace' })
-
-const matchModeItemParser = parseAsStringLiteral(STATE_FACET_MATCH_MODES)
-
-const matchModesParser = parseAsArrayOf(matchModeItemParser)
-  .withDefault([])
-  .withOptions({ history: 'replace' })
-
-const iscedItemParser = parseAsStringLiteral(['yes', 'no'])
-
-const iscedLevelsParser = parseAsArrayOf(iscedItemParser)
-  .withDefault([])
-  .withOptions({ history: 'replace' })
-
-const geoBoundaryItemParser = parseAsStringLiteral(['yes', 'no'])
-
-const geoBoundaryIssuesParser = parseAsArrayOf(geoBoundaryItemParser)
-  .withDefault([])
-  .withOptions({ history: 'replace' })
-
-/** Free-form bucket keys (Schulart strings may contain `;`). */
-const schoolKindsParser = parseAsArrayOf(parseAsString)
-  .withDefault([])
-  .withOptions({ history: 'replace' })
-
-const exploreQueryParser = parseAsString.withDefault('').withOptions({ history: 'replace' })
+import { stateRouteApi } from './stateRouteApi'
+import { useNavigate } from '@tanstack/react-router'
 
 /**
  * URL-backed explorer filters for Bundesland overview (itemsjs facets + name scope + full-text).
  */
 export function useStateOverviewExplorerFilter() {
-  const [exploreQ, setExploreQ] = useQueryState('lq', exploreQueryParser)
-  const [nameScope, setNameScope] = useQueryState('lscope', nameScopeParser)
-  const [matchModes, setMatchModes] = useQueryState('lmm', matchModesParser)
-  const [iscedLevels, setIscedLevels] = useQueryState('lisc', iscedLevelsParser)
-  const [geoBoundaryIssues, setGeoBoundaryIssues] = useQueryState('lgeo', geoBoundaryIssuesParser)
-  const [schoolKinds, setSchoolKinds] = useQueryState('lsk', schoolKindsParser)
+  const search = stateRouteApi.useSearch()
+  const navigate = useNavigate({ from: '/bundesland/$code' })
+  const exploreQ = search.lq ?? ''
+  const nameScope = search.lscope ?? 'both'
+  const matchModes = search.lmm ?? []
+  const iscedLevels = search.lisc ?? []
+  const geoBoundaryIssues = search.lgeo ?? []
+  const schoolKinds = search.lsk ?? []
+
+  function setExploreQ(nextValue: string) {
+    void navigate({
+      replace: true,
+      search: (prev) => ({
+        ...prev,
+        lq: nextValue === '' ? undefined : nextValue,
+      }),
+    })
+  }
+
+  function setNameScope(nextValue: 'both' | 'official' | 'osm') {
+    void navigate({
+      replace: true,
+      search: (prev) => ({
+        ...prev,
+        lscope: nextValue === 'both' ? undefined : nextValue,
+      }),
+    })
+  }
 
   function toggleMatchMode(mode: (typeof STATE_FACET_MATCH_MODES)[number], on: boolean) {
-    void setMatchModes((prev) => {
-      const cur = prev ?? []
-      const next = new Set(cur)
-      if (on) next.add(mode)
-      else next.delete(mode)
-      const arr = [...next]
-      return arr.length === 0 ? [] : arr
+    void navigate({
+      replace: true,
+      search: (prev) => {
+        const cur = prev.lmm ?? []
+        const next = new Set(cur)
+        if (on) next.add(mode)
+        else next.delete(mode)
+        const arr = [...next]
+        return {
+          ...prev,
+          lmm: arr.length === 0 ? undefined : arr,
+        }
+      },
     })
   }
 
   function toggleIscedLevel(level: 'yes' | 'no', on: boolean) {
-    void setIscedLevels((prev) => {
-      const cur = prev ?? []
-      const next = new Set(cur)
-      if (on) next.add(level)
-      else next.delete(level)
-      const arr = [...next]
-      return arr.length === 0 ? [] : arr
+    void navigate({
+      replace: true,
+      search: (prev) => {
+        const cur = prev.lisc ?? []
+        const next = new Set(cur)
+        if (on) next.add(level)
+        else next.delete(level)
+        const arr = [...next]
+        return {
+          ...prev,
+          lisc: arr.length === 0 ? undefined : arr,
+        }
+      },
     })
   }
 
   function toggleGeoBoundaryIssue(v: 'yes' | 'no', on: boolean) {
-    void setGeoBoundaryIssues((prev) => {
-      const cur = prev ?? []
-      const next = new Set(cur)
-      if (on) next.add(v)
-      else next.delete(v)
-      const arr = [...next]
-      return arr.length === 0 ? [] : arr
+    void navigate({
+      replace: true,
+      search: (prev) => {
+        const cur = prev.lgeo ?? []
+        const next = new Set(cur)
+        if (on) next.add(v)
+        else next.delete(v)
+        const arr = [...next]
+        return {
+          ...prev,
+          lgeo: arr.length === 0 ? undefined : arr,
+        }
+      },
     })
   }
 
   function toggleSchoolKind(kind: string, on: boolean) {
-    void setSchoolKinds((prev) => {
-      const cur = prev ?? []
-      const next = new Set(cur)
-      if (on) next.add(kind)
-      else next.delete(kind)
-      const arr = [...next]
-      return arr.length === 0 ? [] : arr
+    void navigate({
+      replace: true,
+      search: (prev) => {
+        const cur = prev.lsk ?? []
+        const next = new Set(cur)
+        if (on) next.add(kind)
+        else next.delete(kind)
+        const arr = [...next]
+        return {
+          ...prev,
+          lsk: arr.length === 0 ? undefined : arr,
+        }
+      },
     })
   }
 
   function resetExplorer() {
-    void setExploreQ('')
-    void setNameScope('both')
-    void setMatchModes([])
-    void setIscedLevels([])
-    void setGeoBoundaryIssues([])
-    void setSchoolKinds([])
+    void navigate({
+      replace: true,
+      search: (prev) => ({
+        ...prev,
+        lq: undefined,
+        lscope: undefined,
+        lmm: undefined,
+        lisc: undefined,
+        lgeo: undefined,
+        lsk: undefined,
+      }),
+    })
   }
 
   return {
-    exploreQ: exploreQ ?? '',
+    exploreQ,
     setExploreQ,
-    nameScope: nameScope ?? 'both',
+    nameScope,
     setNameScope,
-    matchModes: matchModes ?? [],
+    matchModes,
     toggleMatchMode,
-    iscedLevels: iscedLevels ?? [],
+    iscedLevels,
     toggleIscedLevel,
-    geoBoundaryIssues: geoBoundaryIssues ?? [],
+    geoBoundaryIssues,
     toggleGeoBoundaryIssue,
-    schoolKinds: schoolKinds ?? [],
+    schoolKinds,
     toggleSchoolKind,
     resetExplorer,
   }

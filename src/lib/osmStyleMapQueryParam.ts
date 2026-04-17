@@ -12,7 +12,7 @@ function serializeOsmStyleMapTriple(value: OsmStyleMapTriple): string {
   return `${zStr}/${lat.toFixed(5)}/${lon.toFixed(5)}`
 }
 
-/** Shared parse for `?map=` — same rules as nuqs `osmStyleMapParamParser`. */
+/** Shared parse for `?map=` used across index/state/detail routes. */
 export function parseOsmStyleMapSearchParam(
   value: string | null | undefined,
 ): OsmStyleMapTriple | null {

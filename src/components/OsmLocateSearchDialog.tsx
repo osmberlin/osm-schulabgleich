@@ -3,23 +3,20 @@ import { parseOsmIdInput } from '../lib/parseOsmIdInput'
 import { AppModal } from './AppModal'
 import { DialogTitle } from '@headlessui/react'
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
-import { useNavigate, useRouterState } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useId, useState } from 'react'
 
 export function OsmLocateSearchDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const navigate = useNavigate()
-  const osmFromUrl = useRouterState({
-    select: (s) => new URLSearchParams(s.location.search).get('osm')?.trim() ?? '',
-  })
   const [draft, setDraft] = useState('')
   const [localError, setLocalError] = useState<string | null>(null)
   const formId = useId()
 
   useEffect(() => {
     if (!open) return
-    setDraft(osmFromUrl)
+    setDraft('')
     setLocalError(null)
-  }, [open, osmFromUrl])
+  }, [open])
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault()

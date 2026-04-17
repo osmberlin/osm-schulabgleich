@@ -3,6 +3,7 @@ import { AppHeader } from './components/AppHeader'
 import { parseIndexRouteMapSearch, validateIndexRouteSearch } from './lib/indexRouteSearch'
 import { runOsmLocateRedirect } from './lib/osmLocateRedirect'
 import { resolveStateCodeForLonLat } from './lib/stateCodeForLonLatFromBoundaries'
+import { validateStateRouteSearch } from './lib/stateRouteSearch'
 import { AenderungenPage } from './pages/AenderungenPage'
 import { HomePage } from './pages/HomePage'
 import { NotFoundPage } from './pages/NotFoundPage'
@@ -19,7 +20,6 @@ import {
   Outlet,
   redirect,
 } from '@tanstack/react-router'
-import { NuqsAdapter } from 'nuqs/adapters/tanstack-router'
 import { useEffect } from 'react'
 
 function OsmAuthBootstrap() {
@@ -46,7 +46,7 @@ function PendingEditsBeforeUnload() {
 
 function RootLayout() {
   return (
-    <NuqsAdapter>
+    <>
       <OsmAuthBootstrap />
       <PendingEditsBeforeUnload />
       <div className="min-h-screen">
@@ -62,7 +62,7 @@ function RootLayout() {
         </main>
         <AppFooter />
       </div>
-    </NuqsAdapter>
+    </>
   )
 }
 
@@ -110,9 +110,10 @@ const aenderungenRoute = createRoute({
 const stateRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/bundesland/$code',
+  validateSearch: validateStateRouteSearch,
   component: StateLayout,
-  beforeLoad: async ({ location }) => {
-    const osm = new URLSearchParams(location.search).get('osm')?.trim() ?? ''
+  beforeLoad: async ({ search }) => {
+    const osm = typeof search.osm === 'string' ? search.osm.trim() : ''
     if (!osm) return
     await runOsmLocateRedirect(osm)
   },

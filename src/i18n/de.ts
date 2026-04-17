@@ -308,7 +308,6 @@ export const de = {
       },
       { name: 'MapLibre GL', href: 'https://maplibre.org/' },
       { name: 'react-map-gl', href: 'https://vis.gl/react-map-gl' },
-      { name: 'NUQS', href: 'https://nuqs.dev/' },
       { name: 'Tailwind CSS', href: 'https://tailwindcss.com/' },
       { name: 'TanStack Router', href: 'https://tanstack.com/router' },
       { name: 'TanStack Query', href: 'https://tanstack.com/query' },

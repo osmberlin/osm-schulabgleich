@@ -23,7 +23,7 @@ export type OsmLocateErrKey = 'invalid' | 'outside' | 'fetch'
 
 /**
  * Strict search merged for `/` (see TanStack Router `validateSearch`).
- * - **`map`** — same query key as nuqs on Bundesland pages.
+ * - **`map`** — same query key as Bundesland/detail routes.
  * - **`osm`** — OSM locate input; handled in `beforeLoad` like `map` (router redirect).
  * - **`osmLocateErr`** — short-lived after failed locate (banner on the start page).
  */
