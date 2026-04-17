@@ -1,6 +1,6 @@
 import { STATE_MATCH_CATEGORIES, type StateMatchCategory } from './stateMatchCategories'
 import { parseAsArrayOf, parseAsStringLiteral, useQueryState } from 'nuqs'
-import { useCallback, useMemo } from 'react'
+import { useMemo } from 'react'
 
 /** Mutable full list + stable reference for nuqs default / “all categories” URL value. */
 const DEFAULT_STATE_MATCH_CATEGORIES: StateMatchCategory[] = [...STATE_MATCH_CATEGORIES]
@@ -20,21 +20,18 @@ export function useStateCategoryFilter() {
 
   const enabledSet = useMemo(() => new Set(cats), [cats])
 
-  const setCategoryEnabled = useCallback(
-    (c: StateMatchCategory, enabled: boolean) => {
-      void setCats((prev) => {
-        const cur = prev ?? DEFAULT_STATE_MATCH_CATEGORIES
-        const next = new Set(cur)
-        if (enabled) next.add(c)
-        else next.delete(c)
-        const arr = DEFAULT_STATE_MATCH_CATEGORIES.filter((x) => next.has(x))
-        return arr.length === DEFAULT_STATE_MATCH_CATEGORIES.length
-          ? DEFAULT_STATE_MATCH_CATEGORIES
-          : arr
-      })
-    },
-    [setCats],
-  )
+  function setCategoryEnabled(c: StateMatchCategory, enabled: boolean) {
+    void setCats((prev) => {
+      const cur = prev ?? DEFAULT_STATE_MATCH_CATEGORIES
+      const next = new Set(cur)
+      if (enabled) next.add(c)
+      else next.delete(c)
+      const arr = DEFAULT_STATE_MATCH_CATEGORIES.filter((x) => next.has(x))
+      return arr.length === DEFAULT_STATE_MATCH_CATEGORIES.length
+        ? DEFAULT_STATE_MATCH_CATEGORIES
+        : arr
+    })
+  }
 
   return {
     /** Categories currently enabled (drives list + map; synced with URL). */

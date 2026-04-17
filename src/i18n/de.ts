@@ -39,6 +39,20 @@ export const de = {
     confirmTagChange: '{key}={from} wird zu {key}={to} geändert. Fortfahren?',
   },
 
+  osmLocate: {
+    openAria: 'OSM-Objekt auf der Karte suchen',
+    title: 'Bundesland-Karte: OSM-Objekt',
+    description:
+      'Node-, Weg- oder Relations-ID: z. B. w93504889, way/93504889 oder einen Link von openstreetmap.org.',
+    placeholder: 'w93504889 oder URL …',
+    submit: 'Karte anzeigen',
+    cancel: 'Schließen',
+    invalidFormat: 'Die Eingabe konnte nicht als OSM-Objekt gelesen werden.',
+    outsideGermany: 'Der Punkt liegt nicht in Deutschland.',
+    resolveFailed: 'Die Position konnte nicht geladen werden (Overpass oder Netzwerk).',
+    bannerDismiss: 'OK',
+  },
+
   breadcrumb: {
     navLabel: 'Brotkrumen-Navigation',
     home: 'Startseite',

@@ -13,7 +13,7 @@ import bbox from '@turf/bbox'
 import { featureCollection, point } from '@turf/helpers'
 import { getFeature, getAuthToken, configure, uploadChangeset, isLoggedIn } from 'osm-api'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { useCallback, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import MapGL, { Layer, Source } from 'react-map-gl/maplibre'
 
 function syncOsmAuthHeader() {
@@ -73,7 +73,7 @@ export function AenderungenPage() {
     return { longitude: lon, latitude: lat, zoom }
   }, [mapFc])
 
-  const onUpload = useCallback(async () => {
+  async function onUpload() {
     setFeedback(null)
     if (list.length === 0) return
     if (!isLoggedIn()) {
@@ -112,7 +112,7 @@ export function AenderungenPage() {
     } finally {
       setUploadBusy(false)
     }
-  }, [list, clearPending])
+  }
 
   const canUpload = list.length > 0 && Boolean(displayName) && !uploadBusy
 

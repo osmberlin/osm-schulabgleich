@@ -1,6 +1,5 @@
 import { STATE_FACET_MATCH_MODES } from './stateOverviewItemsSearch'
 import { parseAsArrayOf, parseAsString, parseAsStringLiteral, useQueryState } from 'nuqs'
-import { useCallback } from 'react'
 
 const nameScopeParser = parseAsStringLiteral(['both', 'official', 'osm'])
   .withDefault('both')
@@ -42,77 +41,58 @@ export function useStateOverviewExplorerFilter() {
   const [geoBoundaryIssues, setGeoBoundaryIssues] = useQueryState('lgeo', geoBoundaryIssuesParser)
   const [schoolKinds, setSchoolKinds] = useQueryState('lsk', schoolKindsParser)
 
-  const toggleMatchMode = useCallback(
-    (mode: (typeof STATE_FACET_MATCH_MODES)[number], on: boolean) => {
-      void setMatchModes((prev) => {
-        const cur = prev ?? []
-        const next = new Set(cur)
-        if (on) next.add(mode)
-        else next.delete(mode)
-        const arr = [...next]
-        return arr.length === 0 ? [] : arr
-      })
-    },
-    [setMatchModes],
-  )
+  function toggleMatchMode(mode: (typeof STATE_FACET_MATCH_MODES)[number], on: boolean) {
+    void setMatchModes((prev) => {
+      const cur = prev ?? []
+      const next = new Set(cur)
+      if (on) next.add(mode)
+      else next.delete(mode)
+      const arr = [...next]
+      return arr.length === 0 ? [] : arr
+    })
+  }
 
-  const toggleIscedLevel = useCallback(
-    (level: 'yes' | 'no', on: boolean) => {
-      void setIscedLevels((prev) => {
-        const cur = prev ?? []
-        const next = new Set(cur)
-        if (on) next.add(level)
-        else next.delete(level)
-        const arr = [...next]
-        return arr.length === 0 ? [] : arr
-      })
-    },
-    [setIscedLevels],
-  )
+  function toggleIscedLevel(level: 'yes' | 'no', on: boolean) {
+    void setIscedLevels((prev) => {
+      const cur = prev ?? []
+      const next = new Set(cur)
+      if (on) next.add(level)
+      else next.delete(level)
+      const arr = [...next]
+      return arr.length === 0 ? [] : arr
+    })
+  }
 
-  const toggleGeoBoundaryIssue = useCallback(
-    (v: 'yes' | 'no', on: boolean) => {
-      void setGeoBoundaryIssues((prev) => {
-        const cur = prev ?? []
-        const next = new Set(cur)
-        if (on) next.add(v)
-        else next.delete(v)
-        const arr = [...next]
-        return arr.length === 0 ? [] : arr
-      })
-    },
-    [setGeoBoundaryIssues],
-  )
+  function toggleGeoBoundaryIssue(v: 'yes' | 'no', on: boolean) {
+    void setGeoBoundaryIssues((prev) => {
+      const cur = prev ?? []
+      const next = new Set(cur)
+      if (on) next.add(v)
+      else next.delete(v)
+      const arr = [...next]
+      return arr.length === 0 ? [] : arr
+    })
+  }
 
-  const toggleSchoolKind = useCallback(
-    (kind: string, on: boolean) => {
-      void setSchoolKinds((prev) => {
-        const cur = prev ?? []
-        const next = new Set(cur)
-        if (on) next.add(kind)
-        else next.delete(kind)
-        const arr = [...next]
-        return arr.length === 0 ? [] : arr
-      })
-    },
-    [setSchoolKinds],
-  )
+  function toggleSchoolKind(kind: string, on: boolean) {
+    void setSchoolKinds((prev) => {
+      const cur = prev ?? []
+      const next = new Set(cur)
+      if (on) next.add(kind)
+      else next.delete(kind)
+      const arr = [...next]
+      return arr.length === 0 ? [] : arr
+    })
+  }
 
-  const resetExplorer = useCallback(() => {
+  function resetExplorer() {
     void setExploreQ('')
     void setNameScope('both')
     void setMatchModes([])
     void setIscedLevels([])
     void setGeoBoundaryIssues([])
     void setSchoolKinds([])
-  }, [
-    setExploreQ,
-    setNameScope,
-    setMatchModes,
-    setIscedLevels,
-    setGeoBoundaryIssues,
-    setSchoolKinds,
-  ])
+  }
 
   return {
     exploreQ: exploreQ ?? '',

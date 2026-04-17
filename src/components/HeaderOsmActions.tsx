@@ -7,8 +7,9 @@ import {
   useOsmDisplayName,
   usePendingEditCount,
 } from '../stores/osmAppStore'
+import { OsmLocateSearchTrigger } from './OsmLocateSearchDialog'
 import { Link } from '@tanstack/react-router'
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 
 /** Matches SchuleDetail / StateOverview headline total pills (light chip on dark header). */
 const HEADLINE_COUNT_PILL =
@@ -23,7 +24,7 @@ export function HeaderOsmActions() {
   const [loginBusy, setLoginBusy] = useState(false)
   const [loginError, setLoginError] = useState<string | null>(null)
 
-  const onLogin = useCallback(async () => {
+  async function onLogin() {
     if (!isOsmOAuthConfigured()) return
     setLoginBusy(true)
     setLoginError(null)
@@ -35,18 +36,24 @@ export function HeaderOsmActions() {
     } finally {
       setLoginBusy(false)
     }
-  }, [doLogin])
+  }
 
   const loggedIn = Boolean(displayName)
 
   const reviewObjectTitle = formatOsmReviewPendingObjectTooltip(pendingCount)
 
   if (!authInitialized) {
-    return <span className="shrink-0 text-xs text-zinc-500">{de.osm.authLoading}</span>
+    return (
+      <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
+        <OsmLocateSearchTrigger />
+        <span className="shrink-0 text-xs text-zinc-500">{de.osm.authLoading}</span>
+      </div>
+    )
   }
 
   return (
     <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
+      <OsmLocateSearchTrigger />
       {pendingCount > 0 && (
         <Link
           to="/aenderungen"

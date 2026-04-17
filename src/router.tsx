@@ -1,6 +1,7 @@
 import { AppFooter } from './components/AppFooter'
 import { AppHeader } from './components/AppHeader'
 import { parseIndexRouteMapSearch, validateIndexRouteSearch } from './lib/indexRouteSearch'
+import { runOsmLocateRedirect } from './lib/osmLocateRedirect'
 import { resolveStateCodeForLonLat } from './lib/stateCodeForLonLatFromBoundaries'
 import { AenderungenPage } from './pages/AenderungenPage'
 import { HomePage } from './pages/HomePage'
@@ -76,7 +77,11 @@ const indexRoute = createRoute({
   validateSearch: validateIndexRouteSearch,
   component: HomePage,
   beforeLoad: async ({ search }) => {
-    const triple = parseIndexRouteMapSearch(search)
+    const osm = typeof search.osm === 'string' ? search.osm.trim() : ''
+    if (osm) {
+      await runOsmLocateRedirect(osm)
+    }
+    const triple = parseIndexRouteMapSearch(search as Record<string, unknown>)
     if (!triple) return
     const [, lat, lon] = triple
     const code = await resolveStateCodeForLonLat(lon, lat)
@@ -106,6 +111,11 @@ const stateRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/bundesland/$code',
   component: StateLayout,
+  beforeLoad: async ({ location }) => {
+    const osm = new URLSearchParams(location.search).get('osm')?.trim() ?? ''
+    if (!osm) return
+    await runOsmLocateRedirect(osm)
+  },
 })
 
 const stateIndexRoute = createRoute({

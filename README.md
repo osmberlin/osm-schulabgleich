@@ -51,7 +51,8 @@ bun run pipeline:rebuild
 
 ### Startseite (`/`)
 
-- **`map`** (`?map=z/lat/lon`, wie bei openstreetmap.org): Leiten auf das passende `/bundesland/{code}` um.
+- **`map`** (`?map=z/lat/lon`, wie bei openstreetmap.org): Router **`beforeLoad`** leitet auf das passende **`/bundesland/{code}`** um (wie bei **`?osm=`** technisch gleiches Muster: keine globale Client-Logik nötig).
+- **`osm`:** OSM-Objekt als Freitext — z. B. `w93504889`, `way/93504889` oder Link von **openstreetmap.org** / **osm.org**. **`beforeLoad`** lädt die Position per **Overpass**, bestimmt das **Bundesland** und leitet zu **`/bundesland/{code}?map=z/lat/lon`** um (**`bbox`** wird nicht gesetzt). **`osm`** steht danach nicht mehr in der URL. Geht auch mit **`?osm=`** unter **`/bundesland/{code}`** (gleicher Redirect). Die **Lupen**-Suche in der Kopfzeile navigiert zu **`/?osm=…`** und löst denselben Ablauf aus.
 
 ### Bundesland-Übersicht (`/bundesland/{code}`)
 

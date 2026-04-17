@@ -3,6 +3,7 @@ import { HomeHeader } from '../components/home/HomeHeader'
 import { HomeHistorySection } from '../components/home/HomeHistorySection'
 import { HomeOfficialSourcesSection } from '../components/home/HomeOfficialSourcesSection'
 import { HomeStateList } from '../components/home/HomeStateList'
+import { OsmLocateErrBanner } from '../components/OsmLocateErrBanner'
 import { de } from '../i18n/de'
 import { germanyHistoryFromRuns } from '../lib/matchHistoryFromRuns'
 import { runsJsonlUrl, summaryJsonUrl } from '../lib/paths'
@@ -64,6 +65,8 @@ export function HomePage() {
   return (
     <div className="mx-auto max-w-5xl p-6 pb-16">
       <HomeHeader />
+
+      <OsmLocateErrBanner />
 
       {q.isLoading && <p className="text-zinc-400">{de.home.loading}</p>}
       {q.isError && <p className="text-amber-200">{de.home.error}</p>}

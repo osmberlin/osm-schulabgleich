@@ -19,16 +19,29 @@ export function parseIndexRouteMapSearch(
   return parseOsmStyleMapSearchParam(raw)
 }
 
+export type OsmLocateErrKey = 'invalid' | 'outside' | 'fetch'
+
 /**
  * Strict search merged for `/` (see TanStack Router `validateSearch`).
- * Only **`map`** — same query key as nuqs on Bundesland pages — so nothing extra is serialized
- * to the URL (no duplicate `mapCamera=` param).
+ * - **`map`** — same query key as nuqs on Bundesland pages.
+ * - **`osm`** — OSM locate input; handled in `beforeLoad` like `map` (router redirect).
+ * - **`osmLocateErr`** — short-lived after failed locate (banner on the start page).
  */
 export type IndexRouteStrictSearch = {
   map?: string
+  osm?: string
+  osmLocateErr?: OsmLocateErrKey
 }
 
 export function validateIndexRouteSearch(search: Record<string, unknown>): IndexRouteStrictSearch {
   const triple = parseIndexRouteMapSearch(search)
-  return triple ? { map: serializeOsmStyleMapSearchParam(triple) } : {}
+  const osmRaw = firstSearchString(search.osm)
+  const errRaw = firstSearchString(search.osmLocateErr)
+  const out: IndexRouteStrictSearch = {}
+  if (triple) out.map = serializeOsmStyleMapSearchParam(triple)
+  if (osmRaw !== undefined && osmRaw.trim() !== '') out.osm = osmRaw.trim()
+  if (errRaw === 'invalid' || errRaw === 'outside' || errRaw === 'fetch') {
+    out.osmLocateErr = errRaw
+  }
+  return out
 }
