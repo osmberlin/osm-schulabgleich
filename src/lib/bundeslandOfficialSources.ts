@@ -50,7 +50,16 @@ function seed(
 export const BUNDESLAND_OFFICIAL_SOURCES = {
   BW: seed('https://lobw.kultus-bw.de/didsuche/'),
   BY: seed(
-    'https://gdiserv.bayern.de/srv112940/services/schulstandortebayern-wfs?SERVICE=WFS&REQUEST=GetCapabilities',
+    'https://geoportal.bayern.de/csw/gdi?service=CSW&version=2.0.2&request=GetRecords&namespace=xmlns(csw=http://www.opengis.net/cat/csw/2.0.2),xmlns(gmd=http://www.isotc211.org/2005/gmd)&resultType=results&outputFormat=application/xml&outputSchema=http://www.isotc211.org/2005/gmd&startPosition=1&maxRecords=1&typeNames=csw:Record&elementSetName=full&constraintLanguage=CQL_TEXT&constraint_language_version=1.1.0&constraint=csw:ResourceIdentifier=%27*91c52669-956d-44c9-8fbf-440b75fcf8a8*%27',
+    {
+      officialSourceRefUrl:
+        'https://gdiserv.bayern.de/srv112940/services/schulstandortebayern-wfs?SERVICE=WFS&REQUEST=GetCapabilities',
+      officialLicense: 'CC BY 4.0',
+      osmCompatible: 'unknown',
+      likelyNote: 'Unklar ob es ein Waiver gibt um CC BY 4.0 für OSM nutzen zu können.',
+      lastCheckedAt: '2026-04-17',
+      lastCheckedByGithub: 'vizsim',
+    },
   ),
   BE: seed('https://daten.berlin.de/datensaetze/schulen-wfs-ebc64e18', {
     officialLicense: 'DL-DE Zero 2.0',
