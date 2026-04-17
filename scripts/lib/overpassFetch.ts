@@ -1,4 +1,5 @@
 import { injectSchoolSiteRelationsFromOverpass } from './osmOverpassSchoolSites'
+import { featureCollection } from '@turf/helpers'
 import type { Feature, FeatureCollection } from 'geojson'
 import osm2geojson from 'osm2geojson-ultra'
 import { z } from 'zod'
@@ -84,7 +85,7 @@ async function fetchSchoolsOsmOverpassQuery(query: string): Promise<OverpassOk> 
         continue
       }
       if (converted.type === 'Feature') {
-        gjRaw = { type: 'FeatureCollection', features: [converted as Feature] }
+        gjRaw = featureCollection([converted as Feature])
       } else if (converted.type === 'FeatureCollection') {
         gjRaw = converted as FeatureCollection
       } else {

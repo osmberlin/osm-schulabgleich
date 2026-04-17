@@ -1,5 +1,6 @@
 import { type StateCode, stateCodeFromSchoolId } from '../../src/lib/stateConfig'
 import type { JedeschuleSchool } from './jedeschuleCsv'
+import { featureCollection } from '@turf/helpers'
 import type { FeatureCollection } from 'geojson'
 import path from 'node:path'
 
@@ -35,9 +36,8 @@ export function officialGeojsonForState(
 
 /** Nationwide FeatureCollection; `properties.state` from school id prefix when valid. */
 export function officialGeojsonNational(schools: JedeschuleSchool[]) {
-  return {
-    type: 'FeatureCollection' as const,
-    features: schools.map((s) => {
+  return featureCollection(
+    schools.map((s) => {
       const lat = s.latitude ?? null
       const lon = s.longitude ?? null
       const state = stateCodeFromSchoolId(s.id)
@@ -51,7 +51,7 @@ export function officialGeojsonNational(schools: JedeschuleSchool[]) {
           : null,
       }
     }),
-  }
+  )
 }
 
 export async function readJsonFile<T>(filePath: string): Promise<T | null> {

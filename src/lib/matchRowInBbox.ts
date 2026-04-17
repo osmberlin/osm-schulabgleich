@@ -1,6 +1,7 @@
 import type { schoolsMatchRowSchema } from './schemas'
 import type { StateMapBbox } from './useStateMapBbox'
 import { parseJedeschuleLonLatFromRecord, parseMatchRowOsmCentroidLonLat } from './zodGeo'
+import { featureCollection } from '@turf/helpers'
 import type { Feature, FeatureCollection, Point } from 'geojson'
 import type { z } from 'zod'
 
@@ -173,7 +174,7 @@ export function matchesToOverviewMapPoints(
       geometry: { type: 'Point', coordinates: ll },
     })
   }
-  return { type: 'FeatureCollection', features: spreadCoincidentMapPointFeatures(features) }
+  return featureCollection(spreadCoincidentMapPointFeatures(features))
 }
 
 function pointInStateMapBbox(lon: number, lat: number, bbox: StateMapBbox): boolean {

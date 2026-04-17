@@ -1,6 +1,12 @@
 import { de } from '../i18n/de'
 import { boundsToBboxParam } from '../lib/mapBounds'
 import {
+  bboxWsenToPolygonFeature,
+  buildMapDimMaskFeature,
+  LAND_BOUNDARY_LINE_PAINT,
+  MAP_DIM_MASK_FILL,
+} from '../lib/mapDimMask'
+import {
   paintMatchCatCore,
   paintMatchCatHalo,
   paintMatchCatSortKey,
@@ -11,8 +17,8 @@ import {
   hideVectorBasemapBuildings,
   OPENFREEMAP_STYLE,
 } from '../lib/openFreeMapStyle'
-import type { OsmStyleMapTriple } from '../lib/osmStyleMapQueryParam'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import type { OsmStyleMapTriple } from '../lib/osmStyleMapQueryParam'
 import { type StateCode, STATE_BOUNDS, STATE_MAP_CENTER } from '../lib/stateConfig'
 import { STATE_MATCH_CATEGORIES, type StateMatchCategory } from '../lib/stateMatchCategories'
 import type { StateMapBbox } from '../lib/useStateMapBbox'
@@ -22,7 +28,7 @@ import type { CircleLayerSpecification } from '@maplibre/maplibre-gl-style-spec'
 import bbox from '@turf/bbox'
 import type { Feature, FeatureCollection, MultiPolygon, Polygon } from 'geojson'
 import type { FilterSpecification } from 'maplibre-gl'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import MapGL, {
   Layer,
   type MapLayerMouseEvent,
@@ -79,12 +85,6 @@ function matchCategoryFilter(
   return ['in', ['get', 'matchCat'], ['literal', [...enabled]]]
 }
 
-const stateBoundaryLinePaint = {
-  'line-color': '#000000',
-  'line-width': 2,
-  'line-opacity': 0.95,
-}
-
 export function StateMap({
   matchPoints,
   height = 420,
@@ -113,49 +113,46 @@ export function StateMap({
   /** When set, halo points are hoverable and clickable (navigate to Schule detail). */
   onSchoolClick?: (matchKey: string) => void
 }) {
-  const bounds = useMemo(() => {
-    try {
-      if (matchPoints.features.length === 0) return null
-      const b = bbox(matchPoints)
-      return b as [number, number, number, number]
-    } catch {
-      return null
+  let bounds: [number, number, number, number] | null = null
+  try {
+    if (matchPoints.features.length > 0) {
+      bounds = bbox(matchPoints) as [number, number, number, number]
     }
-  }, [matchPoints])
+  } catch {
+    bounds = null
+  }
 
-  const frameBounds = useMemo((): [[number, number], [number, number]] | null => {
-    if (bounds) return lngLatBoundsFromTurfBbox(bounds)
-    const code = stateCode as StateCode | undefined
-    if (code && code in STATE_BOUNDS) return lngLatBoundsFromTurfBbox(STATE_BOUNDS[code])
-    return null
-  }, [bounds, stateCode])
+  const frameBounds: [[number, number], [number, number]] | null = bounds
+    ? lngLatBoundsFromTurfBbox(bounds)
+    : (() => {
+        const code = stateCode as StateCode | undefined
+        if (code && code in STATE_BOUNDS) return lngLatBoundsFromTurfBbox(STATE_BOUNDS[code])
+        return null
+      })()
 
-  const fitTargetBounds = useMemo((): [[number, number], [number, number]] | null => {
-    if (bboxFilter) {
-      return lngLatBoundsFromTurfBbox([bboxFilter[0], bboxFilter[1], bboxFilter[2], bboxFilter[3]])
-    }
-    return frameBounds
-  }, [bboxFilter, frameBounds])
+  const fitTargetBounds: [[number, number], [number, number]] | null = bboxFilter
+    ? lngLatBoundsFromTurfBbox([bboxFilter[0], bboxFilter[1], bboxFilter[2], bboxFilter[3]])
+    : frameBounds
 
-  const initialViewState = useMemo(() => {
-    if (mapCamera) {
-      const [zoom, lat, lon] = mapCamera
-      return { longitude: lon, latitude: lat, zoom, pitch: 0, bearing: 0 }
-    }
-    if (fitTargetBounds) {
-      return {
-        bounds: fitTargetBounds,
-        fitBoundsOptions: { padding: FIT_PADDING, maxZoom: FIT_MAX_ZOOM },
-      }
-    }
-    const code = stateCode as StateCode | undefined
-    if (code && code in STATE_MAP_CENTER) {
-      const [lon, lat] = STATE_MAP_CENTER[code]
-      const zoom = code === 'BE' || code === 'HH' || code === 'HB' ? 10 : 6.5
-      return { longitude: lon, latitude: lat, zoom, pitch: 0, bearing: 0 }
-    }
-    return { longitude: 10.5, latitude: 51.2, zoom: 5.5, pitch: 0, bearing: 0 }
-  }, [fitTargetBounds, stateCode, mapCamera])
+  const initialViewState = mapCamera
+    ? (() => {
+        const [zoom, lat, lon] = mapCamera
+        return { longitude: lon, latitude: lat, zoom, pitch: 0, bearing: 0 }
+      })()
+    : fitTargetBounds
+      ? {
+          bounds: fitTargetBounds,
+          fitBoundsOptions: { padding: FIT_PADDING, maxZoom: FIT_MAX_ZOOM },
+        }
+      : (() => {
+          const code = stateCode as StateCode | undefined
+          if (code && code in STATE_MAP_CENTER) {
+            const [lon, lat] = STATE_MAP_CENTER[code]
+            const zoom = code === 'BE' || code === 'HH' || code === 'HB' ? 10 : 6.5
+            return { longitude: lon, latitude: lat, zoom, pitch: 0, bearing: 0 }
+          }
+          return { longitude: 10.5, latitude: 51.2, zoom: 5.5, pitch: 0, bearing: 0 }
+        })()
 
   const [currentBbox, setCurrentBbox] = useState<StateMapBbox | null>(null)
   const [hoveredPointEntries, setHoveredPointEntries] = useState<
@@ -165,13 +162,17 @@ export function StateMap({
   const hasFilterBbox = bboxFilter != null
   const bboxToolbarEnabled = onApplyBboxFilter != null && onClearBboxFilter != null
 
-  const catFilter = useMemo(() => matchCategoryFilter(enabledCategories), [enabledCategories])
+  const catFilter = matchCategoryFilter(enabledCategories)
 
-  const pointFilter = useMemo((): FilterSpecification => {
-    const geom: FilterSpecification = ['==', ['geometry-type'], 'Point']
-    if (!catFilter) return geom
-    return ['all', geom, catFilter] as FilterSpecification
-  }, [catFilter])
+  const geomOnly: FilterSpecification = ['==', ['geometry-type'], 'Point']
+  const pointFilter: FilterSpecification = catFilter
+    ? (['all', geomOnly, catFilter] as FilterSpecification)
+    : geomOnly
+
+  const cutout: Feature<Polygon | MultiPolygon> | null = bboxFilter
+    ? bboxWsenToPolygonFeature(bboxFilter)
+    : (stateBoundary ?? null)
+  const overviewMaskFeature = buildMapDimMaskFeature(cutout)
 
   function handleMove(e: ViewStateChangeEvent) {
     const b = boundsToBboxParam(e.target.getBounds())
@@ -261,9 +262,21 @@ export function StateMap({
         onMoveEnd={handleMoveEnd}
         {...schoolInteractionProps}
       >
+        {overviewMaskFeature ? (
+          <Source id="state-overview-mask" type="geojson" data={overviewMaskFeature}>
+            <Layer
+              id="state-overview-mask-fill"
+              type="fill"
+              paint={{
+                'fill-color': MAP_DIM_MASK_FILL,
+                'fill-opacity': 1,
+              }}
+            />
+          </Source>
+        ) : null}
         {stateBoundary && (
           <Source id="land-boundary-outline" type="geojson" data={stateBoundary}>
-            <Layer id="land-boundary-line" type="line" paint={stateBoundaryLinePaint} />
+            <Layer id="land-boundary-line" type="line" paint={LAND_BOUNDARY_LINE_PAINT} />
           </Source>
         )}
         <Source id="match-overview-points" type="geojson" data={matchPoints}>

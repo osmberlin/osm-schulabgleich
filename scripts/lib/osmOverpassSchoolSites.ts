@@ -1,3 +1,4 @@
+import { featureCollection } from '@turf/helpers'
 import type { FeatureCollection } from 'geojson'
 
 type OverpassMember = {
@@ -57,5 +58,5 @@ export function injectSchoolSiteRelationsFromOverpass(
     return String(amenity) !== 'school'
   })
 
-  return { type: 'FeatureCollection', features: filtered }
+  return featureCollection(filtered)
 }

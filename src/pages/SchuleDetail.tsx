@@ -18,6 +18,11 @@ import { formatDeInteger } from '../lib/formatNumber'
 import { JEDESCHULE_DUPLICATE_GROUP_SIZE_KEY } from '../lib/jedeschuleDuplicateGroup'
 import { jedeschuleSchoolJsonUrl } from '../lib/jedeschuleUrls'
 import { boundsToBboxParam } from '../lib/mapBounds'
+import {
+  buildMapDimMaskFeature,
+  LAND_BOUNDARY_LINE_PAINT,
+  MAP_DIM_MASK_FILL,
+} from '../lib/mapDimMask'
 import { DETAIL_MAP_OFFICIAL, DETAIL_MAP_OSM } from '../lib/matchCategoryTheme'
 import { MATCH_RADIUS_KM, MATCH_RADIUS_M } from '../lib/matchRadius'
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -57,11 +62,10 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import bbox from '@turf/bbox'
 import circle from '@turf/circle'
-import difference from '@turf/difference'
 import distance from '@turf/distance'
 import { featureCollection, point } from '@turf/helpers'
-import type { Feature, FeatureCollection, MultiPolygon, Polygon } from 'geojson'
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import type { Feature, FeatureCollection, Polygon } from 'geojson'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import MapGL, { Layer, type MapLayerMouseEvent, type MapRef, Source } from 'react-map-gl/maplibre'
 
 /** Padding around the two compared geometries; maxZoom avoids excessive zoom when points are very close. */
@@ -535,26 +539,30 @@ export function SchuleDetail() {
     queryFn: () => fetchStateSchoolsBundle(code),
   })
 
-  const row = useMemo(
-    () => q.data?.matches.find((r) => r.key === keyDecoded) ?? null,
-    [q.data, keyDecoded],
-  )
+  const row = q.data?.matches.find((r) => r.key === keyDecoded) ?? null
 
-  const jedeschuleDuplicateGroupSize = useMemo(() => {
-    const raw = row?.officialProperties?.[JEDESCHULE_DUPLICATE_GROUP_SIZE_KEY]
-    return typeof raw === 'number' && raw > 1 ? raw : null
-  }, [row])
+  const jedeschuleDuplicateGroupSizeRaw =
+    row?.officialProperties?.[JEDESCHULE_DUPLICATE_GROUP_SIZE_KEY]
+  const jedeschuleDuplicateGroupSize =
+    typeof jedeschuleDuplicateGroupSizeRaw === 'number' && jedeschuleDuplicateGroupSizeRaw > 1
+      ? jedeschuleDuplicateGroupSizeRaw
+      : null
 
-  const errorOutsideBoundary = useMemo(() => {
-    if (!row) return null
+  let errorOutsideBoundary: ReturnType<typeof parseErrorOutsideBoundaryFromOfficialProps> = null
+  if (row) {
     const fromMain = parseErrorOutsideBoundaryFromOfficialProps(row.officialProperties ?? null)
-    if (fromMain) return fromMain
-    for (const s of row.ambiguousOfficialSnapshots ?? []) {
-      const p = parseErrorOutsideBoundaryFromOfficialProps(s.properties ?? null)
-      if (p) return p
+    if (fromMain) {
+      errorOutsideBoundary = fromMain
+    } else {
+      for (const s of row.ambiguousOfficialSnapshots ?? []) {
+        const p = parseErrorOutsideBoundaryFromOfficialProps(s.properties ?? null)
+        if (p) {
+          errorOutsideBoundary = p
+          break
+        }
+      }
     }
-    return null
-  }, [row])
+  }
 
   const stateLabelDe =
     code && STATE_ORDER.includes(code as StateCode) ? STATE_LABEL_DE[code as StateCode] : code
@@ -564,32 +572,36 @@ export function SchuleDetail() {
    * Koordinaten — damit z. B. Grundschule-Vorschläge und Kartenmarker auch ohne
    * gespeicherten OSM-Schwerpunkt im JSON funktionieren.
    */
-  const mapOsmCentroid = useMemo((): readonly [number, number] | null => {
-    if (!q.data || !row) return null
-    const fromRow = parseMatchRowOsmCentroidLonLat(row)
-    if (fromRow) return fromRow
-    const of = findOsmFeature(q.data.osm, row.osmType, row.osmId)
-    if (of?.geometry) {
-      const c = osmGeometryCentroidLonLat(of.geometry)
-      if (c) return c
-    }
-    const fromOfficialProps = parseJedeschuleLonLatFromRecord(row.officialProperties ?? undefined)
-    if (fromOfficialProps) return fromOfficialProps
-    if (row.officialId) {
-      const fOff = findOfficialSchoolFeature(q.data.official, row.officialId)
-      if (fOff?.geometry) {
-        if (fOff.geometry.type === 'Point') {
-          const [lon, lat] = fOff.geometry.coordinates
-          return [lon, lat] as const
-        }
-        const cOff = osmGeometryCentroidLonLat(fOff.geometry)
-        if (cOff) return cOff
-      }
-    }
-    return null
-  }, [q.data, row])
+  const mapOsmCentroid: readonly [number, number] | null =
+    !q.data || !row
+      ? null
+      : (() => {
+          const fromRow = parseMatchRowOsmCentroidLonLat(row)
+          if (fromRow) return fromRow
+          const of = findOsmFeature(q.data.osm, row.osmType, row.osmId)
+          if (of?.geometry) {
+            const c = osmGeometryCentroidLonLat(of.geometry)
+            if (c) return c
+          }
+          const fromOfficialProps = parseJedeschuleLonLatFromRecord(
+            row.officialProperties ?? undefined,
+          )
+          if (fromOfficialProps) return fromOfficialProps
+          if (row.officialId) {
+            const fOff = findOfficialSchoolFeature(q.data.official, row.officialId)
+            if (fOff?.geometry) {
+              if (fOff.geometry.type === 'Point') {
+                const [lon, lat] = fOff.geometry.coordinates
+                return [lon, lat] as const
+              }
+              const cOff = osmGeometryCentroidLonLat(fOff.geometry)
+              if (cOff) return cOff
+            }
+          }
+          return null
+        })()
 
-  const ambiguousCandidates = useMemo(() => {
+  const ambiguousCandidates = (() => {
     if (!q.data || !row?.ambiguousOfficialIds?.length || row.category !== 'match_ambiguous') {
       return []
     }
@@ -628,14 +640,11 @@ export function SchuleDetail() {
         showOfficialCoordsMissing: officialLonLat == null,
       }
     })
-  }, [q.data, row, mapOsmCentroid])
+  })()
 
-  const ambiguousNoLocalGeoFeature = useMemo(
-    () => ambiguousCandidates.some((c) => !c.hasOfficialFeature),
-    [ambiguousCandidates],
-  )
+  const ambiguousNoLocalGeoFeature = ambiguousCandidates.some((c) => !c.hasOfficialFeature)
 
-  const detailFc: FeatureCollection | null = useMemo(() => {
+  const detailFc: FeatureCollection | null = (() => {
     if (!q.data || !row) return null
     const features: Feature[] = []
     if (row.ambiguousOfficialIds && row.ambiguousOfficialIds.length > 0) {
@@ -664,50 +673,36 @@ export function SchuleDetail() {
         geometry: { type: 'Point', coordinates: [clon, clat] },
       })
     }
-    return features.length ? { type: 'FeatureCollection', features } : null
-  }, [q.data, row, mapOsmCentroid])
+    return features.length ? featureCollection(features) : null
+  })()
 
   /** Abgleichsradius um den OSM-Schwerpunkt (wie `MATCH_RADIUS_KM` im Matcher). */
-  const compareRadiusRing = useMemo((): Feature | null => {
-    if (!mapOsmCentroid) return null
+  let compareRadiusRing: Feature<Polygon> | null = null
+  if (mapOsmCentroid) {
     const [lon, lat] = mapOsmCentroid
     const ring = circle([lon, lat], MATCH_RADIUS_KM, { steps: 64, units: 'kilometers' })
     ring.properties = { ...ring.properties, _mapDetail: 'compareRadius' as const }
-    return ring
-  }, [mapOsmCentroid])
+    compareRadiusRing = ring as Feature<Polygon>
+  }
 
-  /** Bundeslandfläche abzüglich Kreis — Abdunklung außerhalb des Vergleichsradius (Innen unverdeckt). */
-  const maskShellFeature = useMemo((): Feature | null => {
-    if (!q.data?.boundary || !compareRadiusRing) return null
-    const b = q.data.boundary
-    if (b.geometry?.type !== 'Polygon' && b.geometry?.type !== 'MultiPolygon') return null
-    const boundaryFeat = b as Feature<Polygon | MultiPolygon>
-    const circleFeat = compareRadiusRing as Feature<Polygon>
-    try {
-      const shell = difference(featureCollection([boundaryFeat, circleFeat]))
-      if (!shell) return null
-      return {
-        ...shell,
-        properties: { ...shell.properties, _mapDetail: 'maskShell' as const },
-      }
-    } catch {
-      return null
-    }
-  }, [q.data?.boundary, compareRadiusRing])
+  /** Europe minus Vergleichsradius — gleiche Logik wie Bundeslandkarte (`mapDimMask`). */
+  const detailMapMaskFeature = buildMapDimMaskFeature(compareRadiusRing)
 
-  const connectorLineFeatures = useMemo((): Feature[] => {
-    if (!mapOsmCentroid || !q.data || !row) return []
-    const [fromLon, fromLat] = mapOsmCentroid
-    return detailMapConnectorLines({
-      officialFc: q.data.official as FeatureCollection,
-      matchRow: row,
-      fromLon,
-      fromLat,
-      mapDetail: 'connector',
-    })
-  }, [mapOsmCentroid, q.data, row])
+  const connectorLineFeatures: Feature[] =
+    !mapOsmCentroid || !q.data || !row
+      ? []
+      : (() => {
+          const [fromLon, fromLat] = mapOsmCentroid
+          return detailMapConnectorLines({
+            officialFc: q.data.official as FeatureCollection,
+            matchRow: row,
+            fromLon,
+            fromLat,
+            mapDetail: 'connector',
+          })
+        })()
 
-  const hoverRelationLineFeatures = useMemo((): Feature[] => {
+  const hoverRelationLineFeatures: Feature[] = (() => {
     if (!q.data || !row || !hoveredMapLabel) return []
     const officialFc = q.data.official as FeatureCollection
     if (hoveredMapLabel.kind === 'osm-other') {
@@ -753,12 +748,12 @@ export function SchuleDetail() {
       ]
     }
     return []
-  }, [hoveredMapLabel, q.data, row, mapOsmCentroid])
+  })()
 
   /** True coordinates (one row per `matchKey`); bbox filtering uses these, not display spread. */
-  const allOtherSchoolPointsRaw = useMemo((): FeatureCollection => {
+  const allOtherSchoolPointsRaw: FeatureCollection = (() => {
     const features: Feature[] = []
-    if (!q.data) return { type: 'FeatureCollection', features }
+    if (!q.data) return featureCollection(features)
     const officialFc = q.data.official as FeatureCollection
     const officialLonLatIndex = officialFc?.features?.length
       ? buildOfficialSchoolLonLatIndex(officialFc)
@@ -781,69 +776,74 @@ export function SchuleDetail() {
         geometry: { type: 'Point', coordinates: [lon, lat] },
       })
     }
-    return { type: 'FeatureCollection', features }
-  }, [q.data, keyDecoded])
+    return featureCollection(features)
+  })()
 
-  const otherSchoolPointsInViewport = useMemo((): FeatureCollection => {
-    if (!detailMapBbox) return { type: 'FeatureCollection', features: [] }
-    const [w, s, e, n] = detailMapBbox
-    const inView = allOtherSchoolPointsRaw.features.filter((f) => {
-      if (f.geometry?.type !== 'Point') return false
-      const [lon, lat] = f.geometry.coordinates
-      return lon >= w && lon <= e && lat >= s && lat <= n
-    })
-    return {
-      type: 'FeatureCollection',
-      features: spreadCoincidentMapPointFeatures(inView),
-    }
-  }, [allOtherSchoolPointsRaw, detailMapBbox])
+  const otherSchoolPointsInViewport: FeatureCollection = !detailMapBbox
+    ? featureCollection([])
+    : (() => {
+        const [w, s, e, n] = detailMapBbox
+        const inView = allOtherSchoolPointsRaw.features.filter((f) => {
+          if (f.geometry?.type !== 'Point') return false
+          const [lon, lat] = f.geometry.coordinates
+          return lon >= w && lon <= e && lat >= s && lat <= n
+        })
+        return featureCollection(spreadCoincidentMapPointFeatures(inView))
+      })()
 
-  /** Alles für die Karte inkl. Maske und Verbindungslinien. */
-  const detailMapFc = useMemo((): FeatureCollection | null => {
-    if (!detailFc) return null
-    const features: Feature[] = [...detailFc.features]
-    if (maskShellFeature) features.push(maskShellFeature)
-    features.push(...connectorLineFeatures)
-    features.push(...hoverRelationLineFeatures)
-    return { type: 'FeatureCollection', features }
-  }, [connectorLineFeatures, detailFc, hoverRelationLineFeatures, maskShellFeature])
+  /** Karteninhalt ohne Abdunklungsmaske (Maske eigene Source wie Bundeslandkarte). */
+  const detailMapFc: FeatureCollection | null = !detailFc
+    ? null
+    : featureCollection([
+        ...detailFc.features,
+        ...connectorLineFeatures,
+        ...hoverRelationLineFeatures,
+      ])
+
+  const detailMapPolygonFc: FeatureCollection | null = !detailMapFc
+    ? null
+    : featureCollection(detailMapFc.features.filter((f) => f.geometry.type !== 'Point'))
+
+  const detailMapPointsFc: FeatureCollection | null = !detailMapFc
+    ? null
+    : featureCollection(detailMapFc.features.filter((f) => f.geometry.type === 'Point'))
 
   /** fitBounds ohne Bundesland-Maske (sonst zu weit herausgezoomt). */
-  const detailMapBoundsSourceFc = useMemo((): FeatureCollection | null => {
-    if (!detailFc) return null
-    const features: Feature[] = [...detailFc.features]
-    if (compareRadiusRing) features.push(compareRadiusRing)
-    features.push(...connectorLineFeatures)
-    return { type: 'FeatureCollection', features }
-  }, [compareRadiusRing, connectorLineFeatures, detailFc])
+  const detailMapBoundsSourceFc: FeatureCollection | null = !detailFc
+    ? null
+    : featureCollection([
+        ...detailFc.features,
+        ...(compareRadiusRing ? [compareRadiusRing] : []),
+        ...connectorLineFeatures,
+      ])
 
   /** Bbox of the official point + OSM feature + Abgleichsradius (unsichtbar, nur für Zoom). */
-  const bounds = useMemo(() => {
-    if (!detailMapBoundsSourceFc || detailMapBoundsSourceFc.features.length === 0) return null
+  let bounds: [number, number, number, number] | null = null
+  if (detailMapBoundsSourceFc && detailMapBoundsSourceFc.features.length > 0) {
     try {
-      return bbox(detailMapBoundsSourceFc) as [number, number, number, number]
+      bounds = bbox(detailMapBoundsSourceFc) as [number, number, number, number]
     } catch {
-      return null
+      bounds = null
     }
-  }, [detailMapBoundsSourceFc])
+  }
 
-  const detailInitialViewState = useMemo(() => {
-    if (detailMapUrl) {
-      const [zoom, lat, lon] = detailMapUrl
-      return { latitude: lat, longitude: lon, zoom, pitch: 0, bearing: 0 }
-    }
-    if (!bounds) return { latitude: 51, longitude: 10, zoom: 14, pitch: 0, bearing: 0 }
-    return {
-      bounds: [
-        [bounds[0], bounds[1]],
-        [bounds[2], bounds[3]],
-      ] as [[number, number], [number, number]],
-      fitBoundsOptions: {
-        padding: DETAIL_MAP_PADDING,
-        maxZoom: DETAIL_MAP_MAX_ZOOM,
-      },
-    }
-  }, [bounds, detailMapUrl])
+  const detailInitialViewState = detailMapUrl
+    ? (() => {
+        const [zoom, lat, lon] = detailMapUrl
+        return { latitude: lat, longitude: lon, zoom, pitch: 0, bearing: 0 }
+      })()
+    : !bounds
+      ? { latitude: 51, longitude: 10, zoom: 14, pitch: 0, bearing: 0 }
+      : {
+          bounds: [
+            [bounds[0], bounds[1]],
+            [bounds[2], bounds[3]],
+          ] as [[number, number], [number, number]],
+          fitBoundsOptions: {
+            padding: DETAIL_MAP_PADDING,
+            maxZoom: DETAIL_MAP_MAX_ZOOM,
+          },
+        }
 
   const mapRef = useRef<MapRef>(null)
   useEffect(
@@ -1060,132 +1060,140 @@ export function SchuleDetail() {
               onMouseLeave={handleDetailMapMouseLeave}
               onClick={handleDetailMapClick}
             >
-              <Source id="detail" type="geojson" data={detailMapFc}>
-                {showMapMask && maskShellFeature ? (
+              {showMapMask && detailMapMaskFeature ? (
+                <Source id="detail-dim-mask" type="geojson" data={detailMapMaskFeature}>
                   <Layer
-                    id="mask-shell"
+                    id="detail-dim-mask-fill"
                     type="fill"
-                    filter={['==', ['get', '_mapDetail'], 'maskShell']}
                     paint={{
-                      'fill-color': 'rgba(0,0,0,0.42)',
+                      'fill-color': MAP_DIM_MASK_FILL,
                       'fill-opacity': 1,
                     }}
                   />
-                ) : null}
-                <Layer
-                  id="p"
-                  type="fill"
-                  filter={[
-                    'all',
-                    ['in', ['geometry-type'], ['literal', ['Polygon', 'MultiPolygon']]],
-                    ['!=', ['get', '_mapDetail'], 'maskShell'],
-                  ]}
-                  paint={{
-                    'fill-color': DETAIL_MAP_OSM.polygonFillRgba,
-                    'fill-opacity': 1,
-                  }}
-                />
-                <Layer
-                  id="l"
-                  type="line"
-                  filter={[
-                    'all',
-                    ['in', ['geometry-type'], ['literal', ['Polygon', 'MultiPolygon']]],
-                    ['!=', ['get', '_mapDetail'], 'maskShell'],
-                  ]}
-                  paint={{ 'line-color': DETAIL_MAP_OSM.polygonOutlineHex, 'line-width': 2 }}
-                />
-                {connectorLineFeatures.length > 0 ? (
+                </Source>
+              ) : null}
+              {detailMapPolygonFc && detailMapPolygonFc.features.length > 0 ? (
+                <Source id="detail-polygons" type="geojson" data={detailMapPolygonFc}>
                   <Layer
-                    id="detail-connectors"
-                    type="line"
-                    layout={{
-                      'line-cap': 'round',
-                      'line-join': 'round',
-                    }}
-                    filter={['==', ['get', '_mapDetail'], 'connector']}
+                    id="p"
+                    type="fill"
+                    filter={['in', ['geometry-type'], ['literal', ['Polygon', 'MultiPolygon']]]}
                     paint={{
-                      'line-color': 'rgba(0,0,0,0.22)',
-                      'line-width': 14,
-                      'line-opacity': 1,
+                      'fill-color': DETAIL_MAP_OSM.polygonFillRgba,
+                      'fill-opacity': 1,
                     }}
                   />
-                ) : null}
-                {hoverRelationLineFeatures.length > 0 ? (
                   <Layer
-                    id="detail-hover-relations"
+                    id="l"
                     type="line"
-                    layout={{
-                      'line-cap': 'round',
-                      'line-join': 'round',
-                    }}
-                    filter={['==', ['get', '_mapDetail'], 'hoverRelation']}
+                    filter={['in', ['geometry-type'], ['literal', ['Polygon', 'MultiPolygon']]]}
+                    paint={{ 'line-color': DETAIL_MAP_OSM.polygonOutlineHex, 'line-width': 2 }}
+                  />
+                  {connectorLineFeatures.length > 0 ? (
+                    <Layer
+                      id="detail-connectors"
+                      type="line"
+                      layout={{
+                        'line-cap': 'round',
+                        'line-join': 'round',
+                      }}
+                      filter={['==', ['get', '_mapDetail'], 'connector']}
+                      paint={{
+                        'line-color': 'rgba(0,0,0,0.22)',
+                        'line-width': 14,
+                        'line-opacity': 1,
+                      }}
+                    />
+                  ) : null}
+                  {hoverRelationLineFeatures.length > 0 ? (
+                    <Layer
+                      id="detail-hover-relations"
+                      type="line"
+                      layout={{
+                        'line-cap': 'round',
+                        'line-join': 'round',
+                      }}
+                      filter={['==', ['get', '_mapDetail'], 'hoverRelation']}
+                      paint={{
+                        'line-color': '#0a0a0a',
+                        'line-width': 2.5,
+                        'line-opacity': 0.85,
+                      }}
+                    />
+                  ) : null}
+                </Source>
+              ) : null}
+              {q.data && q.data.boundary ? (
+                <Source id="detail-land-boundary" type="geojson" data={q.data.boundary}>
+                  <Layer
+                    id="detail-land-boundary-line"
+                    type="line"
+                    paint={LAND_BOUNDARY_LINE_PAINT}
+                  />
+                </Source>
+              ) : null}
+              {detailMapPointsFc && detailMapPointsFc.features.length > 0 ? (
+                <Source id="detail-points" type="geojson" data={detailMapPointsFc}>
+                  <Layer
+                    id="c-official-halo"
+                    type="circle"
+                    filter={[
+                      'all',
+                      ['==', ['geometry-type'], 'Point'],
+                      ['!=', ['get', '_mapDetail'], 'osmCentroid'],
+                    ]}
                     paint={{
-                      'line-color': '#0a0a0a',
-                      'line-width': 2.5,
-                      'line-opacity': 0.85,
+                      'circle-radius': 8,
+                      'circle-color': DETAIL_MAP_OFFICIAL.haloRgba,
+                      'circle-stroke-width': 0,
                     }}
                   />
-                ) : null}
-                <Layer
-                  id="c-official-halo"
-                  type="circle"
-                  filter={[
-                    'all',
-                    ['==', ['geometry-type'], 'Point'],
-                    ['!=', ['get', '_mapDetail'], 'osmCentroid'],
-                  ]}
-                  paint={{
-                    'circle-radius': 8,
-                    'circle-color': DETAIL_MAP_OFFICIAL.haloRgba,
-                    'circle-stroke-width': 0,
-                  }}
-                />
-                <Layer
-                  id="c-official-core"
-                  type="circle"
-                  filter={[
-                    'all',
-                    ['==', ['geometry-type'], 'Point'],
-                    ['!=', ['get', '_mapDetail'], 'osmCentroid'],
-                  ]}
-                  paint={{
-                    'circle-radius': 3.5,
-                    'circle-color': DETAIL_MAP_OFFICIAL.innerHex,
-                    'circle-stroke-width': 1,
-                    'circle-stroke-color': '#ffffff',
-                  }}
-                />
-                <Layer
-                  id="c-centroid-halo"
-                  type="circle"
-                  filter={[
-                    'all',
-                    ['==', ['geometry-type'], 'Point'],
-                    ['==', ['get', '_mapDetail'], 'osmCentroid'],
-                  ]}
-                  paint={{
-                    'circle-radius': 8,
-                    'circle-color': DETAIL_REF_OSM_HALO_COLOR,
-                    'circle-stroke-width': 0,
-                  }}
-                />
-                <Layer
-                  id="c-centroid-core"
-                  type="circle"
-                  filter={[
-                    'all',
-                    ['==', ['geometry-type'], 'Point'],
-                    ['==', ['get', '_mapDetail'], 'osmCentroid'],
-                  ]}
-                  paint={{
-                    'circle-radius': 3.5,
-                    'circle-color': DETAIL_REF_OSM_CORE_COLOR,
-                    'circle-stroke-width': 1,
-                    'circle-stroke-color': '#ffffff',
-                  }}
-                />
-              </Source>
+                  <Layer
+                    id="c-official-core"
+                    type="circle"
+                    filter={[
+                      'all',
+                      ['==', ['geometry-type'], 'Point'],
+                      ['!=', ['get', '_mapDetail'], 'osmCentroid'],
+                    ]}
+                    paint={{
+                      'circle-radius': 3.5,
+                      'circle-color': DETAIL_MAP_OFFICIAL.innerHex,
+                      'circle-stroke-width': 1,
+                      'circle-stroke-color': '#ffffff',
+                    }}
+                  />
+                  <Layer
+                    id="c-centroid-halo"
+                    type="circle"
+                    filter={[
+                      'all',
+                      ['==', ['geometry-type'], 'Point'],
+                      ['==', ['get', '_mapDetail'], 'osmCentroid'],
+                    ]}
+                    paint={{
+                      'circle-radius': 8,
+                      'circle-color': DETAIL_REF_OSM_HALO_COLOR,
+                      'circle-stroke-width': 0,
+                    }}
+                  />
+                  <Layer
+                    id="c-centroid-core"
+                    type="circle"
+                    filter={[
+                      'all',
+                      ['==', ['geometry-type'], 'Point'],
+                      ['==', ['get', '_mapDetail'], 'osmCentroid'],
+                    ]}
+                    paint={{
+                      'circle-radius': 3.5,
+                      'circle-color': DETAIL_REF_OSM_CORE_COLOR,
+                      'circle-stroke-width': 1,
+                      'circle-stroke-color': '#ffffff',
+                    }}
+                  />
+                </Source>
+              ) : null}
               {otherSchoolPointsInViewport.features.length > 0 && (
                 <Source id="detail-other-schools" type="geojson" data={otherSchoolPointsInViewport}>
                   <Layer

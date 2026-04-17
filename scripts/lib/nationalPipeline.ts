@@ -38,6 +38,7 @@ import {
 } from './pipelineCommon'
 import { jedeschuleUpstreamDatasetChanged } from './pipelineFreshness'
 import type { PipelineSourceMeta } from './pipelineMeta'
+import { featureCollection } from '@turf/helpers'
 import simplify from '@turf/simplify'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import { createHash } from 'node:crypto'
@@ -186,9 +187,8 @@ function assignPipelineStateToOsmFeature(f: Feature): StateCode {
 }
 
 function tagNationalOsmFc(fc: FeatureCollection): FeatureCollection {
-  return {
-    type: 'FeatureCollection',
-    features: fc.features.map((f) => {
+  return featureCollection(
+    fc.features.map((f) => {
       const state = assignPipelineStateToOsmFeature(f)
       const props = {
         ...(typeof f.properties === 'object' && f.properties != null ? f.properties : {}),
@@ -196,7 +196,7 @@ function tagNationalOsmFc(fc: FeatureCollection): FeatureCollection {
       }
       return { ...f, properties: props }
     }),
-  }
+  )
 }
 
 function osmTypeIdKey(osmType: string, osmId: string) {
@@ -539,29 +539,26 @@ export async function runStateFirstPipeline(
     const deduped = dedupeOfficialInputs(officials)
     dedupeRemovedTotal += deduped.stats.removedCount
 
-    const osmStateFc: FeatureCollection = {
-      type: 'FeatureCollection',
-      features: osmFc.features.filter((f) => assignPipelineStateToOsmFeature(f) === code),
-    }
+    const osmStateFc: FeatureCollection = featureCollection(
+      osmFc.features.filter((f) => assignPipelineStateToOsmFeature(f) === code),
+    )
     const osmSchools = buildOsmSchoolsFromGeoJson(osmStateFc)
     const osmStateByKey = buildOsmStateMap(osmStateFc)
     const { rows } = matchSchools(deduped.officials, osmSchools, { osmStateByKey })
     const enriched = enrichRowsWithPipelineState(rows, osmStateByKey)
 
     const canonicalOfficialIds = new Set(deduped.officials.map((o) => o.id))
-    const officialStateOut: FeatureCollection = {
-      type: 'FeatureCollection',
-      features: gated.features
+    const officialStateOut: FeatureCollection = featureCollection(
+      gated.features
         .filter((f) => {
           const fid = String(f.id ?? (f.properties as { id?: string })?.id ?? '')
           return canonicalOfficialIds.has(fid)
         })
         .map(optimizeOfficialFeatureForUserOutput),
-    }
-    const osmStateUser: FeatureCollection = {
-      type: 'FeatureCollection',
-      features: osmStateFc.features.map(optimizeOsmFeatureForUserOutput),
-    }
+    )
+    const osmStateUser: FeatureCollection = featureCollection(
+      osmStateFc.features.map(optimizeOsmFeatureForUserOutput),
+    )
     const rowsStateUser = enriched.map((r) =>
       optimizeMatchRowForUserOutput(
         r as Record<string, unknown> & {
