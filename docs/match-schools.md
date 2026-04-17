@@ -2,7 +2,7 @@
 
 Implementierung: [`scripts/lib/match.ts`](../scripts/lib/match.ts), Funktion `matchSchools`.
 
-**Eingaben:** `OfficialInput[]` (eine Bundesland-Slice), `OsmSchoolInput[]` (aus dem GeoJSON-Slice desselben Landes), `MatchSchoolsOptions` mit `osmLandByKey` (jedes OSM-Objekt → `LandCode`).
+**Eingaben:** `OfficialInput[]` (eine Bundesland-Slice), `OsmSchoolInput[]` (aus dem GeoJSON-Slice desselben Landes), `MatchSchoolsOptions` mit `osmStateByKey` (jedes OSM-Objekt → `StateCode`).
 
 **Ausgabe:** `MatchRowOut[]` mit Kategorien u. a. `matched`, `official_only`, `osm_only`, `match_ambiguous`, `official_no_coord`.
 
@@ -42,7 +42,7 @@ flowchart TB
 4. **`official_only`**  
    Noch nicht gematchte **with-coord**-Officials.
 
-5. **No-coord-Fallbacks** (nur `withoutCoord`, jeweils land-lokal über `groupOfficialsByLand` und genau **ein** passendes `osm_only` pro Schlüssel/Land):  
+5. **No-coord-Fallbacks** (nur `withoutCoord`, jeweils land-lokal über `groupOfficialsByState` und genau **ein** passendes `osm_only` pro Schlüssel/Land):  
    normalisierter **Name** → **Website** → **Straßenadresse**; bei mehreren Treffern → `match_ambiguous` auf der OSM-Zeile.
 
 6. **`official_no_coord`**  

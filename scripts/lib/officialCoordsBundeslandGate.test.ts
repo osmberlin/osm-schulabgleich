@@ -1,7 +1,7 @@
 import { initBundeslandBoundaries, resetBundeslandBoundariesCache } from './bundeslandBoundaries'
 import {
   gateOfficialFeatureCollection,
-  voidOfficialPointOutsideDeclaredLand,
+  voidOfficialPointOutsideDeclaredState,
 } from './officialCoordsBundeslandGate'
 import type { Feature } from 'geojson'
 import path from 'node:path'
@@ -27,11 +27,11 @@ function pointFeature(
   } as Feature
 }
 
-describe('voidOfficialPointOutsideDeclaredLand', () => {
+describe('voidOfficialPointOutsideDeclaredState', () => {
   it('leaves point inside declared Bundesland unchanged', () => {
     initBundeslandBoundaries(PROJECT_ROOT)
     const f = pointFeature('BE-x', 13.405, 52.52)
-    const out = voidOfficialPointOutsideDeclaredLand(f)
+    const out = voidOfficialPointOutsideDeclaredState(f)
     expect(out.geometry?.type).toBe('Point')
     expect((out.geometry as { coordinates: number[] }).coordinates).toEqual([13.405, 52.52])
     expect(out.properties).not.toHaveProperty('_error_outside_boundary')
@@ -40,7 +40,7 @@ describe('voidOfficialPointOutsideDeclaredLand', () => {
   it('voids geometry and records error when point is outside declared land (RP id in Berlin)', () => {
     initBundeslandBoundaries(PROJECT_ROOT)
     const f = pointFeature('RP-wrong', 13.405, 52.52)
-    const out = voidOfficialPointOutsideDeclaredLand(f)
+    const out = voidOfficialPointOutsideDeclaredState(f)
     expect(out.geometry).toBeNull()
     expect(out.properties).toMatchObject({
       id: 'RP-wrong',
@@ -48,10 +48,10 @@ describe('voidOfficialPointOutsideDeclaredLand', () => {
     })
   })
 
-  it('voids when point is in the sea (landCodeForPoint null)', () => {
+  it('voids when point is in the sea (stateCodeForPoint null)', () => {
     initBundeslandBoundaries(PROJECT_ROOT)
     const f = pointFeature('BY-x', 6.0, 55.0)
-    const out = voidOfficialPointOutsideDeclaredLand(f)
+    const out = voidOfficialPointOutsideDeclaredState(f)
     expect(out.geometry).toBeNull()
     expect(out.properties?._error_outside_boundary).toEqual({ latitude: 55.0, longitude: 6.0 })
   })
@@ -59,7 +59,7 @@ describe('voidOfficialPointOutsideDeclaredLand', () => {
   it('passes through features without a valid school id land prefix', () => {
     initBundeslandBoundaries(PROJECT_ROOT)
     const f = pointFeature('nope', 13.405, 52.52)
-    const out = voidOfficialPointOutsideDeclaredLand(f)
+    const out = voidOfficialPointOutsideDeclaredState(f)
     expect(out.geometry?.type).toBe('Point')
   })
 })

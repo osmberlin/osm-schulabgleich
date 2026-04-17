@@ -2,7 +2,7 @@
 import { parseSchoolsFromCsvText } from '../../scripts/lib/jedeschuleCsv'
 import { jedeschuleDumpAbsolutePath } from '../../scripts/lib/jedeschuleDumpConfig'
 import { officialGeojsonNational } from '../../scripts/lib/pipelineCommon'
-import { landCodeFromSchoolId, STATE_ORDER } from '../../src/lib/stateConfig'
+import { stateCodeFromSchoolId, STATE_ORDER } from '../../src/lib/stateConfig'
 /**
  * Reads `public/datasets/jedeschule-latest.csv` (or `JEDESCHULE_CSV`) and writes
  * markdown reports under `analysis/out/`.
@@ -163,16 +163,16 @@ function tokenizeSchoolName(name: string): string[] {
 }
 
 type SchoolRow = {
-  land: string
+  state: string
   schoolTypeRaw: string
   name: string
 }
 
-function landFromProps(p: Record<string, unknown>): string {
-  const landProp = p.land
-  if (typeof landProp === 'string' && landProp.length === 2) return landProp
+function stateFromProps(p: Record<string, unknown>): string {
+  const stateProp = p.state
+  if (typeof stateProp === 'string' && stateProp.length === 2) return stateProp
   const id = typeof p.id === 'string' ? p.id : ''
-  return landCodeFromSchoolId(id) ?? '??'
+  return stateCodeFromSchoolId(id) ?? '??'
 }
 
 async function main() {
@@ -192,7 +192,7 @@ async function main() {
     const schoolTypeRaw = typeof st === 'string' ? st.trim() : st == null ? '' : String(st).trim()
     const name = typeof p.name === 'string' ? p.name : ''
     schools.push({
-      land: landFromProps(p),
+      state: stateFromProps(p),
       schoolTypeRaw,
       name,
     })
@@ -200,7 +200,7 @@ async function main() {
 
   await mkdir(OUT_DIR, { recursive: true })
 
-  const statesInData = new Set(schools.map((s) => s.land))
+  const statesInData = new Set(schools.map((s) => s.state))
   const orderStates = [
     ...STATE_ORDER.filter((c) => statesInData.has(c)),
     ...[...statesInData]
@@ -214,7 +214,7 @@ async function main() {
   let statesAllFilled = 0
   const statesWithNoType: string[] = []
   for (const code of orderStates) {
-    const subset = schools.filter((s) => s.land === code)
+    const subset = schools.filter((s) => s.state === code)
     const total = subset.length
     const withType = subset.filter((s) => s.schoolTypeRaw !== '').length
     const share = total ? ((withType / total) * 100).toFixed(1) : '0.0'
@@ -297,27 +297,27 @@ async function main() {
   await writeFile(path.join(OUT_DIR, '02-school-type-counts.md'), q2Md, 'utf8')
 
   // --- Q3: per state per type (same `school_type` normalization as Q2) ---
-  const landSchoolTotals = new Map<string, number>()
+  const stateSchoolTotals = new Map<string, number>()
   for (const s of schools) {
-    landSchoolTotals.set(s.land, (landSchoolTotals.get(s.land) ?? 0) + 1)
+    stateSchoolTotals.set(s.state, (stateSchoolTotals.get(s.state) ?? 0) + 1)
   }
   const tripleKey = new Map<string, number>()
   for (const s of schools) {
     const t = schoolTypeBucketKeyQ2(s.schoolTypeRaw)
-    const k = JSON.stringify([s.land, t] as const)
+    const k = JSON.stringify([s.state, t] as const)
     tripleKey.set(k, (tripleKey.get(k) ?? 0) + 1)
   }
   const q3Rows = [...tripleKey.entries()]
     .map(([k, c]) => {
-      const [land, typ] = JSON.parse(k) as [string, string]
-      return { land, typ, c }
+      const [state, typ] = JSON.parse(k) as [string, string]
+      return { state, typ, c }
     })
-    .sort((a, b) => a.land.localeCompare(b.land) || b.c - a.c || a.typ.localeCompare(b.typ))
+    .sort((a, b) => a.state.localeCompare(b.state) || b.c - a.c || a.typ.localeCompare(b.typ))
     .map((x) => [
-      x.land,
+      x.state,
       truncateForQ3SchoolTypeDisplay(x.typ),
       String(x.c),
-      formatCountPct(x.c, landSchoolTotals.get(x.land) ?? 0),
+      formatCountPct(x.c, stateSchoolTotals.get(x.state) ?? 0),
     ])
 
   const q3Md =

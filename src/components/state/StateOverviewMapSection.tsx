@@ -1,17 +1,17 @@
 import { de } from '../../i18n/de'
-import type { LandMatchCategory } from '../../lib/landMatchCategories'
+import type { StateMatchCategory } from '../../lib/stateMatchCategories'
 import type { OsmStyleMapTriple } from '../../lib/useDetailMapParam'
-import type { LandMapBbox } from '../../lib/useLandMapBbox'
-import { LandMap } from '../LandMap'
+import type { StateMapBbox } from '../../lib/useStateMapBbox'
+import { StateMap } from '../StateMap'
 import { useNavigate } from '@tanstack/react-router'
 import type { Feature, FeatureCollection, Geometry, MultiPolygon, Polygon } from 'geojson'
 import { MapProvider } from 'react-map-gl/maplibre'
 
-export function LandOverviewMapSection({
+export function StateOverviewMapSection({
   enabledCategories,
   enabledSet,
   mapMatchPoints,
-  landCode,
+  stateCode,
   boundary,
   mapCamera,
   setMapCamera,
@@ -19,15 +19,15 @@ export function LandOverviewMapSection({
   setBboxFilter,
   clearBboxFilter,
 }: {
-  enabledCategories: LandMatchCategory[]
-  enabledSet: Set<LandMatchCategory>
+  enabledCategories: StateMatchCategory[]
+  enabledSet: Set<StateMatchCategory>
   mapMatchPoints: FeatureCollection<Geometry>
-  landCode: string
+  stateCode: string
   boundary: Feature<Polygon | MultiPolygon> | null
   mapCamera: OsmStyleMapTriple | null
   setMapCamera: (mapCamera: OsmStyleMapTriple | null) => void
-  bboxFilter: LandMapBbox | null
-  setBboxFilter: (bboxFilter: LandMapBbox | null) => void
+  bboxFilter: StateMapBbox | null
+  setBboxFilter: (bboxFilter: StateMapBbox | null) => void
   clearBboxFilter: () => void
 }) {
   const navigate = useNavigate()
@@ -38,7 +38,7 @@ export function LandOverviewMapSection({
         className="flex h-[440px] items-center justify-center rounded-lg border border-zinc-700 px-4 text-center"
         role="status"
       >
-        <p className="text-sm text-zinc-400">{de.land.mapNoVisibleCategories}</p>
+        <p className="text-sm text-zinc-400">{de.state.mapNoVisibleCategories}</p>
       </div>
     )
   }
@@ -46,12 +46,12 @@ export function LandOverviewMapSection({
   return (
     <MapProvider>
       <div>
-        <LandMap
+        <StateMap
           matchPoints={mapMatchPoints}
           height={440}
           enabledCategories={enabledSet}
-          landCode={landCode}
-          landBoundary={boundary}
+          stateCode={stateCode}
+          stateBoundary={boundary}
           mapCamera={mapCamera}
           onMapCameraChange={setMapCamera}
           bboxFilter={bboxFilter}
@@ -60,7 +60,7 @@ export function LandOverviewMapSection({
           onSchoolClick={(matchKey) =>
             void navigate({
               to: '/bundesland/$code/schule/$matchKey',
-              params: { code: landCode, matchKey },
+              params: { code: stateCode, matchKey },
             })
           }
         />

@@ -1,15 +1,15 @@
 import { mergeSyntheticOfficialNoCoordRows } from './mergeSyntheticOfficialNoCoordRows'
-import { landBoundaryUrl, landMatchesUrl, landOfficialUrl, landOsmUrl } from './paths'
+import { stateBoundaryUrl, stateMatchesUrl, stateOfficialUrl, stateOsmUrl } from './paths'
 import { schoolsMatchesFileSchema } from './schemas'
 import type { Feature, FeatureCollection, MultiPolygon, Polygon } from 'geojson'
 
 /** Official + OSM GeoJSON + matches + optional Bundesland outline for one land (SchuleDetail / cache). */
-export async function fetchLandSchoolsBundle(code: string) {
+export async function fetchStateSchoolsBundle(code: string) {
   const [oRes, osmRes, mRes, bRes] = await Promise.all([
-    fetch(landOfficialUrl(code)),
-    fetch(landOsmUrl(code)),
-    fetch(landMatchesUrl(code)),
-    fetch(landBoundaryUrl(code)),
+    fetch(stateOfficialUrl(code)),
+    fetch(stateOsmUrl(code)),
+    fetch(stateMatchesUrl(code)),
+    fetch(stateBoundaryUrl(code)),
   ])
   if (!oRes.ok || !osmRes.ok || !mRes.ok) {
     throw new Error('land fetch')

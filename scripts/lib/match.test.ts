@@ -1,5 +1,5 @@
 import { normalizeAddressMatchKey, normalizeWebsiteMatchKey } from '../../src/lib/compareMatchKeys'
-import type { LandCode } from '../../src/lib/stateConfig'
+import type { StateCode } from '../../src/lib/stateConfig'
 import {
   MATCH_RADIUS_KM,
   matchSchools,
@@ -12,8 +12,8 @@ import {
 } from './match'
 import { describe, expect, it } from 'vitest'
 
-function landOpts(osm: OsmSchoolInput, land: LandCode): { osmLandByKey: Map<string, LandCode> } {
-  return { osmLandByKey: new Map([[`${osm.osmType}/${osm.osmId}`, land]]) }
+function landOpts(osm: OsmSchoolInput, land: StateCode): { osmStateByKey: Map<string, StateCode> } {
+  return { osmStateByKey: new Map([[`${osm.osmType}/${osm.osmId}`, land]]) }
 }
 
 describe('matchSchools', () => {
@@ -118,8 +118,8 @@ describe('matchSchools', () => {
       { id: 'BE-x', name: 'S', lon: 13.4, lat: 52.52, properties: { id: 'BE-x' } },
       { id: 'RP-x', name: 'S', lon: 13.4, lat: 52.52, properties: { id: 'RP-x' } },
     ]
-    const osmLandByKey = new Map<string, LandCode>([['way/1', 'BE']])
-    const { rows } = matchSchools(mixed, [osmNear], { osmLandByKey })
+    const osmStateByKey = new Map<string, StateCode>([['way/1', 'BE']])
+    const { rows } = matchSchools(mixed, [osmNear], { osmStateByKey })
     const m = rows.filter((r) => r.category === 'matched')
     expect(m).toHaveLength(1)
     expect(m[0].officialId).toBe('BE-x')
@@ -233,12 +233,12 @@ describe('matchSchools', () => {
       name: 'Albert-Einstein-Schule',
       tags: { amenity: 'school', name: 'Albert-Einstein-Schule' },
     }
-    const osmLandByKey = new Map<string, LandCode>([
+    const osmStateByKey = new Map<string, StateCode>([
       ['way/bbz', 'BE'],
       ['way/wrs', 'BE'],
       ['way/aes', 'BE'],
     ])
-    const { rows } = matchSchools(campus, [osmBbz, osmWrs, osmAes], { osmLandByKey })
+    const { rows } = matchSchools(campus, [osmBbz, osmWrs, osmAes], { osmStateByKey })
     const matched = rows.filter(
       (r) => r.category === 'matched' && r.matchMode === 'distance_and_name',
     )
@@ -280,11 +280,11 @@ describe('matchSchools', () => {
       tags: { amenity: 'school', name: 'Campus Mitte' },
       centroid: [13.40004, 52.52004],
     }
-    const osmLandByKey = new Map<string, LandCode>([
+    const osmStateByKey = new Map<string, StateCode>([
       ['way/albert', 'BE'],
       ['way/generic', 'BE'],
     ])
-    const { rows } = matchSchools(schools, [osmAlbert, osmGeneric], { osmLandByKey })
+    const { rows } = matchSchools(schools, [osmAlbert, osmGeneric], { osmStateByKey })
     const generic = rows.find((r) => r.osmId === 'generic')
     expect(generic?.category).toBe('matched')
     expect(generic?.matchMode).toBe('distance')
@@ -516,9 +516,9 @@ describe('matchSchools', () => {
       tags: { amenity: 'school', name: 'Gemeinsamer Name X' },
       centroid: [8.7, 52.1],
     }
-    const osmLandByKey = new Map<string, LandCode>([['way/555', 'BE']])
+    const osmStateByKey = new Map<string, StateCode>([['way/555', 'BE']])
     const { rows, officialNoCoordCount } = matchSchools(officialsNoCoord, [osmOnly], {
-      osmLandByKey,
+      osmStateByKey,
     })
     const m = rows.filter((r) => r.category === 'matched')
     expect(m).toHaveLength(1)
@@ -543,8 +543,8 @@ describe('matchSchools', () => {
       tags: { amenity: 'school', name: 'Solo Name Y' },
       centroid: [8.7, 52.1],
     }
-    const osmLandByKey = new Map<string, LandCode>([['way/556', 'BE']])
-    const { rows } = matchSchools(officialsNoCoord, [osmOnly], { osmLandByKey })
+    const osmStateByKey = new Map<string, StateCode>([['way/556', 'BE']])
+    const { rows } = matchSchools(officialsNoCoord, [osmOnly], { osmStateByKey })
     expect(rows.some((r) => r.category === 'matched')).toBe(false)
     expect(rows.find((r) => r.osmId === '556')?.category).toBe('osm_only')
   })
@@ -571,11 +571,11 @@ describe('matchSchools', () => {
       name: 'Marie-Curie-Schule',
       tags: { amenity: 'school', name: 'Marie-Curie-Schule' },
     }
-    const osmLandByKey = new Map<string, LandCode>([
+    const osmStateByKey = new Map<string, StateCode>([
       ['way/hb-1', 'HB'],
       ['way/he-1', 'HE'],
     ])
-    const { rows } = matchSchools(officialsNoCoord, [osmHb, osmHeSameName], { osmLandByKey })
+    const { rows } = matchSchools(officialsNoCoord, [osmHb, osmHeSameName], { osmStateByKey })
     const hbRow = rows.find((r) => r.osmId === 'hb-1')
     const heRow = rows.find((r) => r.osmId === 'he-1')
     expect(hbRow?.category).toBe('matched')

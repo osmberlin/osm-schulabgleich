@@ -71,7 +71,7 @@ export const de = {
     loading: 'Lade Zusammenfassung…',
     error: 'Zusammenfassung konnte nicht geladen werden.',
     empty: 'Noch keine Daten…',
-    toLand: 'Zum Bundesland',
+    toState: 'Zum Bundesland',
     globalKpiAria: 'Deutschland — Kennzahlen (Summe aller Bundesländer)',
     historyHeading: 'Deutschland — Entwicklung über Pipeline-Läufe',
     historyLead:
@@ -87,7 +87,7 @@ export const de = {
         'Die Tabelle wird in Github gepflegt. Du kannst einen Issue erstellen oder die Tabelle direkt auf GitHub bearbeiten.',
       ctaIssue: 'Lizenz recherchieren (GitHub-Issue)',
       ctaEditFile: 'Tabelle auf GitHub bearbeiten',
-      colLand: 'Bundesland',
+      colState: 'Bundesland',
       colOfficialLicense: 'Amtliche Lizenz',
       colOsmCompatible: 'OSM-kompatibel',
       colChecked: 'Zuletzt geprüft',
@@ -110,12 +110,12 @@ export const de = {
       },
     },
   },
-  land: {
+  state: {
     /** Bundesland-Übersicht — ein Kopfzeilentext statt getrenntem Titel und Code. */
     overviewTitle: 'Schulabgleich in {name} ({code})',
     back: 'Alle Bundesländer',
     loading: 'Lade Daten…',
-    error: 'Fehler beim Laden der Landdaten.',
+    error: 'Fehler beim Laden der Bundesland-Daten.',
     table: 'Trefferliste',
     category: 'Kategorie',
     name: 'Name',
@@ -197,7 +197,7 @@ export const de = {
     officialCoordsMissing: 'Koordinaten fehlen',
     officialCoordsOutsideBoundaryTitle: 'Amtliche Geoposition außerhalb des Bundeslandes',
     officialCoordsOutsideBoundaryBody:
-      'Die Geoposition dieser Schule in den amtlichen Daten wirkte fehlerhaft — sie lag außerhalb der Grenze von {land}. Wir behandeln diese Schule daher wie eine ohne verwertbare Geodaten.',
+      'Die Geoposition dieser Schule in den amtlichen Daten wirkte fehlerhaft — sie lag außerhalb der Grenze von {state}. Wir behandeln diese Schule daher wie eine ohne verwertbare Geodaten.',
     officialCoordsOutsideBoundaryCoordsIntro: 'Ursprüngliche amtliche Koordinaten:',
     officialCoordsOutsideBoundaryOsmPinLinkLabel: 'Auf OpenStreetMap mit Stecknadel',
     ambiguousAlertTitle: 'Uneindeutig',
@@ -272,7 +272,7 @@ export const de = {
     downloadOk: 'Download OK',
     downloadFail: 'Download fehlgeschlagen',
     errors: 'Fehler',
-    lands: 'Bundesländer',
+    states: 'Bundesländer',
     runDownloads: 'Downloads im Lauf',
     matchRan: 'Abgleich ausgeführt',
     matchSkipped: 'Abgleich übersprungen',

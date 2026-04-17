@@ -1,5 +1,5 @@
-import { landCodeFromSchoolId } from '../../src/lib/stateConfig'
-import { landCodeForPoint } from './bundeslandBoundaries'
+import { stateCodeFromSchoolId } from '../../src/lib/stateConfig'
+import { stateCodeForPoint } from './bundeslandBoundaries'
 import type { Feature, FeatureCollection, Point } from 'geojson'
 
 export type ErrorOutsideBoundary = {
@@ -12,9 +12,9 @@ export type ErrorOutsideBoundary = {
  * clear geometry and record the original position on properties for downstream UI.
  * Requires {@link initBundeslandBoundaries} for the same project root.
  */
-export function voidOfficialPointOutsideDeclaredLand(f: Feature): Feature {
+export function voidOfficialPointOutsideDeclaredState(f: Feature): Feature {
   const id = String(f.id ?? (f.properties as { id?: string } | null | undefined)?.id ?? '')
-  const declaredLand = landCodeFromSchoolId(id)
+  const declaredLand = stateCodeFromSchoolId(id)
   if (!declaredLand) return f
 
   const g = f.geometry
@@ -25,7 +25,7 @@ export function voidOfficialPointOutsideDeclaredLand(f: Feature): Feature {
   const lat = coords[1]!
   if (!Number.isFinite(lon) || !Number.isFinite(lat)) return f
 
-  const pointLand = landCodeForPoint(lon, lat)
+  const pointLand = stateCodeForPoint(lon, lat)
   if (pointLand === declaredLand) return f
 
   const baseProps =
@@ -46,6 +46,6 @@ export function voidOfficialPointOutsideDeclaredLand(f: Feature): Feature {
 export function gateOfficialFeatureCollection(fc: FeatureCollection): FeatureCollection {
   return {
     ...fc,
-    features: fc.features.map(voidOfficialPointOutsideDeclaredLand),
+    features: fc.features.map(voidOfficialPointOutsideDeclaredState),
   }
 }

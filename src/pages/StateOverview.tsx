@@ -1,48 +1,49 @@
-import { LandOverviewFiltersDisclosure } from '../components/land/LandOverviewFiltersDisclosure'
-import { LandOverviewHistorySection } from '../components/land/LandOverviewHistorySection'
-import { LandOverviewMapSection } from '../components/land/LandOverviewMapSection'
-import { LandOverviewMatchList } from '../components/land/LandOverviewMatchList'
-import { LandOverviewStats } from '../components/land/LandOverviewStats'
+import { StateOverviewFiltersDisclosure } from '../components/state/StateOverviewFiltersDisclosure'
+import { StateOverviewHistorySection } from '../components/state/StateOverviewHistorySection'
+import { StateOverviewMapSection } from '../components/state/StateOverviewMapSection'
+import { StateOverviewMatchList } from '../components/state/StateOverviewMatchList'
+import { StateOverviewStats } from '../components/state/StateOverviewStats'
 import { de } from '../i18n/de'
-import {
-  collectFilteredIdsFromSearchResult,
-  createLandMatchItemsJsEngine,
-  searchLandMatchesWithExplorer,
-} from '../lib/landOverviewItemsSearch'
-import { landHistoryFromRuns } from '../lib/matchHistoryFromRuns'
+import { stateHistoryFromRuns } from '../lib/matchHistoryFromRuns'
 import {
   buildOfficialSchoolLonLatIndex,
   matchesToOverviewMapPoints,
-  matchRowIncludedWhenLandMapBboxActive,
+  matchRowIncludedWhenStateMapBboxActive,
 } from '../lib/matchRowInBbox'
 import { mergeSyntheticOfficialNoCoordRows } from '../lib/mergeSyntheticOfficialNoCoordRows'
 import {
-  landBoundaryUrl,
-  landMatchesUrl,
-  landOfficialUrl,
-  landOsmMetaUrl,
-  landOsmUrl,
+  stateBoundaryUrl,
+  stateMatchesUrl,
+  stateOfficialUrl,
+  stateOsmMetaUrl,
+  stateOsmUrl,
   runsJsonlUrl,
   summaryJsonUrl,
 } from '../lib/paths'
 import { runsPayloadFromHistoryText } from '../lib/runHistoryJsonl'
 import { runsFileSchema, schoolsMatchesFileSchema, summaryFileSchema } from '../lib/schemas'
-import { useLandCategoryFilter } from '../lib/useLandCategoryFilter'
-import { useLandMapState } from '../lib/useLandMapState'
-import { useLandOverviewExplorerFilter } from '../lib/useLandOverviewExplorerFilter'
+import {
+  collectFilteredIdsFromSearchResult,
+  createStateMatchItemsJsEngine,
+  searchStateMatchesWithExplorer,
+} from '../lib/stateOverviewItemsSearch'
+import { useStateCategoryFilter } from '../lib/useStateCategoryFilter'
+import { useStateOverviewExplorerFilter } from '../lib/useStateOverviewExplorerFilter'
+import { useStateOverviewMapState } from '../lib/useStateOverviewMapState'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from '@tanstack/react-router'
 import type { Feature, FeatureCollection, MultiPolygon, Polygon } from 'geojson'
 import { useId, useMemo } from 'react'
 
-export function LandOverview() {
+export function StateOverview() {
   const { code } = useParams({ strict: false }) as { code: string }
   const statsInputId = useId()
   const historyHeadingId = useId()
   const { enabledSet, enabledCategories, setCategoryEnabled, isCategoryEnabled } =
-    useLandCategoryFilter()
-  const { mapCamera, setMapCamera, bboxFilter, setBboxFilter, clearBboxFilter } = useLandMapState()
-  const explorer = useLandOverviewExplorerFilter()
+    useStateCategoryFilter()
+  const { mapCamera, setMapCamera, bboxFilter, setBboxFilter, clearBboxFilter } =
+    useStateOverviewMapState()
+  const explorer = useStateOverviewExplorerFilter()
 
   const summaryQ = useQuery({
     queryKey: ['summary'],
@@ -62,20 +63,20 @@ export function LandOverview() {
     },
   })
 
-  const landSummary = summaryQ.data?.lands.find((l) => l.code === code)
+  const stateSummary = summaryQ.data?.states.find((l) => l.code === code)
 
-  const landHistoryPoints = useMemo(
-    () => (runsQ.data ? landHistoryFromRuns(runsQ.data.runs, code) : []),
+  const stateHistoryPoints = useMemo(
+    () => (runsQ.data ? stateHistoryFromRuns(runsQ.data.runs, code) : []),
     [runsQ.data, code],
   )
 
   const dataQ = useQuery({
-    queryKey: ['land-data', code],
+    queryKey: ['state-data', code],
     queryFn: async () => {
       const [oRes, osmRes, mRes] = await Promise.all([
-        fetch(landOfficialUrl(code)),
-        fetch(landOsmUrl(code)),
-        fetch(landMatchesUrl(code)),
+        fetch(stateOfficialUrl(code)),
+        fetch(stateOsmUrl(code)),
+        fetch(stateMatchesUrl(code)),
       ])
       if (!oRes.ok || !osmRes.ok || !mRes.ok) {
         throw new Error('land fetch')
@@ -100,9 +101,9 @@ export function LandOverview() {
   })
 
   const metaQ = useQuery({
-    queryKey: ['land-osm-meta', code],
+    queryKey: ['state-osm-meta', code],
     queryFn: async () => {
-      const r = await fetch(landOsmMetaUrl(code))
+      const r = await fetch(stateOsmMetaUrl(code))
       if (!r.ok) return null
       return r.json() as Promise<Record<string, unknown>>
     },
@@ -110,9 +111,9 @@ export function LandOverview() {
   })
 
   const boundaryQ = useQuery({
-    queryKey: ['land-boundary', code],
+    queryKey: ['state-boundary', code],
     queryFn: async () => {
-      const r = await fetch(landBoundaryUrl(code))
+      const r = await fetch(stateBoundaryUrl(code))
       if (!r.ok) return null
       return r.json() as Promise<Feature<Polygon | MultiPolygon>>
     },
@@ -131,7 +132,7 @@ export function LandOverview() {
   const matchesAfterBbox = useMemo(() => {
     if (!bboxFilter) return matches
     return matches.filter((r) =>
-      matchRowIncludedWhenLandMapBboxActive(r, bboxFilter, officialLonLatIndex),
+      matchRowIncludedWhenStateMapBboxActive(r, bboxFilter, officialLonLatIndex),
     )
   }, [matches, bboxFilter, officialLonLatIndex])
 
@@ -156,13 +157,13 @@ export function LandOverview() {
   )
 
   const itemsEngine = useMemo(
-    () => createLandMatchItemsJsEngine(matchesAfterBbox),
+    () => createStateMatchItemsJsEngine(matchesAfterBbox),
     [matchesAfterBbox],
   )
 
   const exploreResult = useMemo(() => {
     if (matchesAfterBbox.length === 0) return null
-    return searchLandMatchesWithExplorer(itemsEngine, {
+    return searchStateMatchesWithExplorer(itemsEngine, {
       query: explorer.exploreQ,
       nameScope: explorer.nameScope,
       matchModes: explorer.matchModes,
@@ -206,20 +207,20 @@ export function LandOverview() {
   )
 
   if (dataQ.isLoading || summaryQ.isLoading) {
-    return <p className="text-zinc-400">{de.land.loading}</p>
+    return <p className="text-zinc-400">{de.state.loading}</p>
   }
   if (dataQ.isError || !dataQ.data) {
-    return <p className="text-red-400">{de.land.error}</p>
+    return <p className="text-red-400">{de.state.error}</p>
   }
 
   return (
     <div>
-      {landSummary?.osmSource === 'cached' && (
+      {stateSummary?.osmSource === 'cached' && (
         <div
           className="mb-4 rounded-md border border-amber-800 bg-amber-950/40 p-3 text-sm text-amber-100"
           role="status"
         >
-          {de.land.osmCachedBanner}
+          {de.state.osmCachedBanner}
           {metaQ.data?.overpassQueriedAt != null && (
             <span className="mt-1 block text-xs opacity-90">
               Stand: {String(metaQ.data.overpassResponseTimestamp ?? metaQ.data.overpassQueriedAt)}
@@ -228,7 +229,7 @@ export function LandOverview() {
         </div>
       )}
 
-      <LandOverviewFiltersDisclosure
+      <StateOverviewFiltersDisclosure
         exploreQ={explorer.exploreQ}
         setExploreQ={(q) => {
           void explorer.setExploreQ(q)
@@ -251,18 +252,18 @@ export function LandOverview() {
         bboxTotalCount={matchesAfterBbox.length}
       />
 
-      <LandOverviewStats
+      <StateOverviewStats
         catCounts={catCounts}
         statsInputId={statsInputId}
         isCategoryEnabled={isCategoryEnabled}
         setCategoryEnabled={setCategoryEnabled}
       />
 
-      <LandOverviewMapSection
+      <StateOverviewMapSection
         enabledCategories={enabledCategories}
         enabledSet={enabledSet}
         mapMatchPoints={mapMatchPoints}
-        landCode={code}
+        stateCode={code}
         boundary={boundaryQ.data ?? null}
         mapCamera={mapCamera}
         setMapCamera={setMapCamera}
@@ -271,7 +272,7 @@ export function LandOverview() {
         clearBboxFilter={clearBboxFilter}
       />
 
-      <LandOverviewMatchList
+      <StateOverviewMatchList
         code={code}
         listMatches={listMatches}
         matchesLength={matches.length}
@@ -282,12 +283,12 @@ export function LandOverview() {
         exploreFilteredCount={matchesAfterExplorer.length}
       />
 
-      <LandOverviewHistorySection
+      <StateOverviewHistorySection
         code={code}
         historyHeadingId={historyHeadingId}
         isLoading={runsQ.isLoading}
         isError={runsQ.isError}
-        points={landHistoryPoints}
+        points={stateHistoryPoints}
       />
     </div>
   )

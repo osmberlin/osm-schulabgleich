@@ -1,5 +1,5 @@
 import { de } from '../i18n/de'
-import { type LandCode, STATE_LABEL_DE } from '../lib/stateConfig'
+import { type StateCode, STATE_LABEL_DE } from '../lib/stateConfig'
 import { AppBreadcrumb, type AppBreadcrumbCrumb } from './AppBreadcrumb'
 import { useRouterState } from '@tanstack/react-router'
 
@@ -27,7 +27,7 @@ export function PageBreadcrumb() {
     if (m) {
       const code = m[1]
       const matchKeyEnc = m[2]
-      const label = STATE_LABEL_DE[code as LandCode] ?? code
+      const label = STATE_LABEL_DE[code as StateCode] ?? code
       if (matchKeyEnc) {
         return {
           homeCurrent: false,

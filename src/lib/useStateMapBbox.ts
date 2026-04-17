@@ -1,16 +1,16 @@
-import { landMapBboxTupleSchema } from './zodGeo'
+import { stateMapBboxTupleSchema } from './zodGeo'
 import { createParser, useQueryState } from 'nuqs'
 
 /** Map viewport bbox in WGS84: west, south, east, north (URL `?bbox=`). */
-export type LandMapBbox = readonly [west: number, south: number, east: number, north: number]
+export type StateMapBbox = readonly [west: number, south: number, east: number, north: number]
 
-export const landMapBboxParser = createParser({
+export const stateMapBboxParser = createParser({
   parse(value) {
     const parts = value.split(',').map((x) => Number.parseFloat(x.trim()))
-    const r = landMapBboxTupleSchema.safeParse(parts)
-    return r.success ? (r.data as LandMapBbox) : null
+    const r = stateMapBboxTupleSchema.safeParse(parts)
+    return r.success ? (r.data as StateMapBbox) : null
   },
-  serialize(value: LandMapBbox) {
+  serialize(value: StateMapBbox) {
     return value.map((n) => n.toFixed(4)).join(',')
   },
 }).withOptions({ history: 'replace' })
@@ -18,8 +18,8 @@ export const landMapBboxParser = createParser({
 /**
  * URL-synced map list filter for the Bundesland page (`?bbox=west,south,east,north`).
  */
-export function useLandMapBbox() {
-  const [bbox, setBbox] = useQueryState('bbox', landMapBboxParser)
+export function useStateMapBbox() {
+  const [bbox, setBbox] = useQueryState('bbox', stateMapBboxParser)
 
   return {
     bbox,

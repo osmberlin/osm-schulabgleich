@@ -68,8 +68,8 @@ async function fetchTaginfoGermanyKeyValues(key: string, rp: number): Promise<Ta
   }
 }
 
-function landFromProps(p: Record<string, unknown>): string {
-  const pl = p._pipelineLand
+function stateFromPipelineProps(p: Record<string, unknown>): string {
+  const pl = p._pipelineState
   if (typeof pl === 'string' && pl.length === 2) return pl
   return '??'
 }
@@ -103,13 +103,13 @@ async function main() {
   const canonicalCounts = new Map<string, number>()
   const sourceCounts = new Map<string, number>()
 
-  type PerLand = { total: number; withCanonical: number }
-  const perLand = new Map<string, PerLand>()
+  type PerState = { total: number; withCanonical: number }
+  const perState = new Map<string, PerState>()
 
   for (const code of STATE_ORDER) {
-    perLand.set(code, { total: 0, withCanonical: 0 })
+    perState.set(code, { total: 0, withCanonical: 0 })
   }
-  perLand.set('??', { total: 0, withCanonical: 0 })
+  perState.set('??', { total: 0, withCanonical: 0 })
 
   for (const f of features) {
     const p = f.properties ?? {}
@@ -122,10 +122,10 @@ async function main() {
     if (hasS && hasSd) withBoth++
     if (hasS || hasSd) withEither++
 
-    const land = landFromProps(p)
-    const pl = perLand.get(land) ?? { total: 0, withCanonical: 0 }
+    const stateCode = stateFromPipelineProps(p)
+    const pl = perState.get(stateCode) ?? { total: 0, withCanonical: 0 }
     pl.total++
-    perLand.set(land, pl)
+    perState.set(stateCode, pl)
 
     if (hasS && school) {
       schoolCounts.set(school, (schoolCounts.get(school) ?? 0) + 1)
@@ -139,7 +139,7 @@ async function main() {
     if (norm.canonicalDe) {
       canonicalCounts.set(norm.canonicalDe, (canonicalCounts.get(norm.canonicalDe) ?? 0) + 1)
       pl.withCanonical++
-      perLand.set(land, pl)
+      perState.set(stateCode, pl)
     }
   }
 
@@ -176,8 +176,8 @@ async function main() {
   }
   mappingPreviewRows.sort((a, b) => a[0].localeCompare(b[0]))
 
-  const landRows = STATE_ORDER.map((code) => {
-    const pl = perLand.get(code) ?? { total: 0, withCanonical: 0 }
+  const stateRows = STATE_ORDER.map((code) => {
+    const pl = perState.get(code) ?? { total: 0, withCanonical: 0 }
     const pct = pl.total ? ((pl.withCanonical / pl.total) * 100).toFixed(1) : '0.0'
     return [code, String(pl.total), String(pl.withCanonical), `${pct}%`]
   })
@@ -272,7 +272,7 @@ async function main() {
         .map(([k, c]) => [k, String(c), `${((c / total) * 100).toFixed(2)} %`]),
     ) +
     '\n\n## Per Bundesland: features with a canonical Schulart\n\n' +
-    mdTable(['State', 'Features (total)', 'With canonicalDe', 'Share'], landRows) +
+    mdTable(['State', 'Features (total)', 'With canonicalDe', 'Share'], stateRows) +
     '\n\n## Appendix: `school=*` mapping preview (distinct raw → canonical)\n\n' +
     '*Useful for extending `OSM_SCHOOL_EN_TO_DE` when `source` is `unmapped`.*\n\n' +
     mdTable(['raw `school=*`', 'canonicalDe', 'source'], mappingPreviewRows) +

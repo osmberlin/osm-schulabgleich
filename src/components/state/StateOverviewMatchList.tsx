@@ -1,15 +1,15 @@
 import { de } from '../../i18n/de'
 import { formatDeInteger } from '../../lib/formatNumber'
 import { formatMatchRowListId } from '../../lib/formatOsmRef'
-import type { LandMatchCategory } from '../../lib/landMatchCategories'
 import { matchRowDisplayName } from '../../lib/matchRowInBbox'
+import type { StateMatchCategory } from '../../lib/stateMatchCategories'
 import { CategoryLegendSwatch } from '../CategoryLegendSwatch'
 import { ChevronRightIcon } from '@heroicons/react/20/solid'
 import { Link } from '@tanstack/react-router'
 
 type ListMatchRow = {
   key: string
-  category: LandMatchCategory
+  category: StateMatchCategory
   officialId: string | null
   osmType: 'way' | 'relation' | 'node' | null
   osmId: string | null
@@ -20,7 +20,7 @@ type ListMatchRow = {
   distanceMeters: number | null
 }
 
-export function LandOverviewMatchList({
+export function StateOverviewMatchList({
   code,
   listMatches,
   matchesLength,
@@ -42,7 +42,7 @@ export function LandOverviewMatchList({
   return (
     <>
       <h2 className="mt-10 mb-2 flex flex-row flex-wrap items-center gap-x-2 text-lg font-semibold text-zinc-100">
-        <span>{de.land.table}</span>
+        <span>{de.state.table}</span>
         <span className="inline-flex shrink-0 items-center rounded-full border border-zinc-300/90 bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold text-zinc-700 tabular-nums">
           {formatDeInteger(listMatches.length)}
         </span>
@@ -53,13 +53,13 @@ export function LandOverviewMatchList({
             {matchesLength === 0
               ? '—'
               : enabledCategoriesLength === 0
-                ? de.land.mapNoVisibleCategories
+                ? de.state.mapNoVisibleCategories
                 : listBboxActive && matchesAfterBboxCount === 0
-                  ? de.land.tableBboxEmpty
+                  ? de.state.tableBboxEmpty
                   : exploreFilteredCount === 0 && matchesAfterBboxCount > 0
-                    ? de.land.tableExplorerEmpty
+                    ? de.state.tableExplorerEmpty
                     : visibleMatchesLength === 0
-                      ? de.land.tableFilteredEmpty
+                      ? de.state.tableFilteredEmpty
                       : '—'}
           </p>
         ) : (
@@ -73,14 +73,14 @@ export function LandOverviewMatchList({
                     to="/bundesland/$code/schule/$matchKey"
                     params={{ code, matchKey: row.key }}
                     className="relative flex justify-between gap-x-3 px-3 py-2.5 hover:bg-zinc-800/50 sm:gap-x-6 sm:px-5 sm:py-3.5"
-                    aria-label={`${de.land.detail}: ${title}`}
+                    aria-label={`${de.state.detail}: ${title}`}
                   >
                     <div className="min-w-0 flex-1">
                       <p className="text-sm/5 font-semibold text-zinc-100">{title}</p>
                       <div className="mt-1 flex min-w-0 items-center gap-2">
                         <CategoryLegendSwatch category={row.category} />
                         <span className="min-w-0 text-xs font-medium text-zinc-300">
-                          {de.land.categoryLabel[row.category]}
+                          {de.state.categoryLabel[row.category]}
                         </span>
                         {row.category === 'matched' && row.matchMode && (
                           <span className="min-w-0 text-xs text-zinc-400">
@@ -97,7 +97,7 @@ export function LandOverviewMatchList({
                           )}
                           {row.distanceMeters != null && (
                             <p className="text-right text-xs/5 text-zinc-400 tabular-nums">
-                              {de.land.tableDistanceAway.replace(
+                              {de.state.tableDistanceAway.replace(
                                 '{meters}',
                                 formatDeInteger(row.distanceMeters),
                               )}

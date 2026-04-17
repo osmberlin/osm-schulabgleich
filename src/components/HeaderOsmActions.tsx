@@ -10,7 +10,7 @@ import {
 import { Link } from '@tanstack/react-router'
 import { useCallback, useState } from 'react'
 
-/** Matches SchuleDetail / LandOverview headline total pills (light chip on dark header). */
+/** Matches SchuleDetail / StateOverview headline total pills (light chip on dark header). */
 const HEADLINE_COUNT_PILL =
   'inline-flex shrink-0 items-center rounded-full border border-zinc-300/90 bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold text-zinc-700 tabular-nums'
 

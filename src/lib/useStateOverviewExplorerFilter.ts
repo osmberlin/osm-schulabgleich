@@ -1,4 +1,4 @@
-import { LAND_FACET_MATCH_MODES } from './landOverviewItemsSearch'
+import { STATE_FACET_MATCH_MODES } from './stateOverviewItemsSearch'
 import { parseAsArrayOf, parseAsString, parseAsStringLiteral, useQueryState } from 'nuqs'
 import { useCallback } from 'react'
 
@@ -6,7 +6,7 @@ const nameScopeParser = parseAsStringLiteral(['both', 'official', 'osm'])
   .withDefault('both')
   .withOptions({ history: 'replace' })
 
-const matchModeItemParser = parseAsStringLiteral(LAND_FACET_MATCH_MODES)
+const matchModeItemParser = parseAsStringLiteral(STATE_FACET_MATCH_MODES)
 
 const matchModesParser = parseAsArrayOf(matchModeItemParser)
   .withDefault([])
@@ -34,7 +34,7 @@ const exploreQueryParser = parseAsString.withDefault('').withOptions({ history: 
 /**
  * URL-backed explorer filters for Bundesland overview (itemsjs facets + name scope + full-text).
  */
-export function useLandOverviewExplorerFilter() {
+export function useStateOverviewExplorerFilter() {
   const [exploreQ, setExploreQ] = useQueryState('lq', exploreQueryParser)
   const [nameScope, setNameScope] = useQueryState('lscope', nameScopeParser)
   const [matchModes, setMatchModes] = useQueryState('lmm', matchModesParser)
@@ -43,7 +43,7 @@ export function useLandOverviewExplorerFilter() {
   const [schoolKinds, setSchoolKinds] = useQueryState('lsk', schoolKindsParser)
 
   const toggleMatchMode = useCallback(
-    (mode: (typeof LAND_FACET_MATCH_MODES)[number], on: boolean) => {
+    (mode: (typeof STATE_FACET_MATCH_MODES)[number], on: boolean) => {
       void setMatchModes((prev) => {
         const cur = prev ?? []
         const next = new Set(cur)

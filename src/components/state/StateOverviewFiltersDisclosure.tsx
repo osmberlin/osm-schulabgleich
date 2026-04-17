@@ -2,11 +2,11 @@ import { de } from '../../i18n/de'
 import { cn } from '../../lib/cn'
 import { formatDeInteger } from '../../lib/formatNumber'
 import {
-  LAND_FACET_MATCH_MODES,
-  LAND_MATCH_FACET_MATCH_MODE_NONE,
-  LAND_MATCH_FACET_SCHOOL_KIND_NONE,
-  type LandFacetMatchMode,
-} from '../../lib/landOverviewItemsSearch'
+  STATE_FACET_MATCH_MODES,
+  STATE_MATCH_FACET_MATCH_MODE_NONE,
+  STATE_MATCH_FACET_SCHOOL_KIND_NONE,
+  type StateFacetMatchMode,
+} from '../../lib/stateOverviewItemsSearch'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { useEffect, useId, useState } from 'react'
 
@@ -21,16 +21,16 @@ function sortBuckets(b: Bucket[]): Bucket[] {
 }
 
 function matchModeLabel(key: string): string {
-  if (key === LAND_MATCH_FACET_MATCH_MODE_NONE) return de.land.explorer.matchModeNone
+  if (key === STATE_MATCH_FACET_MATCH_MODE_NONE) return de.state.explorer.matchModeNone
   const k = key as keyof typeof de.detail.matchModeLabel
   return de.detail.matchModeLabel[k] ?? key
 }
 
 function schoolKindLabel(key: string): string {
-  return key === LAND_MATCH_FACET_SCHOOL_KIND_NONE ? de.land.explorer.schoolKindNone : key
+  return key === STATE_MATCH_FACET_SCHOOL_KIND_NONE ? de.state.explorer.schoolKindNone : key
 }
 
-export function LandOverviewFiltersDisclosure({
+export function StateOverviewFiltersDisclosure({
   exploreQ,
   setExploreQ,
   nameScope,
@@ -53,7 +53,7 @@ export function LandOverviewFiltersDisclosure({
   nameScope: 'both' | 'official' | 'osm'
   setNameScope: (s: 'both' | 'official' | 'osm') => void
   matchModes: string[]
-  toggleMatchMode: (mode: LandFacetMatchMode, on: boolean) => void
+  toggleMatchMode: (mode: StateFacetMatchMode, on: boolean) => void
   iscedLevels: string[]
   toggleIscedLevel: (level: 'yes' | 'no', on: boolean) => void
   geoBoundaryIssues: string[]
@@ -100,9 +100,9 @@ export function LandOverviewFiltersDisclosure({
         )}
       >
         <span className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
-          <span className="shrink-0">{de.land.explorer.summary}</span>
+          <span className="shrink-0">{de.state.explorer.summary}</span>
           <span className="truncate text-xs font-normal text-zinc-400 tabular-nums sm:text-sm">
-            {de.land.explorer.summaryCounts
+            {de.state.explorer.summaryCounts
               .replace('{filtered}', formatDeInteger(filteredCount))
               .replace('{total}', formatDeInteger(bboxTotalCount))}
           </span>
@@ -113,18 +113,18 @@ export function LandOverviewFiltersDisclosure({
         />
       </summary>
       <div className="border-t border-zinc-700 px-4 py-4 text-sm text-zinc-200">
-        <p className="mb-4 text-xs text-zinc-400">{de.land.explorer.openHint}</p>
+        <p className="mb-4 text-xs text-zinc-400">{de.state.explorer.openHint}</p>
 
         <div className="mb-5">
           <label className="mb-1.5 block text-xs font-medium text-zinc-300" htmlFor={`${baseId}-q`}>
-            {de.land.explorer.queryLabel}
+            {de.state.explorer.queryLabel}
           </label>
           <input
             id={`${baseId}-q`}
             type="search"
             value={localQ}
             onChange={(e) => setLocalQ(e.target.value)}
-            placeholder={de.land.explorer.queryPlaceholder}
+            placeholder={de.state.explorer.queryPlaceholder}
             className="block w-full rounded-md border border-zinc-600 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 focus:outline-none"
             autoComplete="off"
           />
@@ -132,14 +132,14 @@ export function LandOverviewFiltersDisclosure({
 
         <fieldset className="mb-5">
           <legend className="mb-2 text-xs font-medium text-zinc-300">
-            {de.land.explorer.nameScopeLabel}
+            {de.state.explorer.nameScopeLabel}
           </legend>
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             {(
               [
-                ['both', de.land.explorer.nameScopeBoth],
-                ['official', de.land.explorer.nameScopeOfficial],
-                ['osm', de.land.explorer.nameScopeOsm],
+                ['both', de.state.explorer.nameScopeBoth],
+                ['official', de.state.explorer.nameScopeOfficial],
+                ['osm', de.state.explorer.nameScopeOsm],
               ] as const
             ).map(([value, label]) => (
               <label
@@ -161,10 +161,10 @@ export function LandOverviewFiltersDisclosure({
 
         <fieldset className="mb-5">
           <legend className="mb-2 text-xs font-medium text-zinc-300">
-            {de.land.explorer.matchModeHeading}
+            {de.state.explorer.matchModeHeading}
           </legend>
           <div className="flex max-h-40 flex-col gap-2 overflow-y-auto pr-1">
-            {LAND_FACET_MATCH_MODES.map((mode) => {
+            {STATE_FACET_MATCH_MODES.map((mode) => {
               const bucket = matchBuckets.find((b) => String(b.key) === mode)
               const count = bucket?.doc_count ?? 0
               const checked = matchModes.includes(mode)
@@ -193,7 +193,7 @@ export function LandOverviewFiltersDisclosure({
 
         <fieldset className="mb-5">
           <legend className="mb-2 text-xs font-medium text-zinc-300">
-            {de.land.explorer.iscedHeading}
+            {de.state.explorer.iscedHeading}
           </legend>
           <div className="flex flex-col gap-2 sm:flex-row">
             {(['yes', 'no'] as const).map((level) => {
@@ -212,7 +212,7 @@ export function LandOverviewFiltersDisclosure({
                       onChange={(e) => toggleIscedLevel(level, e.target.checked)}
                       className="rounded border-zinc-500 text-emerald-600 focus:ring-emerald-500"
                     />
-                    {level === 'yes' ? de.land.explorer.iscedYes : de.land.explorer.iscedNo}
+                    {level === 'yes' ? de.state.explorer.iscedYes : de.state.explorer.iscedNo}
                   </span>
                   <span className="text-zinc-400 tabular-nums">{formatDeInteger(count)}</span>
                 </label>
@@ -223,7 +223,7 @@ export function LandOverviewFiltersDisclosure({
 
         <fieldset className="mb-5">
           <legend className="mb-2 text-xs font-medium text-zinc-300">
-            {de.land.explorer.geoBoundaryHeading}
+            {de.state.explorer.geoBoundaryHeading}
           </legend>
           <div className="flex flex-col gap-2 sm:flex-row">
             {(['yes', 'no'] as const).map((level) => {
@@ -243,8 +243,8 @@ export function LandOverviewFiltersDisclosure({
                       className="rounded border-zinc-500 text-emerald-600 focus:ring-emerald-500"
                     />
                     {level === 'yes'
-                      ? de.land.explorer.geoBoundaryYes
-                      : de.land.explorer.geoBoundaryNo}
+                      ? de.state.explorer.geoBoundaryYes
+                      : de.state.explorer.geoBoundaryNo}
                   </span>
                   <span className="text-zinc-400 tabular-nums">{formatDeInteger(count)}</span>
                 </label>
@@ -255,7 +255,7 @@ export function LandOverviewFiltersDisclosure({
 
         <fieldset className="mb-5">
           <legend className="mb-2 text-xs font-medium text-zinc-300">
-            {de.land.explorer.schoolKindHeading}
+            {de.state.explorer.schoolKindHeading}
           </legend>
           <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
             {schoolBuckets.map((b) => {
@@ -291,7 +291,7 @@ export function LandOverviewFiltersDisclosure({
             disabled={!hasActiveExplorer}
             className="rounded-md border border-zinc-600 bg-zinc-800 px-3 py-2 text-xs font-medium text-zinc-100 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {de.land.explorer.reset}
+            {de.state.explorer.reset}
           </button>
         </div>
       </div>

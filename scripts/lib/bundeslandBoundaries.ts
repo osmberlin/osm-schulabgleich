@@ -1,4 +1,4 @@
-import { type LandCode, STATE_ORDER } from '../../src/lib/stateConfig'
+import { type StateCode, STATE_ORDER } from '../../src/lib/stateConfig'
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon'
 import { point } from '@turf/helpers'
 import type { Feature, MultiPolygon, Polygon } from 'geojson'
@@ -9,7 +9,7 @@ import path from 'node:path'
  * Order for point-in-polygon checks (small city-states first — same as former bbox heuristic).
  * When boundaries touch, the first match wins.
  */
-const PIPELINE_LAND_POLYGON_ORDER: LandCode[] = [
+const PIPELINE_LAND_POLYGON_ORDER: StateCode[] = [
   'BE',
   'HH',
   'HB',
@@ -28,12 +28,12 @@ const PIPELINE_LAND_POLYGON_ORDER: LandCode[] = [
   'TH',
 ]
 
-type Loaded = Map<LandCode, Feature<Polygon | MultiPolygon>>
+type Loaded = Map<StateCode, Feature<Polygon | MultiPolygon>>
 
 let cached: Loaded | null = null
 let cachedRoot: string | null = null
 
-function readBoundaryFile(projectRoot: string, code: LandCode): Feature<Polygon | MultiPolygon> {
+function readBoundaryFile(projectRoot: string, code: StateCode): Feature<Polygon | MultiPolygon> {
   const p = path.join(projectRoot, 'public/bundesland-boundaries', `${code}.geojson`)
   const raw = readFileSync(p, 'utf8')
   const f = JSON.parse(raw) as Feature
@@ -69,9 +69,9 @@ export function resetBundeslandBoundariesCache(): void {
   cachedRoot = null
 }
 
-export function landCodeForPoint(lon: number, lat: number): LandCode | null {
+export function stateCodeForPoint(lon: number, lat: number): StateCode | null {
   if (!cached) {
-    throw new Error('initBundeslandBoundaries must be called before landCodeForPoint')
+    throw new Error('initBundeslandBoundaries must be called before stateCodeForPoint')
   }
   const pt = point([lon, lat])
   for (const code of PIPELINE_LAND_POLYGON_ORDER) {
@@ -83,11 +83,11 @@ export function landCodeForPoint(lon: number, lat: number): LandCode | null {
 }
 
 /** Resolve land from optional env for tests (directory containing {code}.geojson). */
-export function landCodeForPointWithRoot(
+export function stateCodeForPointWithRoot(
   projectRoot: string,
   lon: number,
   lat: number,
-): LandCode | null {
+): StateCode | null {
   initBundeslandBoundaries(projectRoot)
-  return landCodeForPoint(lon, lat)
+  return stateCodeForPoint(lon, lat)
 }

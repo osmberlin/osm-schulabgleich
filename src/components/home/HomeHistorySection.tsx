@@ -12,7 +12,7 @@ export function HomeHistorySection({ points }: { points: MatchHistoryStackPoint[
       <div className="rounded-lg border border-zinc-700 bg-zinc-900/40 p-4 shadow-none outline outline-zinc-100/10">
         <MatchCountsHistoryChart
           points={points}
-          categoryLabels={de.land.categoryLabel}
+          categoryLabels={de.state.categoryLabel}
           chartDescription={de.home.historyHeading}
         />
       </div>

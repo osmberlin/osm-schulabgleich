@@ -6,24 +6,24 @@ import { parseErrorOutsideBoundaryFromOfficialProps } from './zodGeo'
 import itemsjs from 'itemsjs'
 import type { z } from 'zod'
 
-export const LAND_MATCH_FACET_SCHOOL_KIND_NONE = '(keine)'
-export const LAND_MATCH_FACET_MATCH_MODE_NONE = '(none)'
+export const STATE_MATCH_FACET_SCHOOL_KIND_NONE = '(keine)'
+export const STATE_MATCH_FACET_MATCH_MODE_NONE = '(none)'
 
-export type LandMatchRow = z.infer<typeof schoolsMatchRowSchema>
+export type StateMatchRow = z.infer<typeof schoolsMatchRowSchema>
 
-export const LAND_FACET_MATCH_MODES = [
+export const STATE_FACET_MATCH_MODES = [
   'distance',
   'distance_and_name',
   'name',
   'website',
   'address',
   'ref',
-  LAND_MATCH_FACET_MATCH_MODE_NONE,
+  STATE_MATCH_FACET_MATCH_MODE_NONE,
 ] as const
 
-export type LandFacetMatchMode = (typeof LAND_FACET_MATCH_MODES)[number]
+export type StateFacetMatchMode = (typeof STATE_FACET_MATCH_MODES)[number]
 
-function namePartsForSearch(row: LandMatchRow): string[] {
+function namePartsForSearch(row: StateMatchRow): string[] {
   const out: string[] = []
   if (row.officialName) out.push(row.officialName)
   if (row.osmName) out.push(row.osmName)
@@ -37,19 +37,19 @@ function namePartsForSearch(row: LandMatchRow): string[] {
   return out
 }
 
-export function effectiveSchoolKindDeForMatchRow(row: LandMatchRow): string {
+export function effectiveSchoolKindDeForMatchRow(row: StateMatchRow): string {
   if (row.schoolKindDe != null && row.schoolKindDe !== '') return row.schoolKindDe
   const tags = row.osmTags
-  if (!tags) return LAND_MATCH_FACET_SCHOOL_KIND_NONE
+  if (!tags) return STATE_MATCH_FACET_SCHOOL_KIND_NONE
   const r = canonicalSchoolKindDe({
     school: tags.school,
     schoolDe: tags['school:de'],
   })
-  return r.canonicalDe ?? LAND_MATCH_FACET_SCHOOL_KIND_NONE
+  return r.canonicalDe ?? STATE_MATCH_FACET_SCHOOL_KIND_NONE
 }
 
 /** Pipeline `_error_outside_boundary` on amtliche Daten (voided Point outside declared Bundesland). */
-export function hasOfficialGeoOutsideBoundaryFlag(row: LandMatchRow): boolean {
+export function hasOfficialGeoOutsideBoundaryFlag(row: StateMatchRow): boolean {
   if (parseErrorOutsideBoundaryFromOfficialProps(row.officialProperties ?? null)) return true
   for (const s of row.ambiguousOfficialSnapshots ?? []) {
     if (parseErrorOutsideBoundaryFromOfficialProps(s.properties ?? null)) return true
@@ -57,12 +57,12 @@ export function hasOfficialGeoOutsideBoundaryFlag(row: LandMatchRow): boolean {
   return false
 }
 
-export function matchRowToItemsJsDoc(row: LandMatchRow) {
+export function matchRowToItemsJsDoc(row: StateMatchRow) {
   const hasIsced = !!row.osmTags?.['isced:level']?.trim()
   return {
     id: row.key,
     nameSubstantives: substantivesFromNames(namePartsForSearch(row)),
-    matchMode: (row.matchMode ?? LAND_MATCH_FACET_MATCH_MODE_NONE) as string,
+    matchMode: (row.matchMode ?? STATE_MATCH_FACET_MATCH_MODE_NONE) as string,
     iscedLevel: hasIsced ? 'yes' : 'no',
     schoolKindDe: effectiveSchoolKindDeForMatchRow(row),
     hasOfficial: row.officialId ? 'yes' : 'no',
@@ -71,7 +71,7 @@ export function matchRowToItemsJsDoc(row: LandMatchRow) {
   }
 }
 
-export function createLandMatchItemsJsEngine(rows: LandMatchRow[]) {
+export function createStateMatchItemsJsEngine(rows: StateMatchRow[]) {
   const data = rows.map(matchRowToItemsJsDoc)
   return itemsjs(data, {
     searchableFields: ['nameSubstantives'],
@@ -102,8 +102,8 @@ export type ExplorerFilterState = {
   schoolKinds: string[]
 }
 
-export function searchLandMatchesWithExplorer(
-  engine: ReturnType<typeof createLandMatchItemsJsEngine>,
+export function searchStateMatchesWithExplorer(
+  engine: ReturnType<typeof createStateMatchItemsJsEngine>,
   state: ExplorerFilterState,
 ) {
   const filters: Record<string, string[]> = {}

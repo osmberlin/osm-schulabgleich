@@ -69,7 +69,7 @@ export function HomeOfficialSourcesSection() {
           <thead>
             <tr className="border-b border-zinc-700 bg-zinc-900/80 text-xs font-semibold tracking-wide text-zinc-400 uppercase">
               <th scope="col" className="px-3 py-2.5 align-top">
-                {t.colLand}
+                {t.colState}
               </th>
               <th scope="col" className="px-3 py-2.5 align-top">
                 {t.colOfficialLicense}
@@ -101,7 +101,7 @@ export function HomeOfficialSourcesSection() {
                       to="/bundesland/$code"
                       params={{ code }}
                       className="text-emerald-400/90 underline decoration-emerald-600/40 underline-offset-2 hover:text-emerald-300 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400"
-                      aria-label={`${de.home.toLand}: ${name}`}
+                      aria-label={`${de.home.toState}: ${name}`}
                     >
                       {name}
                     </Link>

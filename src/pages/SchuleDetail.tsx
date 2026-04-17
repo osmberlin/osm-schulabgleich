@@ -13,15 +13,14 @@ import {
   buildOpenStreetMapOrgPinUrl,
   buildOsmBrowseUrl,
 } from '../lib/editorLinks'
-import { fetchLandSchoolsBundle } from '../lib/fetchLandSchoolsBundle'
+import { fetchStateSchoolsBundle } from '../lib/fetchStateSchoolsBundle'
 import { formatDeInteger } from '../lib/formatNumber'
 import { JEDESCHULE_DUPLICATE_GROUP_SIZE_KEY } from '../lib/jedeschuleDuplicateGroup'
 import { jedeschuleSchoolJsonUrl } from '../lib/jedeschuleUrls'
-import type { LandMatchCategory } from '../lib/landMatchCategories'
 import { boundsToBboxParam } from '../lib/mapBounds'
 import { DETAIL_MAP_OFFICIAL, DETAIL_MAP_OSM } from '../lib/matchCategoryTheme'
-import 'maplibre-gl/dist/maplibre-gl.css'
 import { MATCH_RADIUS_KM, MATCH_RADIUS_M } from '../lib/matchRadius'
+import 'maplibre-gl/dist/maplibre-gl.css'
 import {
   buildOfficialSchoolLonLatIndex,
   matchRowDisplayName,
@@ -38,10 +37,11 @@ import { promoteClosedLineStringsToPolygons } from '../lib/osmClosedRingsToPolyg
 import { findOsmFeature } from '../lib/osmFeatureLookup'
 import { osmGeometryCentroidLonLat } from '../lib/osmGeometryCentroid'
 import { comparePropertySections, normalizeAddressCompareString } from '../lib/propertyCompare'
-import { STATE_LABEL_DE, STATE_ORDER, type LandCode } from '../lib/stateConfig'
+import { STATE_LABEL_DE, STATE_ORDER, type StateCode } from '../lib/stateConfig'
+import type { StateMatchCategory } from '../lib/stateMatchCategories'
 import { useDetailMapMask } from '../lib/useDetailMapMask'
 import { useDetailMapParam } from '../lib/useDetailMapParam'
-import type { LandMapBbox } from '../lib/useLandMapBbox'
+import type { StateMapBbox } from '../lib/useStateMapBbox'
 import {
   parseErrorOutsideBoundaryFromOfficialProps,
   parseJedeschuleLonLatFromRecord,
@@ -168,16 +168,16 @@ type HoveredMapLabel =
       lat: number
       name: string
       matchKey: string
-      matchCat: LandMatchCategory
+      matchCat: StateMatchCategory
     }
 
-/** Same category line as LandLayout header (`de.land.categoryLabel`). */
+/** Same category line as StateLayout header (`de.state.categoryLabel`). */
 function detailMapPopupCategoryLine(
   hovered: HoveredMapLabel,
-  currentSchuleCategory: LandMatchCategory,
+  currentSchuleCategory: StateMatchCategory,
 ): string {
   const cat = hovered.kind === 'osm-other' ? hovered.matchCat : currentSchuleCategory
-  return de.land.categoryLabel[cat] ?? cat
+  return de.state.categoryLabel[cat] ?? cat
 }
 
 /** Uncontrolled `<details>` opened on first paint (React’s `DetailsHTMLAttributes` has no `defaultOpen` yet). */
@@ -526,13 +526,13 @@ export function SchuleDetail() {
   const keyDecoded = decodeURIComponent(matchKey)
   const { showMapMask, setShowMapMask } = useDetailMapMask()
   const { map: detailMapUrl, setMap: setDetailMapUrl } = useDetailMapParam()
-  const [detailMapBbox, setDetailMapBbox] = useState<LandMapBbox | null>(null)
+  const [detailMapBbox, setDetailMapBbox] = useState<StateMapBbox | null>(null)
   const detailMapSkipUrlSyncRef = useRef(false)
   const [hoveredMapLabel, setHoveredMapLabel] = useState<HoveredMapLabel | null>(null)
 
   const q = useQuery({
     queryKey: ['schule-detail', code, keyDecoded],
-    queryFn: () => fetchLandSchoolsBundle(code),
+    queryFn: () => fetchStateSchoolsBundle(code),
   })
 
   const row = useMemo(
@@ -556,8 +556,8 @@ export function SchuleDetail() {
     return null
   }, [row])
 
-  const landLabelDe =
-    code && STATE_ORDER.includes(code as LandCode) ? STATE_LABEL_DE[code as LandCode] : code
+  const stateLabelDe =
+    code && STATE_ORDER.includes(code as StateCode) ? STATE_LABEL_DE[code as StateCode] : code
 
   /**
    * Karten-Schwerpunkt: zuerst OSM (wie Matcher), sonst OSM-Geometrie, sonst amtliche
@@ -921,7 +921,7 @@ export function SchuleDetail() {
     if (layerId === OTHER_SCHOOLS_LAYER_CORE || layerId === OTHER_SCHOOLS_LAYER_HALO) {
       const matchKey = hit.properties?.matchKey
       const name = hit.properties?.name
-      const matchCat = hit.properties?.matchCat as LandMatchCategory | undefined
+      const matchCat = hit.properties?.matchCat as StateMatchCategory | undefined
       if (
         typeof matchKey === 'string' &&
         typeof name === 'string' &&
@@ -1004,8 +1004,8 @@ export function SchuleDetail() {
     }
   }
 
-  if (q.isLoading) return <p className="text-zinc-400">{de.land.loading}</p>
-  if (q.isError) return <p className="text-red-400">{de.land.error}</p>
+  if (q.isLoading) return <p className="text-zinc-400">{de.state.loading}</p>
+  if (q.isError) return <p className="text-red-400">{de.state.error}</p>
   if (!row) {
     return (
       <p className="text-zinc-400">
@@ -1377,8 +1377,8 @@ export function SchuleDetail() {
               <div className="mt-2 text-sm text-amber-100/85">
                 <p className="leading-relaxed">
                   {de.detail.officialCoordsOutsideBoundaryBody.replace(
-                    '{land}',
-                    landLabelDe ?? '—',
+                    '{state}',
+                    stateLabelDe ?? '—',
                   )}
                 </p>
                 <p className="mt-2 leading-relaxed">

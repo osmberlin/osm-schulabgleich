@@ -1,13 +1,13 @@
 import { de } from '../../i18n/de'
 import { formatDeInteger } from '../../lib/formatNumber'
-import { LAND_MATCH_CATEGORIES, type LandMatchCategory } from '../../lib/landMatchCategories'
+import { STATE_MATCH_CATEGORIES, type StateMatchCategory } from '../../lib/stateMatchCategories'
 import { CategoryLegendSwatch } from '../CategoryLegendSwatch'
 import { LayerToggleStatBlock, StatBlocksRow } from '../StatBlocks'
 import { InformationCircleIcon } from '@heroicons/react/20/solid'
 
-type CategoryCounts = Record<LandMatchCategory, number>
+type CategoryCounts = Record<StateMatchCategory, number>
 
-export function LandOverviewStats({
+export function StateOverviewStats({
   catCounts,
   statsInputId,
   isCategoryEnabled,
@@ -15,12 +15,12 @@ export function LandOverviewStats({
 }: {
   catCounts: CategoryCounts
   statsInputId: string
-  isCategoryEnabled: (category: LandMatchCategory) => boolean
-  setCategoryEnabled: (category: LandMatchCategory, enabled: boolean) => void
+  isCategoryEnabled: (category: StateMatchCategory) => boolean
+  setCategoryEnabled: (category: StateMatchCategory, enabled: boolean) => void
 }) {
   return (
-    <StatBlocksRow aria-label={de.land.legendRowAria} className="mb-6">
-      {LAND_MATCH_CATEGORIES.map((cat) => {
+    <StatBlocksRow aria-label={de.state.legendRowAria} className="mb-6">
+      {STATE_MATCH_CATEGORIES.map((cat) => {
         const count = catCounts[cat]
         const disabled = count === 0
         return (
@@ -30,16 +30,16 @@ export function LandOverviewStats({
             checked={disabled ? false : isCategoryEnabled(cat)}
             disabled={disabled}
             onChange={(on) => setCategoryEnabled(cat, on)}
-            label={de.land.categoryLabel[cat]}
+            label={de.state.categoryLabel[cat]}
             labelAddon={
               cat === 'official_no_coord' ? (
                 <button
                   type="button"
                   className="inline-flex rounded text-zinc-400 hover:text-zinc-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
-                  aria-label={de.land.officialNoCoordKpiInfoButton}
+                  aria-label={de.state.officialNoCoordKpiInfoButton}
                   onClick={(e) => {
                     e.preventDefault()
-                    window.alert(de.land.officialNoCoordKpiInfoAlert)
+                    window.alert(de.state.officialNoCoordKpiInfoAlert)
                   }}
                 >
                   <InformationCircleIcon className="size-4" aria-hidden />

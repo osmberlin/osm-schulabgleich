@@ -2,11 +2,11 @@ import { germanyHistoryFromRuns } from './matchHistoryFromRuns'
 import { STATE_ORDER } from './stateConfig'
 import { describe, expect, it } from 'vitest'
 
-function fullNationalRun(finishedAt: string, matchedPerLand: number) {
-  const lands = STATE_ORDER.map((code) => ({
+function fullNationalRun(finishedAt: string, matchedPerState: number) {
+  const states = STATE_ORDER.map((code) => ({
     code,
     counts: {
-      matched: matchedPerLand,
+      matched: matchedPerState,
       official_only: 0,
       osm_only: 0,
       ambiguous: 0,
@@ -19,7 +19,7 @@ function fullNationalRun(finishedAt: string, matchedPerLand: number) {
     durationMs: 1,
     overallOk: true,
     errors: [] as string[],
-    lands,
+    states,
     matchSkipped: false,
   }
 }

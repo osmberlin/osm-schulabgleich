@@ -16,10 +16,10 @@ flowchart TB
   oFetch --> osmPipeline[".pipeline/schools_osm_de.geojson"]
   oFetch --> metaOsm[schools_osm_de.meta.json]
   csvFile --> parse[CSV parsen]
-  parse --> perLand[Pro LandCode STATE_ORDER]
+  parse --> perState[Pro StateCode STATE_ORDER]
   osmPipeline --> osmFc[OSM FeatureCollection]
-  osmFc --> perLand
-  perLand --> sliceOfficial[officialGeojsonForLand]
+  osmFc --> perState
+  perState --> sliceOfficial[officialGeojsonForState]
   sliceOfficial --> gate[gateOfficialFeatureCollection]
   gate --> dedupe[dedupeOfficialInputs]
   osmFc --> sliceOsm[OSM nach Bundesland filtern]

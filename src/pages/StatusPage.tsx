@@ -159,7 +159,7 @@ export function StatusPage() {
                   <span className="font-medium">{de.status.matchSkipped}.</span>{' '}
                   {run.matchSkipReason ?? ''}
                 </p>
-              ) : run.lands.length > 0 ? (
+              ) : run.states.length > 0 ? (
                 <p className="mt-2 text-xs text-zinc-400">{de.status.matchRan}</p>
               ) : run.errors.length > 0 ? (
                 <p className="mt-2 text-xs text-amber-200">{de.status.matchNotRunMissingInputs}</p>
@@ -193,9 +193,9 @@ export function StatusPage() {
                 </pre>
               )}
               <details className="mt-2 text-xs text-zinc-400">
-                <summary>{de.status.lands}</summary>
+                <summary>{de.status.states}</summary>
                 <ul className="mt-1 list-inside list-disc">
-                  {run.lands.map((l) => (
+                  {run.states.map((l) => (
                     <li key={l.code}>
                       {l.code} — {l.osmSource ?? '?'}
                       {l.osmSnapshotAt ? ` (${l.osmSnapshotAt})` : ''}

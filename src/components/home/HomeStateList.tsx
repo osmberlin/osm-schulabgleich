@@ -1,7 +1,7 @@
 import { de } from '../../i18n/de'
 import { formatDeInteger } from '../../lib/formatNumber'
 import { CATEGORY_INNER_HEX } from '../../lib/matchCategoryTheme'
-import { type LandCode, STATE_LABEL_DE, STATE_ORDER } from '../../lib/stateConfig'
+import { type StateCode, STATE_LABEL_DE, STATE_ORDER } from '../../lib/stateConfig'
 import { ChevronRightIcon } from '@heroicons/react/20/solid'
 import { Link } from '@tanstack/react-router'
 import { type ReactNode } from 'react'
@@ -11,7 +11,7 @@ const PIE_CY = 20
 const PIE_R = 18
 const TAU = Math.PI * 2
 
-type LandSummaryLike = {
+type StateSummaryLike = {
   counts: {
     matched: number
     official_only: number
@@ -106,11 +106,11 @@ function MiniPie({
     <div className="flex h-10 w-10 shrink-0 items-center justify-center">
       <svg width="40" height="40" viewBox="0 0 40 40" role="img" className="shrink-0">
         <title>
-          {de.land.categoryLabel.matched} {formatDeInteger(matched)},{' '}
-          {de.land.categoryLabel.official_only} {formatDeInteger(officialOnly)},{' '}
-          {de.land.categoryLabel.osm_only} {formatDeInteger(osmOnly)},{' '}
-          {de.land.categoryLabel.match_ambiguous} {formatDeInteger(matchAmbiguous)},{' '}
-          {de.land.categoryLabel.official_no_coord} {formatDeInteger(officialNoCoord)}
+          {de.state.categoryLabel.matched} {formatDeInteger(matched)},{' '}
+          {de.state.categoryLabel.official_only} {formatDeInteger(officialOnly)},{' '}
+          {de.state.categoryLabel.osm_only} {formatDeInteger(osmOnly)},{' '}
+          {de.state.categoryLabel.match_ambiguous} {formatDeInteger(matchAmbiguous)},{' '}
+          {de.state.categoryLabel.official_no_coord} {formatDeInteger(officialNoCoord)}
         </title>
         {paths}
       </svg>
@@ -118,45 +118,45 @@ function MiniPie({
   )
 }
 
-export function HomeLandList({ byCode }: { byCode: Map<string, LandSummaryLike> }) {
+export function HomeStateList({ byCode }: { byCode: Map<string, StateSummaryLike> }) {
   return (
     <div className="overflow-hidden rounded-lg border border-zinc-700 bg-zinc-900/40 shadow-none outline outline-zinc-100/10">
       <ul className="divide-y divide-zinc-700">
         {STATE_ORDER.map((code) => {
-          const land = byCode.get(code) ?? null
-          const label = STATE_LABEL_DE[code as LandCode]
+          const row = byCode.get(code) ?? null
+          const label = STATE_LABEL_DE[code as StateCode]
           return (
             <li key={code}>
               <Link
                 to="/bundesland/$code"
                 params={{ code }}
                 className="relative flex items-center justify-between gap-x-3 px-3 py-2.5 hover:bg-zinc-800/50 sm:gap-x-6 sm:px-5 sm:py-3.5"
-                aria-label={`${de.home.toLand}: ${label}`}
+                aria-label={`${de.home.toState}: ${label}`}
               >
                 <div className="flex min-w-0 flex-1 items-center gap-4">
                   <MiniPie
-                    matched={land?.counts.matched ?? 0}
-                    officialOnly={land?.counts.official_only ?? 0}
-                    osmOnly={land?.counts.osm_only ?? 0}
-                    matchAmbiguous={land?.counts.ambiguous ?? 0}
-                    officialNoCoord={land?.counts.official_no_coord ?? 0}
+                    matched={row?.counts.matched ?? 0}
+                    officialOnly={row?.counts.official_only ?? 0}
+                    osmOnly={row?.counts.osm_only ?? 0}
+                    matchAmbiguous={row?.counts.ambiguous ?? 0}
+                    officialNoCoord={row?.counts.official_no_coord ?? 0}
                   />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm/5 font-semibold text-zinc-100">{label}</p>
-                    {land && (
+                    {row && (
                       <div className="mt-1 text-xs text-zinc-400">
-                        {de.land.categoryLabel.matched} {formatDeInteger(land.counts.matched)} ·{' '}
-                        {de.land.categoryLabel.official_only}{' '}
-                        {formatDeInteger(land.counts.official_only)} ·{' '}
-                        {de.land.categoryLabel.osm_only} {formatDeInteger(land.counts.osm_only)} ·{' '}
-                        {de.land.categoryLabel.match_ambiguous}{' '}
-                        {formatDeInteger(land.counts.ambiguous)} ·{' '}
-                        {de.land.categoryLabel.official_no_coord}{' '}
-                        {formatDeInteger(land.counts.official_no_coord)}
-                        {land.osmSource === 'cached' ? ' · OSM-Cache' : ''}
+                        {de.state.categoryLabel.matched} {formatDeInteger(row.counts.matched)} ·{' '}
+                        {de.state.categoryLabel.official_only}{' '}
+                        {formatDeInteger(row.counts.official_only)} ·{' '}
+                        {de.state.categoryLabel.osm_only} {formatDeInteger(row.counts.osm_only)} ·{' '}
+                        {de.state.categoryLabel.match_ambiguous}{' '}
+                        {formatDeInteger(row.counts.ambiguous)} ·{' '}
+                        {de.state.categoryLabel.official_no_coord}{' '}
+                        {formatDeInteger(row.counts.official_no_coord)}
+                        {row.osmSource === 'cached' ? ' · OSM-Cache' : ''}
                       </div>
                     )}
-                    {!land && (
+                    {!row && (
                       <div className="mt-1 text-xs text-zinc-400">Keine Zusammenfassung</div>
                     )}
                   </div>

@@ -1,4 +1,4 @@
-import type { LandMatchCategory } from './landMatchCategories'
+import type { StateMatchCategory } from './stateMatchCategories'
 
 /**
  * Match categories (Legende, Karte, Listen, Detail).
@@ -16,7 +16,7 @@ const theme = {
     polygonOutlineHex: '#047857',
     twOuter: 'bg-emerald-500/30',
     twInner: 'bg-emerald-500',
-    /** OSM-Fläche in der Legende (LandMap) */
+    /** OSM-Fläche in der Legende (StateMap) */
     twPolygonSwatch: 'inline-block h-2 w-4 shrink-0 rounded-sm bg-emerald-500/80',
   },
   official_only: {
@@ -57,7 +57,7 @@ const theme = {
   },
 } as const
 
-export const CATEGORY_INNER_HEX: Record<LandMatchCategory, string> = {
+export const CATEGORY_INNER_HEX: Record<StateMatchCategory, string> = {
   matched: theme.matched.innerHex,
   official_only: theme.official_only.innerHex,
   osm_only: theme.osm_only.innerHex,
@@ -65,7 +65,7 @@ export const CATEGORY_INNER_HEX: Record<LandMatchCategory, string> = {
   official_no_coord: theme.official_no_coord.innerHex,
 }
 
-const CATEGORY_HALO_RGBA: Record<LandMatchCategory, string> = {
+const CATEGORY_HALO_RGBA: Record<StateMatchCategory, string> = {
   matched: theme.matched.haloRgba,
   official_only: theme.official_only.haloRgba,
   osm_only: theme.osm_only.haloRgba,
@@ -75,7 +75,7 @@ const CATEGORY_HALO_RGBA: Record<LandMatchCategory, string> = {
 
 /** Nested-circle legend (CategoryLegendSwatch). */
 export const MATCH_CATEGORY_SWATCH_CLASSES: Record<
-  LandMatchCategory,
+  StateMatchCategory,
   { outer: string; inner: string }
 > = {
   matched: { outer: theme.matched.twOuter, inner: theme.matched.twInner },

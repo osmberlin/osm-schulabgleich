@@ -9,8 +9,8 @@ import { MATCH_RADIUS_KM } from '../../src/lib/matchRadius'
 import { centroidFromOsmGeometry } from '../../src/lib/osmGeometryCentroid'
 import { OSM_SCHOOL_NAME_TAGS_IN_ORDER, type OsmNameMatchTag } from '../../src/lib/osmNameMatchTags'
 import { canonicalSchoolKindDe } from '../../src/lib/osmSchoolKindDe'
-import type { LandCode } from '../../src/lib/stateConfig'
-import { landCodeFromSchoolId } from '../../src/lib/stateConfig'
+import type { StateCode } from '../../src/lib/stateConfig'
+import { stateCodeFromSchoolId } from '../../src/lib/stateConfig'
 import distance from '@turf/distance'
 import { point } from '@turf/helpers'
 import type { FeatureCollection } from 'geojson'
@@ -113,7 +113,7 @@ export type MatchRowOut = {
   /** OSM `ref` value used for JedeSchule id suffix match (`BE-07K12` ↔ `ref=07K12`). */
   matchedByRefNormalized?: string
   /** Federal state code for national pipeline split (optional). */
-  pipelineLand?: string
+  pipelineState?: string
 }
 
 function snapshotsFromOfficials(offs: OfficialInput[]): AmbiguousOfficialSnapshot[] {
@@ -138,26 +138,26 @@ function schoolKindFromOsmTags(
   }
 }
 
-function osmLandKey(o: OsmSchoolInput): string {
+function osmSchoolInputKey(o: OsmSchoolInput): string {
   return `${o.osmType}/${o.osmId}`
 }
 
 function rowLandByOsmRef(
   row: Pick<MatchRowOut, 'osmType' | 'osmId'>,
   opts: MatchSchoolsOptions,
-): LandCode {
+): StateCode {
   const key = `${row.osmType}/${row.osmId}`
-  const land = opts.osmLandByKey.get(key)
+  const land = opts.osmStateByKey.get(key)
   if (land === undefined) {
-    throw new Error(`matchSchools: osmLandByKey missing entry "${key}"`)
+    throw new Error(`matchSchools: osmStateByKey missing entry "${key}"`)
   }
   return land
 }
 
-function groupOfficialsByLand(officials: OfficialInput[]): Map<LandCode, OfficialInput[]> {
-  const byLand = new Map<LandCode, OfficialInput[]>()
+function groupOfficialsByState(officials: OfficialInput[]): Map<StateCode, OfficialInput[]> {
+  const byLand = new Map<StateCode, OfficialInput[]>()
   for (const off of officials) {
-    const land = landCodeFromSchoolId(off.id)
+    const land = stateCodeFromSchoolId(off.id)
     if (!land) continue
     const arr = byLand.get(land)
     if (arr) arr.push(off)
@@ -193,14 +193,14 @@ function osmRowAddressKey(row: MatchRowOut): string {
 function officialsNearOsm(
   o: OsmSchoolInput,
   withCoord: OfficialInput[],
-  osmLand: LandCode,
+  osmState: StateCode,
   excludeReserved?: Set<string>,
 ): OfficialInput[] {
   const [lon, lat] = o.centroid
   return withCoord.filter((off) => {
     if (excludeReserved?.has(off.id)) return false
-    const offLand = landCodeFromSchoolId(off.id)
-    if (offLand != null && offLand !== osmLand) return false
+    const offLand = stateCodeFromSchoolId(off.id)
+    if (offLand != null && offLand !== osmState) return false
     const d = distance(point([off.lon, off.lat]), point([lon, lat]), { units: 'kilometers' })
     return d <= MATCH_RADIUS_KM
   })
@@ -269,7 +269,7 @@ export type MatchSchoolsOptions = {
    * state participate in distance-radius matching and in the no-coordinates name fallback. Every
    * `osmSchools` entry must have a map entry.
    */
-  osmLandByKey: Map<string, LandCode>
+  osmStateByKey: Map<string, StateCode>
 }
 
 /** Map JedeSchule id suffix to keyed lookup: `BE-07K12` → `BE:07k12` (collisions dropped). */
@@ -277,7 +277,7 @@ function buildOfficialRefMatchIndex(withCoord: OfficialInput[]): Map<string, Off
   const seenTwice = new Set<string>()
   const m = new Map<string, OfficialInput>()
   for (const off of withCoord) {
-    const land = landCodeFromSchoolId(off.id)
+    const land = stateCodeFromSchoolId(off.id)
     if (!land) continue
     const dash = off.id.indexOf('-')
     if (dash < 0 || dash >= off.id.length - 1) continue
@@ -297,7 +297,7 @@ function buildOfficialRefMatchIndex(withCoord: OfficialInput[]): Map<string, Off
   return m
 }
 
-function normalizeOsmRefTagForMatch(raw: string | undefined, land: LandCode): string | null {
+function normalizeOsmRefTagForMatch(raw: string | undefined, land: StateCode): string | null {
   if (raw == null || typeof raw !== 'string') return null
   let t = raw.trim().toLowerCase()
   if (!t) return null
@@ -333,18 +333,18 @@ function extractRefMatches(
       const b = osmSchools[j]!
       const rd = refMatchOsmSortKey(a) - refMatchOsmSortKey(b)
       if (rd !== 0) return rd
-      return osmLandKey(a).localeCompare(osmLandKey(b), 'en')
+      return osmSchoolInputKey(a).localeCompare(osmSchoolInputKey(b), 'en')
     })
 
   for (const i of orderIdx) {
     const o = osmSchools[i]!
-    const landKey = osmLandKey(o)
+    const landKey = osmSchoolInputKey(o)
     if (consumedOsmKeys.has(landKey)) continue
-    const osmLand = opts.osmLandByKey.get(landKey)
-    if (osmLand === undefined) {
-      throw new Error(`matchSchools: osmLandByKey missing entry "${landKey}"`)
+    const osmState = opts.osmStateByKey.get(landKey)
+    if (osmState === undefined) {
+      throw new Error(`matchSchools: osmStateByKey missing entry "${landKey}"`)
     }
-    const refKey = normalizeOsmRefTagForMatch(o.tags.ref, osmLand)
+    const refKey = normalizeOsmRefTagForMatch(o.tags.ref, osmState)
     if (!refKey) continue
     const off = index.get(refKey)
     if (!off) continue
@@ -393,16 +393,16 @@ export function matchSchools(
   const refPass = extractRefMatches(officials, osmSchools, opts)
   for (const id of refPass.reservedOfficialIds) reserved.add(id)
   rows.push(...refPass.refRows)
-  const osmRemaining = osmSchools.filter((o) => !refPass.consumedOsmKeys.has(osmLandKey(o)))
+  const osmRemaining = osmSchools.filter((o) => !refPass.consumedOsmKeys.has(osmSchoolInputKey(o)))
 
   const fullCandsByOsm = new Map<string, OfficialInput[]>()
   for (const o of osmRemaining) {
-    const landKey = osmLandKey(o)
-    const osmLand = opts.osmLandByKey.get(landKey)
-    if (osmLand === undefined) {
-      throw new Error(`matchSchools: osmLandByKey missing entry "${landKey}"`)
+    const landKey = osmSchoolInputKey(o)
+    const osmState = opts.osmStateByKey.get(landKey)
+    if (osmState === undefined) {
+      throw new Error(`matchSchools: osmStateByKey missing entry "${landKey}"`)
     }
-    fullCandsByOsm.set(landKey, officialsNearOsm(o, withCoord, osmLand))
+    fullCandsByOsm.set(landKey, officialsNearOsm(o, withCoord, osmState))
   }
 
   /** Global pass: unique distance+name among ≥2 nearby officials — closest matches claim officials first. */
@@ -416,7 +416,7 @@ export function matchSchools(
   }
   const phase1Proposals: Phase1Proposal[] = []
   for (const o of osmRemaining) {
-    const landKey = osmLandKey(o)
+    const landKey = osmSchoolInputKey(o)
     const full = fullCandsByOsm.get(landKey) ?? []
     if (full.length < 2) continue
     const winner = uniqueNameOfficialIn(full, o)
@@ -468,10 +468,10 @@ export function matchSchools(
 
   for (const o of osmRemaining) {
     const [lon, lat] = o.centroid
-    const landKey = osmLandKey(o)
-    const osmLand = opts.osmLandByKey.get(landKey)
-    if (osmLand === undefined) {
-      throw new Error(`matchSchools: osmLandByKey missing entry "${landKey}"`)
+    const landKey = osmSchoolInputKey(o)
+    const osmState = opts.osmStateByKey.get(landKey)
+    if (osmState === undefined) {
+      throw new Error(`matchSchools: osmStateByKey missing entry "${landKey}"`)
     }
     const phase1Row = phase1RowByLandKey.get(landKey)
     if (phase1Row) {
@@ -479,7 +479,7 @@ export function matchSchools(
       continue
     }
 
-    const cands = officialsNearOsm(o, withCoord, osmLand, reserved)
+    const cands = officialsNearOsm(o, withCoord, osmState, reserved)
 
     if (cands.length === 0) {
       rows.push({
@@ -635,7 +635,7 @@ export function matchSchools(
     else noCoordByName.set(key, [off])
   }
 
-  const osmOnlyByNameAndLand = new Map<string, Map<LandCode, number[]>>()
+  const osmOnlyByNameAndLand = new Map<string, Map<StateCode, number[]>>()
   for (let idx = 0; idx < rows.length; idx++) {
     const row = rows[idx]
     if (row.category !== 'osm_only') continue
@@ -651,7 +651,7 @@ export function matchSchools(
     for (const normKey of keys) {
       let byLand = osmOnlyByNameAndLand.get(normKey)
       if (!byLand) {
-        byLand = new Map<LandCode, number[]>()
+        byLand = new Map<StateCode, number[]>()
         osmOnlyByNameAndLand.set(normKey, byLand)
       }
       const arr = byLand.get(rowLand)
@@ -664,7 +664,7 @@ export function matchSchools(
   for (const [key, officialsWithNameAll] of noCoordByName.entries()) {
     const byLand = osmOnlyByNameAndLand.get(key)
     if (!byLand) continue
-    const officialsByLand = groupOfficialsByLand(officialsWithNameAll)
+    const officialsByLand = groupOfficialsByState(officialsWithNameAll)
     for (const [land, officialsWithName] of officialsByLand) {
       const osmIdxs = byLand.get(land)
       if (!osmIdxs) continue
@@ -721,7 +721,7 @@ export function matchSchools(
     if (arr) arr.push(off)
     else noCoordByWebsite.set(key, [off])
   }
-  const osmOnlyByWebsiteAndLand = new Map<string, Map<LandCode, number[]>>()
+  const osmOnlyByWebsiteAndLand = new Map<string, Map<StateCode, number[]>>()
   for (let idx = 0; idx < rows.length; idx++) {
     const row = rows[idx]
     if (row.category !== 'osm_only') continue
@@ -730,7 +730,7 @@ export function matchSchools(
     if (!key) continue
     let byLand = osmOnlyByWebsiteAndLand.get(key)
     if (!byLand) {
-      byLand = new Map<LandCode, number[]>()
+      byLand = new Map<StateCode, number[]>()
       osmOnlyByWebsiteAndLand.set(key, byLand)
     }
     const arr = byLand.get(rowLand)
@@ -740,7 +740,7 @@ export function matchSchools(
   for (const [key, officialsWithWebsiteAll] of noCoordByWebsite.entries()) {
     const byLand = osmOnlyByWebsiteAndLand.get(key)
     if (!byLand) continue
-    const officialsByLand = groupOfficialsByLand(officialsWithWebsiteAll)
+    const officialsByLand = groupOfficialsByState(officialsWithWebsiteAll)
     for (const [land, officialsWithWebsite] of officialsByLand) {
       const osmIdxs = byLand.get(land)
       if (!osmIdxs) continue
@@ -793,7 +793,7 @@ export function matchSchools(
     if (arr) arr.push(off)
     else noCoordByAddress.set(key, [off])
   }
-  const osmOnlyByAddressAndLand = new Map<string, Map<LandCode, number[]>>()
+  const osmOnlyByAddressAndLand = new Map<string, Map<StateCode, number[]>>()
   for (let idx = 0; idx < rows.length; idx++) {
     const row = rows[idx]
     if (row.category !== 'osm_only') continue
@@ -802,7 +802,7 @@ export function matchSchools(
     if (!key) continue
     let byLand = osmOnlyByAddressAndLand.get(key)
     if (!byLand) {
-      byLand = new Map<LandCode, number[]>()
+      byLand = new Map<StateCode, number[]>()
       osmOnlyByAddressAndLand.set(key, byLand)
     }
     const arr = byLand.get(rowLand)
@@ -812,7 +812,7 @@ export function matchSchools(
   for (const [key, officialsWithAddressAll] of noCoordByAddress.entries()) {
     const byLand = osmOnlyByAddressAndLand.get(key)
     if (!byLand) continue
-    const officialsByLand = groupOfficialsByLand(officialsWithAddressAll)
+    const officialsByLand = groupOfficialsByState(officialsWithAddressAll)
     for (const [land, officialsWithAddress] of officialsByLand) {
       const osmIdxs = byLand.get(land)
       if (!osmIdxs) continue

@@ -16,7 +16,7 @@ const matchRowOsmCentroidLonLatSchema = z.object({
 })
 
 /** Map list filter: west, south, east, north. */
-export const landMapBboxTupleSchema = z
+export const stateMapBboxTupleSchema = z
   .tuple([zFinite, zFinite, zFinite, zFinite])
   .refine(([w, s, e, n]) => w < e && s < n)
 

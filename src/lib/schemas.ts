@@ -73,7 +73,7 @@ export const schoolsMatchRowSchema = z
     matchedByWebsiteNormalized: z.string().optional(),
     matchedByAddressNormalized: z.string().optional(),
     matchedByRefNormalized: z.string().optional(),
-    pipelineLand: z.string().optional(),
+    pipelineState: z.string().optional(),
     schoolKindDe: z.string().nullable().optional(),
     schoolKindDeSource: schoolKindDeSourceSchema.nullable().optional(),
   })
@@ -99,7 +99,7 @@ export const schoolsMatchesFileSchema = z.array(schoolsMatchRowSchema)
 
 export type SchoolsMatchRow = z.infer<typeof schoolsMatchRowSchema>
 
-const landSummarySchema = z.object({
+const stateSummarySchema = z.object({
   code: z.string(),
   osmSource: z.enum(['live', 'cached', 'missing']),
   overpassError: z.string().optional(),
@@ -119,15 +119,15 @@ export const summaryFileSchema = z.object({
   generatedAt: z.string(),
   pipelineVersion: z.number(),
   jedeschuleCsvSource: z.string().optional(),
-  lands: z.array(landSummarySchema),
+  states: z.array(stateSummarySchema),
 })
 
-const runLandEntrySchema = z.object({
+const runStateEntrySchema = z.object({
   code: z.string(),
   osmSource: z.enum(['live', 'cached', 'missing']).optional(),
   overpassError: z.string().optional(),
   osmSnapshotAt: z.string().optional(),
-  counts: landSummarySchema.shape.counts.optional(),
+  counts: stateSummarySchema.shape.counts.optional(),
 })
 
 export const runRecordSchema = z.object({
@@ -137,7 +137,7 @@ export const runRecordSchema = z.object({
   gitSha: z.string().optional(),
   overallOk: z.boolean(),
   errors: z.array(z.string()),
-  lands: z.array(runLandEntrySchema),
+  states: z.array(runStateEntrySchema),
   matchSkipped: z.boolean().optional(),
   matchSkipReason: z.string().optional(),
   downloads: z

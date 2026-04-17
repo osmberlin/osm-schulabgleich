@@ -2,10 +2,10 @@ import { AppFooter } from './components/AppFooter'
 import { AppHeader } from './components/AppHeader'
 import { AenderungenPage } from './pages/AenderungenPage'
 import { HomePage } from './pages/HomePage'
-import { LandLayout } from './pages/LandLayout'
-import { LandOverview } from './pages/LandOverview'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { SchuleDetail } from './pages/SchuleDetail'
+import { StateLayout } from './pages/StateLayout'
+import { StateOverview } from './pages/StateOverview'
 import { StatusPage } from './pages/StatusPage'
 import { getOsmPendingObjectCount, useOsmAppActions } from './stores/osmAppStore'
 import { QueryClient } from '@tanstack/react-query'
@@ -80,20 +80,20 @@ const aenderungenRoute = createRoute({
   component: AenderungenPage,
 })
 
-const landRoute = createRoute({
+const stateRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/bundesland/$code',
-  component: LandLayout,
+  component: StateLayout,
 })
 
-const landIndexRoute = createRoute({
-  getParentRoute: () => landRoute,
+const stateIndexRoute = createRoute({
+  getParentRoute: () => stateRoute,
   path: '/',
-  component: LandOverview,
+  component: StateOverview,
 })
 
 const schuleRoute = createRoute({
-  getParentRoute: () => landRoute,
+  getParentRoute: () => stateRoute,
   path: 'schule/$matchKey',
   component: SchuleDetail,
 })
@@ -102,7 +102,7 @@ const routeTree = rootRoute.addChildren([
   indexRoute,
   statusRoute,
   aenderungenRoute,
-  landRoute.addChildren([landIndexRoute, schuleRoute]),
+  stateRoute.addChildren([stateIndexRoute, schuleRoute]),
 ])
 
 export const queryClient = new QueryClient({

@@ -1,12 +1,12 @@
-import type { LandMatchCategory } from '../lib/landMatchCategories'
 import { MATCH_CATEGORY_SWATCH_CLASSES } from '../lib/matchCategoryTheme'
+import type { StateMatchCategory } from '../lib/stateMatchCategories'
 
-/** Same nested-circle language as map halo + core (LandMap). */
+/** Same nested-circle language as map halo + core (StateMap). */
 export function CategoryLegendSwatch({
   category,
   innerClassName = 'size-1.5',
 }: {
-  category: LandMatchCategory
+  category: StateMatchCategory
   /** Smaller inner dot (e.g. `size-1`) so outer halo reads better in legend tiles. */
   innerClassName?: string
 }) {

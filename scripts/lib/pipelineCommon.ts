@@ -1,4 +1,4 @@
-import { type LandCode, landCodeFromSchoolId } from '../../src/lib/stateConfig'
+import { type StateCode, stateCodeFromSchoolId } from '../../src/lib/stateConfig'
 import type { JedeschuleSchool } from './jedeschuleCsv'
 import type { FeatureCollection } from 'geojson'
 import path from 'node:path'
@@ -25,27 +25,27 @@ export function schoolToOfficialProps(s: Record<string, unknown>): Record<string
 }
 
 /** Per-Bundesland slice of the JedeSchule dump (same geometry rules as nationwide). */
-export function officialGeojsonForLand(
+export function officialGeojsonForState(
   schools: JedeschuleSchool[],
-  land: LandCode,
+  state: StateCode,
 ): FeatureCollection {
-  const filtered = schools.filter((s) => landCodeFromSchoolId(s.id) === land)
+  const filtered = schools.filter((s) => stateCodeFromSchoolId(s.id) === state)
   return officialGeojsonNational(filtered)
 }
 
-/** Nationwide FeatureCollection; `properties.land` from school id prefix when valid. */
+/** Nationwide FeatureCollection; `properties.state` from school id prefix when valid. */
 export function officialGeojsonNational(schools: JedeschuleSchool[]) {
   return {
     type: 'FeatureCollection' as const,
     features: schools.map((s) => {
       const lat = s.latitude ?? null
       const lon = s.longitude ?? null
-      const land = landCodeFromSchoolId(s.id)
+      const state = stateCodeFromSchoolId(s.id)
       const has = typeof lat === 'number' && typeof lon === 'number' && Number.isFinite(lat + lon)
       return {
         type: 'Feature' as const,
         id: s.id,
-        properties: { ...schoolToOfficialProps({ ...s }), ...(land ? { land } : {}) },
+        properties: { ...schoolToOfficialProps({ ...s }), ...(state ? { state } : {}) },
         geometry: has
           ? { type: 'Point' as const, coordinates: [lon as number, lat as number] }
           : null,

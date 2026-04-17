@@ -17,17 +17,17 @@ export const STATE_ORDER = [
   'TH',
 ] as const
 
-export type LandCode = (typeof STATE_ORDER)[number]
+export type StateCode = (typeof STATE_ORDER)[number]
 
 /** JedeSchule id prefix before the first hyphen, e.g. `HB-352` → `HB`. */
-export function landCodeFromSchoolId(id: string): LandCode | null {
+export function stateCodeFromSchoolId(id: string): StateCode | null {
   const dash = id.indexOf('-')
   const state = dash > 0 ? id.slice(0, dash) : ''
-  if (state.length === 2 && STATE_ORDER.includes(state as LandCode)) return state as LandCode
+  if (state.length === 2 && STATE_ORDER.includes(state as StateCode)) return state as StateCode
   return null
 }
 
-export const STATE_LABEL_DE: Record<LandCode, string> = {
+export const STATE_LABEL_DE: Record<StateCode, string> = {
   BW: 'Baden-Württemberg',
   BY: 'Bayern',
   BE: 'Berlin',
@@ -50,7 +50,7 @@ export const STATE_LABEL_DE: Record<LandCode, string> = {
  * Approximate WGS84 bbox [west, south, east, north] per Bundesland for map framing
  * when there is no geometry yet (fallback; prefer fitting to loaded school data).
  */
-export const STATE_BOUNDS: Record<LandCode, [number, number, number, number]> = {
+export const STATE_BOUNDS: Record<StateCode, [number, number, number, number]> = {
   BW: [7.4, 47.5, 10.6, 49.9],
   BY: [8.9, 47.2, 13.9, 50.6],
   BE: [13.0, 52.3, 13.8, 52.7],
@@ -70,7 +70,7 @@ export const STATE_BOUNDS: Record<LandCode, [number, number, number, number]> = 
 }
 
 /** Approximate map marker [lon, lat] for federal overview. */
-export const STATE_MAP_CENTER: Record<LandCode, [number, number]> = {
+export const STATE_MAP_CENTER: Record<StateCode, [number, number]> = {
   BW: [9.2, 48.6],
   BY: [11.5, 48.9],
   BE: [13.4, 52.52],

@@ -9,8 +9,8 @@ function str(v: unknown): string | null {
  * Uses JedeSchule fields first, then OSM addr:*.
  */
 export function formatSchoolWhereSubtitle(
-  landLabel: string,
-  landCode: string,
+  stateLabel: string,
+  stateCode: string,
   officialProperties: Record<string, unknown> | null | undefined,
   osmTags: Record<string, string> | null | undefined,
 ): string {
@@ -25,8 +25,8 @@ export function formatSchoolWhereSubtitle(
 
   const left = addr || osmAddr
   const mid = place
-  if (left && mid) return `${left}, ${mid} · ${landLabel} (${landCode})`
-  if (left) return `${left} · ${landLabel} (${landCode})`
-  if (mid) return `${mid} · ${landLabel} (${landCode})`
-  return `${landLabel} (${landCode})`
+  if (left && mid) return `${left}, ${mid} · ${stateLabel} (${stateCode})`
+  if (left) return `${left} · ${stateLabel} (${stateCode})`
+  if (mid) return `${mid} · ${stateLabel} (${stateCode})`
+  return `${stateLabel} (${stateCode})`
 }

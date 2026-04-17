@@ -1,4 +1,4 @@
-import type { LandCode } from './stateConfig'
+import type { StateCode } from './stateConfig'
 import { STATE_ORDER } from './stateConfig'
 
 /**
@@ -114,9 +114,9 @@ export const BUNDESLAND_OFFICIAL_SOURCES = {
     lastCheckedByGithub: 'vizsim',
   }),
   TH: seed('https://www.schulportal-thueringen.de/start'),
-} as const satisfies Record<LandCode, BundeslandOfficialSourceRow>
+} as const satisfies Record<StateCode, BundeslandOfficialSourceRow>
 
-/** Runtime guard: every LandCode has a row. */
+/** Runtime guard: every StateCode has a row. */
 for (const code of STATE_ORDER) {
   if (!(code in BUNDESLAND_OFFICIAL_SOURCES)) {
     throw new Error(`Missing BUNDESLAND_OFFICIAL_SOURCES entry for ${code}`)
@@ -124,6 +124,6 @@ for (const code of STATE_ORDER) {
 }
 
 /** Fragment for homepage licence table row (e.g. `licence-bw` → URL `#licence-bw`). No leading `#`. */
-export function licenceTableRowHash(code: LandCode): string {
+export function licenceTableRowHash(code: StateCode): string {
   return `licence-${code.toLowerCase()}`
 }

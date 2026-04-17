@@ -4,7 +4,7 @@ import {
   licenceTableRowHash,
   type BundeslandOfficialSourceRow,
 } from '../../lib/bundeslandOfficialSources'
-import { type LandCode, STATE_ORDER } from '../../lib/stateConfig'
+import { type StateCode, STATE_ORDER } from '../../lib/stateConfig'
 import { ExclamationTriangleIcon, ShieldCheckIcon } from '@heroicons/react/20/solid'
 import { Link } from '@tanstack/react-router'
 
@@ -14,12 +14,12 @@ export type SchuleDetailLicenceInfo = {
   osmLicenceCompatible: boolean
 }
 
-export function getSchuleDetailLicenceInfo(routeLandCode: string): SchuleDetailLicenceInfo {
-  const licenceLandCode = STATE_ORDER.includes(routeLandCode as LandCode)
-    ? (routeLandCode as LandCode)
+export function getSchuleDetailLicenceInfo(routeStateCode: string): SchuleDetailLicenceInfo {
+  const licenceStateCode = STATE_ORDER.includes(routeStateCode as StateCode)
+    ? (routeStateCode as StateCode)
     : null
-  const officialLicenceRow = licenceLandCode ? BUNDESLAND_OFFICIAL_SOURCES[licenceLandCode] : null
-  const licenceHash = licenceLandCode ? licenceTableRowHash(licenceLandCode) : ''
+  const officialLicenceRow = licenceStateCode ? BUNDESLAND_OFFICIAL_SOURCES[licenceStateCode] : null
+  const licenceHash = licenceStateCode ? licenceTableRowHash(licenceStateCode) : ''
   const osmLicenceCompatible =
     officialLicenceRow != null &&
     (officialLicenceRow.osmCompatible === 'yes_licence' ||

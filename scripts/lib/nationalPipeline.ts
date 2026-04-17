@@ -3,12 +3,12 @@ import { promoteClosedLineStringsToPolygons } from '../../src/lib/osmClosedRings
 import { centroidFromOsmGeometry } from '../../src/lib/osmGeometryCentroid'
 import { parseRunHistoryFileText, stringifyRunHistoryJsonl } from '../../src/lib/runHistoryJsonl'
 import {
-  type LandCode,
-  landCodeFromSchoolId,
+  type StateCode,
+  stateCodeFromSchoolId,
   STATE_MAP_CENTER,
   STATE_ORDER,
 } from '../../src/lib/stateConfig'
-import { initBundeslandBoundaries, landCodeForPoint } from './bundeslandBoundaries'
+import { initBundeslandBoundaries, stateCodeForPoint } from './bundeslandBoundaries'
 import { dedupeOfficialInputs } from './dedupeOfficialInputs'
 import {
   buildJedeschuleStatsFromDump,
@@ -29,7 +29,7 @@ import { gateOfficialFeatureCollection } from './officialCoordsBundeslandGate'
 import { fetchSchoolsOsmOverpassGermanyWithRetries } from './overpassFetch'
 import {
   datasetsDir,
-  officialGeojsonForLand,
+  officialGeojsonForState,
   PIPELINE_VERSION,
   readJsonFile,
   schoolToOfficialProps,
@@ -50,7 +50,7 @@ function envScopedJsonFileName(fileName: string): string {
   return fileName.replace(/\.json$/, '.dev.json')
 }
 
-type LandSummaryOut = {
+type StateSummaryOut = {
   code: string
   osmSource: 'live' | 'cached' | 'missing'
   overpassError?: string
@@ -70,7 +70,7 @@ type SummaryFileOut = {
   generatedAt: string
   pipelineVersion: number
   jedeschuleCsvSource?: string
-  lands: LandSummaryOut[]
+  states: StateSummaryOut[]
 }
 
 // 4 decimals ~= 11m latitude resolution; acceptable "about 10m" for Germany.
@@ -154,7 +154,7 @@ function optimizeMatchRowForUserOutput(
   row: Record<string, unknown> & { osmCentroidLon?: number | null; osmCentroidLat?: number | null },
 ): Record<string, unknown> {
   const out = { ...row }
-  delete out.pipelineLand
+  delete out.pipelineState
   if (typeof out.osmCentroidLon === 'number') {
     out.osmCentroidLon = roundToDecimals(out.osmCentroidLon, USER_FACING_COORD_DECIMALS)
   }
@@ -164,8 +164,8 @@ function optimizeMatchRowForUserOutput(
   return out
 }
 
-function nearestLandByCenter(lon: number, lat: number): LandCode {
-  let best: LandCode = 'NI'
+function nearestStateByCenter(lon: number, lat: number): StateCode {
+  let best: StateCode = 'NI'
   let bestD = Number.POSITIVE_INFINITY
   for (const code of STATE_ORDER) {
     const [clon, clat] = STATE_MAP_CENTER[code]
@@ -178,33 +178,33 @@ function nearestLandByCenter(lon: number, lat: number): LandCode {
   return best
 }
 
-function assignPipelineLandToOsmFeature(f: Feature): LandCode {
+function assignPipelineStateToOsmFeature(f: Feature): StateCode {
   const c = centroidFromOsmGeometry(f.geometry ?? null)
-  if (!c) return nearestLandByCenter(10.45, 51.16)
+  if (!c) return nearestStateByCenter(10.45, 51.16)
   const [lon, lat] = c
-  return landCodeForPoint(lon, lat) ?? nearestLandByCenter(lon, lat)
+  return stateCodeForPoint(lon, lat) ?? nearestStateByCenter(lon, lat)
 }
 
 function tagNationalOsmFc(fc: FeatureCollection): FeatureCollection {
   return {
     type: 'FeatureCollection',
     features: fc.features.map((f) => {
-      const land = assignPipelineLandToOsmFeature(f)
+      const state = assignPipelineStateToOsmFeature(f)
       const props = {
         ...(typeof f.properties === 'object' && f.properties != null ? f.properties : {}),
-        _pipelineLand: land,
+        _pipelineState: state,
       }
       return { ...f, properties: props }
     }),
   }
 }
 
-function osmLandKey(osmType: string, osmId: string) {
+function osmTypeIdKey(osmType: string, osmId: string) {
   return `${osmType}/${osmId}`
 }
 
-function buildOsmLandMap(fc: FeatureCollection): Map<string, LandCode> {
-  const m = new Map<string, LandCode>()
+function buildOsmStateMap(fc: FeatureCollection): Map<string, StateCode> {
+  const m = new Map<string, StateCode>()
   for (const f of fc.features) {
     const idRaw = f.id
     let osmType: 'way' | 'relation' | 'node' = 'way'
@@ -221,24 +221,24 @@ function buildOsmLandMap(fc: FeatureCollection): Map<string, LandCode> {
         osmId = idRaw.slice(5)
       }
     }
-    const land = assignPipelineLandToOsmFeature(f)
-    if (osmId) m.set(osmLandKey(osmType, osmId), land)
+    const state = assignPipelineStateToOsmFeature(f)
+    if (osmId) m.set(osmTypeIdKey(osmType, osmId), state)
   }
   return m
 }
 
-function enrichRowsWithPipelineLand(
+function enrichRowsWithPipelineState(
   rows: MatchRowOut[],
-  osmLandByKey: Map<string, LandCode>,
+  osmStateByKey: Map<string, StateCode>,
 ): MatchRowOut[] {
   return rows.map((r) => {
-    let land: LandCode | undefined
-    if (r.officialId) land = landCodeFromSchoolId(r.officialId) ?? undefined
-    if (!land && r.osmId && r.osmType)
-      land = osmLandByKey.get(osmLandKey(r.osmType, r.osmId)) ?? undefined
-    if (!land && r.ambiguousOfficialIds?.length)
-      land = landCodeFromSchoolId(r.ambiguousOfficialIds[0]) ?? undefined
-    return land ? { ...r, pipelineLand: land } : { ...r }
+    let state: StateCode | undefined
+    if (r.officialId) state = stateCodeFromSchoolId(r.officialId) ?? undefined
+    if (!state && r.osmId && r.osmType)
+      state = osmStateByKey.get(osmTypeIdKey(r.osmType, r.osmId)) ?? undefined
+    if (!state && r.ambiguousOfficialIds?.length)
+      state = stateCodeFromSchoolId(r.ambiguousOfficialIds[0]) ?? undefined
+    return state ? { ...r, pipelineState: state } : { ...r }
   })
 }
 
@@ -369,10 +369,10 @@ type MatchNationResult = {
 
 export type RunStateFirstOptions = {
   /** Only rewrite `datasets/{code}/` and patch that land in `summary.json`. Needs a complete existing `summary.json` (falls back to full run). */
-  onlyLands?: LandCode[]
+  onlyStates?: StateCode[]
 }
 
-export type RunSplitLandsOptions = RunStateFirstOptions
+export type RunSplitStatesOptions = RunStateFirstOptions
 
 const JEDESCHULE_CSV_SOURCE_LABEL = 'jedeschule-latest.csv' as const
 
@@ -444,7 +444,7 @@ export async function runStateFirstPipeline(
       durationMs: Math.round(performance.now() - t0),
       overallOk: true,
       errors: [],
-      lands: [],
+      states: [],
       matchSkipped: true,
       matchSkipReason: reason,
       downloads: downloadSnapshot,
@@ -474,7 +474,7 @@ export async function runStateFirstPipeline(
       durationMs: Math.round(performance.now() - t0),
       overallOk: false,
       errors,
-      lands: [],
+      states: [],
       matchSkipped: false,
       downloads: downloadSnapshot,
     })
@@ -494,15 +494,15 @@ export async function runStateFirstPipeline(
 
   const summaryPath = path.join(datasetsDir(projectRoot), 'summary.json')
 
-  let codesToProcess: LandCode[] = [...STATE_ORDER]
-  const requested = opts?.onlyLands?.filter((c): c is LandCode =>
-    STATE_ORDER.includes(c as LandCode),
+  let codesToProcess: StateCode[] = [...STATE_ORDER]
+  const requested = opts?.onlyStates?.filter((c): c is StateCode =>
+    STATE_ORDER.includes(c as StateCode),
   )
   if (requested?.length) {
     const uniq = [...new Set(requested)]
     if (uniq.length < STATE_ORDER.length) {
       const prev = await readJsonFile<SummaryFileOut>(summaryPath)
-      const prevCodes = new Set((prev?.lands ?? []).map((l) => l.code))
+      const prevCodes = new Set((prev?.states ?? []).map((l) => l.code))
       const complete = STATE_ORDER.every((c) => prevCodes.has(c))
       if (complete) {
         codesToProcess = uniq
@@ -517,7 +517,7 @@ export async function runStateFirstPipeline(
   }
 
   let dedupeRemovedTotal = 0
-  const landRunEntriesForRecord: {
+  const stateRunEntriesForRecord: {
     code: string
     osmSource: 'live' | 'cached' | 'missing'
     osmSnapshotAt?: string
@@ -530,26 +530,26 @@ export async function runStateFirstPipeline(
     }
   }[] = []
 
-  const summaryUpdates = new Map<string, LandSummaryOut>()
+  const summaryUpdates = new Map<string, StateSummaryOut>()
 
   for (const code of codesToProcess) {
-    const officialFcLand = officialGeojsonForLand(schools, code)
-    const gated = gateOfficialFeatureCollection(officialFcLand)
+    const officialFcState = officialGeojsonForState(schools, code)
+    const gated = gateOfficialFeatureCollection(officialFcState)
     const officials = officialsFromNationalOfficialFc(gated)
     const deduped = dedupeOfficialInputs(officials)
     dedupeRemovedTotal += deduped.stats.removedCount
 
-    const osmLand: FeatureCollection = {
+    const osmStateFc: FeatureCollection = {
       type: 'FeatureCollection',
-      features: osmFc.features.filter((f) => assignPipelineLandToOsmFeature(f) === code),
+      features: osmFc.features.filter((f) => assignPipelineStateToOsmFeature(f) === code),
     }
-    const osmSchools = buildOsmSchoolsFromGeoJson(osmLand)
-    const osmLandByKey = buildOsmLandMap(osmLand)
-    const { rows } = matchSchools(deduped.officials, osmSchools, { osmLandByKey })
-    const enriched = enrichRowsWithPipelineLand(rows, osmLandByKey)
+    const osmSchools = buildOsmSchoolsFromGeoJson(osmStateFc)
+    const osmStateByKey = buildOsmStateMap(osmStateFc)
+    const { rows } = matchSchools(deduped.officials, osmSchools, { osmStateByKey })
+    const enriched = enrichRowsWithPipelineState(rows, osmStateByKey)
 
     const canonicalOfficialIds = new Set(deduped.officials.map((o) => o.id))
-    const officialLandOut: FeatureCollection = {
+    const officialStateOut: FeatureCollection = {
       type: 'FeatureCollection',
       features: gated.features
         .filter((f) => {
@@ -558,11 +558,11 @@ export async function runStateFirstPipeline(
         })
         .map(optimizeOfficialFeatureForUserOutput),
     }
-    const osmLandUser: FeatureCollection = {
+    const osmStateUser: FeatureCollection = {
       type: 'FeatureCollection',
-      features: osmLand.features.map(optimizeOsmFeatureForUserOutput),
+      features: osmStateFc.features.map(optimizeOsmFeatureForUserOutput),
     }
-    const rowsLandUser = enriched.map((r) =>
+    const rowsStateUser = enriched.map((r) =>
       optimizeMatchRowForUserOutput(
         r as Record<string, unknown> & {
           osmCentroidLon?: number | null
@@ -574,18 +574,24 @@ export async function runStateFirstPipeline(
     await mkdir(path.join(datasetsDir(projectRoot), code), { recursive: true })
     await writeJson(
       path.join(datasetsDir(projectRoot), code, 'schools_official.geojson'),
-      officialLandOut,
+      officialStateOut,
     )
-    await writeJson(path.join(datasetsDir(projectRoot), code, 'schools_osm.geojson'), osmLandUser)
-    await writeJson(path.join(datasetsDir(projectRoot), code, 'schools_matches.json'), rowsLandUser)
+    await writeJson(path.join(datasetsDir(projectRoot), code, 'schools_osm.geojson'), osmStateUser)
+    await writeJson(
+      path.join(datasetsDir(projectRoot), code, 'schools_matches.json'),
+      rowsStateUser,
+    )
 
-    const osmMetaLand: Record<string, unknown> = {
+    const osmMetaState: Record<string, unknown> = {
       overpassQueriedAt: osmMeta?.generatedAt,
       overpassResponseTimestamp: osmMeta?.overpassResponseTimestamp,
       interpreterUrl: osmMeta?.interpreterUrl,
       osmSource: osmMeta?.ok ? 'live' : 'missing',
     }
-    await writeJson(path.join(datasetsDir(projectRoot), code, 'schools_osm.meta.json'), osmMetaLand)
+    await writeJson(
+      path.join(datasetsDir(projectRoot), code, 'schools_osm.meta.json'),
+      osmMetaState,
+    )
 
     const counts = {
       matched: enriched.filter((r) => r.category === 'matched').length,
@@ -596,7 +602,7 @@ export async function runStateFirstPipeline(
     }
 
     const osmSource: 'live' | 'cached' | 'missing' =
-      osmMeta?.ok && osmLand.features.length > 0 ? 'live' : 'missing'
+      osmMeta?.ok && osmStateFc.features.length > 0 ? 'live' : 'missing'
 
     summaryUpdates.set(code, {
       code,
@@ -608,7 +614,7 @@ export async function runStateFirstPipeline(
       jedeschuleLastUpdated: statByState.get(code),
     })
 
-    landRunEntriesForRecord.push({
+    stateRunEntriesForRecord.push({
       code,
       osmSource,
       osmSnapshotAt: osmMeta?.overpassResponseTimestamp ?? osmMeta?.generatedAt,
@@ -626,29 +632,29 @@ export async function runStateFirstPipeline(
       generatedAt: new Date().toISOString(),
       pipelineVersion: PIPELINE_VERSION,
       jedeschuleCsvSource: JEDESCHULE_CSV_SOURCE_LABEL,
-      lands: STATE_ORDER.flatMap((c) => {
+      states: STATE_ORDER.flatMap((c) => {
         const row = summaryUpdates.get(c)
         return row ? [row] : []
       }),
     }
   } else {
     const prev = await readJsonFile<SummaryFileOut>(summaryPath)
-    const byCode = new Map((prev?.lands ?? []).map((l) => [l.code, l] as const))
+    const byCode = new Map((prev?.states ?? []).map((l) => [l.code, l] as const))
     for (const c of codesToProcess) {
       const row = summaryUpdates.get(c)
       if (row) byCode.set(c, row)
     }
-    const lands = STATE_ORDER.map((c) => byCode.get(c)).filter(
-      (row): row is LandSummaryOut => row != null,
+    const states = STATE_ORDER.map((c) => byCode.get(c)).filter(
+      (row): row is StateSummaryOut => row != null,
     )
-    if (lands.length !== STATE_ORDER.length) {
+    if (states.length !== STATE_ORDER.length) {
       errors.push('pipeline:match: summary-Zusammenführung unvollständig')
     }
     merged = {
       generatedAt: new Date().toISOString(),
       pipelineVersion: PIPELINE_VERSION,
       jedeschuleCsvSource: JEDESCHULE_CSV_SOURCE_LABEL,
-      lands,
+      states,
     }
   }
   await writeJson(summaryPath, merged)
@@ -662,7 +668,7 @@ export async function runStateFirstPipeline(
     durationMs,
     overallOk: errors.length === 0,
     errors,
-    lands: landRunEntriesForRecord,
+    states: stateRunEntriesForRecord,
     matchSkipped: false,
     downloads: downloadSnapshot,
   })
@@ -686,9 +692,9 @@ export async function runMatchNational(projectRoot: string): Promise<MatchNation
 }
 
 /** @deprecated Split is integrated into {@link runStateFirstPipeline}. */
-export async function runSplitLands(
+export async function runSplitStates(
   projectRoot: string,
-  opts?: RunSplitLandsOptions,
+  opts?: RunSplitStatesOptions,
 ): Promise<{ errors: string[] }> {
   const r = await runStateFirstPipeline(projectRoot, opts)
   return { errors: r.errors }

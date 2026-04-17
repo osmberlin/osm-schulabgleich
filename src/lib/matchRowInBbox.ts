@@ -1,5 +1,5 @@
 import type { schoolsMatchRowSchema } from './schemas'
-import type { LandMapBbox } from './useLandMapBbox'
+import type { StateMapBbox } from './useStateMapBbox'
 import { parseJedeschuleLonLatFromRecord, parseMatchRowOsmCentroidLonLat } from './zodGeo'
 import type { Feature, FeatureCollection, Point } from 'geojson'
 import type { z } from 'zod'
@@ -176,28 +176,28 @@ export function matchesToOverviewMapPoints(
   return { type: 'FeatureCollection', features: spreadCoincidentMapPointFeatures(features) }
 }
 
-function pointInLandMapBbox(lon: number, lat: number, bbox: LandMapBbox): boolean {
+function pointInStateMapBbox(lon: number, lat: number, bbox: StateMapBbox): boolean {
   const [w, s, e, n] = bbox
   return lon >= w && lon <= e && lat >= s && lat <= n
 }
 
-export function matchRowInLandMapBbox(
+export function matchRowInStateMapBbox(
   row: Row,
-  bbox: LandMapBbox,
+  bbox: StateMapBbox,
   officialLonLatIndex: Map<string, [number, number]> | null,
 ): boolean {
   const p = matchRowMapLonLat(row, officialLonLatIndex)
   if (!p) return false
-  return pointInLandMapBbox(p[0], p[1], bbox)
+  return pointInStateMapBbox(p[0], p[1], bbox)
 }
 
 /** Bbox filter for list + KPI: no-coordinate rows are never inside a map window — always keep them. */
-export function matchRowIncludedWhenLandMapBboxActive(
+export function matchRowIncludedWhenStateMapBboxActive(
   row: Row,
-  bbox: LandMapBbox | null,
+  bbox: StateMapBbox | null,
   officialLonLatIndex: Map<string, [number, number]> | null,
 ): boolean {
   if (!bbox) return true
   if (row.category === 'official_no_coord') return true
-  return matchRowInLandMapBbox(row, bbox, officialLonLatIndex)
+  return matchRowInStateMapBbox(row, bbox, officialLonLatIndex)
 }

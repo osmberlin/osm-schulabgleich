@@ -1,7 +1,7 @@
 import { berlinCalendarDateKey } from './berlinCalendarDateKey'
-import { LAND_MATCH_CATEGORIES, type LandMatchCategory } from './landMatchCategories'
 import { runRecordSchema } from './schemas'
-import type { LandCode } from './stateConfig'
+import type { StateCode } from './stateConfig'
+import { STATE_MATCH_CATEGORIES, type StateMatchCategory } from './stateMatchCategories'
 import type { z } from 'zod'
 
 type RunRecord = z.infer<typeof runRecordSchema>
@@ -17,14 +17,14 @@ export type MatchHistoryStackPoint = {
 }
 
 /** Balken-Reihenfolge: gleiche Abgleich-Reihenfolge, zuletzt Bordeaux (CVD: nicht direkt neben Grün). */
-export const MATCH_HISTORY_STACK_KEYS = [...LAND_MATCH_CATEGORIES] as const
+export const MATCH_HISTORY_STACK_KEYS = [...STATE_MATCH_CATEGORIES] as const
 
-export type MatchHistoryChartLabels = Record<LandMatchCategory, string>
+export type MatchHistoryChartLabels = Record<StateMatchCategory, string>
 
 export type MatchHistorySegmentKey = (typeof MATCH_HISTORY_STACK_KEYS)[number]
 
 function countsToStack(
-  c: NonNullable<RunRecord['lands'][number]['counts']>,
+  c: NonNullable<RunRecord['states'][number]['counts']>,
 ): Omit<MatchHistoryStackPoint, 'finishedAt'> {
   return {
     matched: c.matched,
@@ -40,10 +40,10 @@ function totalOfStack(p: Omit<MatchHistoryStackPoint, 'finishedAt'>): number {
 }
 
 /** Runs usable for the Germany-wide chart: full 16 Länder, each with counts, match not skipped. */
-function isFullNationalRun(run: RunRecord, stateOrder: readonly LandCode[]): boolean {
+function isFullNationalRun(run: RunRecord, stateOrder: readonly StateCode[]): boolean {
   if (run.matchSkipped === true) return false
-  if (run.lands.length !== stateOrder.length) return false
-  const byCode = new Map(run.lands.map((l) => [l.code, l]))
+  if (run.states.length !== stateOrder.length) return false
+  const byCode = new Map(run.states.map((l) => [l.code, l]))
   for (const code of stateOrder) {
     const e = byCode.get(code)
     if (!e?.counts) return false
@@ -54,7 +54,7 @@ function isFullNationalRun(run: RunRecord, stateOrder: readonly LandCode[]): boo
 /** Aggregate stacked counts per finishedAt for all Germany (sum over Länder). */
 export function germanyHistoryFromRuns(
   runs: RunRecord[],
-  stateOrder: readonly LandCode[],
+  stateOrder: readonly StateCode[],
 ): MatchHistoryStackPoint[] {
   const sorted = [...runs].sort((a, b) => Date.parse(a.finishedAt) - Date.parse(b.finishedAt))
   const outByBerlinDay = new Map<string, MatchHistoryStackPoint>()
@@ -65,7 +65,7 @@ export function germanyHistoryFromRuns(
     let osm_only = 0
     let match_ambiguous = 0
     let official_no_coord = 0
-    for (const l of run.lands) {
+    for (const l of run.states) {
       const c = l.counts
       if (!c) continue
       matched += c.matched
@@ -91,12 +91,15 @@ export function germanyHistoryFromRuns(
   )
 }
 
-/** Stacked counts for one Land over time (chronological). */
-export function landHistoryFromRuns(runs: RunRecord[], landCode: string): MatchHistoryStackPoint[] {
+/** Stacked counts for one federal state over time (chronological). */
+export function stateHistoryFromRuns(
+  runs: RunRecord[],
+  stateCode: string,
+): MatchHistoryStackPoint[] {
   const sorted = [...runs].sort((a, b) => Date.parse(a.finishedAt) - Date.parse(b.finishedAt))
   const outByBerlinDay = new Map<string, MatchHistoryStackPoint>()
   for (const run of sorted) {
-    const entry = run.lands.find((l) => l.code === landCode)
+    const entry = run.states.find((l) => l.code === stateCode)
     if (!entry?.counts) continue
     const stack = countsToStack(entry.counts)
     if (totalOfStack(stack) === 0) continue

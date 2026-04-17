@@ -1,4 +1,4 @@
-import type { LandMapBbox } from './useLandMapBbox'
+import type { StateMapBbox } from './useStateMapBbox'
 
 export type MapBoundsLike = {
   getWest(): number
@@ -7,7 +7,7 @@ export type MapBoundsLike = {
   getNorth(): number
 }
 
-export function boundsToBboxParam(bounds: MapBoundsLike): LandMapBbox {
+export function boundsToBboxParam(bounds: MapBoundsLike): StateMapBbox {
   return [
     Number(bounds.getWest().toFixed(4)),
     Number(bounds.getSouth().toFixed(4)),

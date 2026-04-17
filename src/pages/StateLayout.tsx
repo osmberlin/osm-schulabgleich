@@ -1,17 +1,17 @@
 import { CategoryLegendSwatch } from '../components/CategoryLegendSwatch'
 import { de } from '../i18n/de'
-import { fetchLandSchoolsBundle } from '../lib/fetchLandSchoolsBundle'
+import { fetchStateSchoolsBundle } from '../lib/fetchStateSchoolsBundle'
 import { formatDeInteger } from '../lib/formatNumber'
-import type { LandMatchCategory } from '../lib/landMatchCategories'
 import { formatSchoolWhereSubtitle } from '../lib/schoolWhere'
-import { type LandCode, STATE_LABEL_DE } from '../lib/stateConfig'
+import { type StateCode, STATE_LABEL_DE } from '../lib/stateConfig'
+import type { StateMatchCategory } from '../lib/stateMatchCategories'
 import { useQuery } from '@tanstack/react-query'
 import { Outlet, useParams, useRouterState } from '@tanstack/react-router'
 import { useMemo } from 'react'
 
-export function LandLayout() {
+export function StateLayout() {
   const { code } = useParams({ strict: false }) as { code: string }
-  const label = STATE_LABEL_DE[code as LandCode] ?? code
+  const label = STATE_LABEL_DE[code as StateCode] ?? code
 
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const schuleKeyDecoded = useMemo(() => {
@@ -26,7 +26,7 @@ export function LandLayout() {
 
   const schuleQ = useQuery({
     queryKey: ['schule-detail', code, schuleKeyDecoded],
-    queryFn: () => fetchLandSchoolsBundle(code),
+    queryFn: () => fetchStateSchoolsBundle(code),
     enabled: !!code && !!schuleKeyDecoded,
   })
 
@@ -40,12 +40,12 @@ export function LandLayout() {
       schuleQ.isLoading ? (
         <>
           <h1 className="mb-2 text-2xl font-semibold text-zinc-500">…</h1>
-          <p className="mb-6 text-sm text-zinc-400">{de.land.loading}</p>
+          <p className="mb-6 text-sm text-zinc-400">{de.state.loading}</p>
         </>
       ) : schuleQ.isError ? (
         <>
           <h1 className="mb-2 text-2xl font-semibold text-zinc-100">{label}</h1>
-          <p className="mb-6 text-sm text-red-400">{de.land.error}</p>
+          <p className="mb-6 text-sm text-red-400">{de.state.error}</p>
         </>
       ) : schuleRow ? (
         <>
@@ -54,9 +54,9 @@ export function LandLayout() {
               {schuleRow.officialName ?? schuleRow.osmName ?? '—'}
             </h1>
             <div className="flex shrink-0 items-center gap-2 sm:justify-end">
-              <CategoryLegendSwatch category={schuleRow.category as LandMatchCategory} />
+              <CategoryLegendSwatch category={schuleRow.category as StateMatchCategory} />
               <span className="text-sm font-medium text-zinc-200">
-                {de.land.categoryLabel[schuleRow.category as LandMatchCategory] ??
+                {de.state.categoryLabel[schuleRow.category as StateMatchCategory] ??
                   schuleRow.category}
               </span>
             </div>
@@ -84,7 +84,7 @@ export function LandLayout() {
       )
     ) : (
       <h1 className="mb-6 min-w-0 text-2xl font-semibold text-zinc-100">
-        {de.land.overviewTitle.replace('{name}', label).replace('{code}', code)}
+        {de.state.overviewTitle.replace('{name}', label).replace('{code}', code)}
       </h1>
     )
 

@@ -1,5 +1,5 @@
 import { osmStyleMapParamParser, type OsmStyleMapTriple } from './useDetailMapParam'
-import { landMapBboxParser, type LandMapBbox } from './useLandMapBbox'
+import { stateMapBboxParser, type StateMapBbox } from './useStateMapBbox'
 import { useQueryStates } from 'nuqs'
 
 /**
@@ -7,11 +7,11 @@ import { useQueryStates } from 'nuqs'
  * - `map` = camera state (`z/lat/lon`) that always follows map movement
  * - `bbox` = explicit list filter snapshot (changes only when user applies/clears)
  */
-export function useLandMapState() {
+export function useStateOverviewMapState() {
   const [state, setState] = useQueryStates(
     {
       mapCamera: osmStyleMapParamParser,
-      bboxFilter: landMapBboxParser,
+      bboxFilter: stateMapBboxParser,
     },
     {
       history: 'replace',
@@ -24,11 +24,11 @@ export function useLandMapState() {
 
   return {
     mapCamera: state.mapCamera as OsmStyleMapTriple | null,
-    bboxFilter: state.bboxFilter as LandMapBbox | null,
+    bboxFilter: state.bboxFilter as StateMapBbox | null,
     setMapCamera: (mapCamera: OsmStyleMapTriple | null) => {
       void setState({ mapCamera })
     },
-    setBboxFilter: (bboxFilter: LandMapBbox | null) => {
+    setBboxFilter: (bboxFilter: StateMapBbox | null) => {
       void setState({ bboxFilter })
     },
     clearBboxFilter: () => {

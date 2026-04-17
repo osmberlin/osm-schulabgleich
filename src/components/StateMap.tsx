@@ -1,5 +1,4 @@
 import { de } from '../i18n/de'
-import { LAND_MATCH_CATEGORIES, type LandMatchCategory } from '../lib/landMatchCategories'
 import { boundsToBboxParam } from '../lib/mapBounds'
 import {
   paintMatchCatCore,
@@ -12,12 +11,13 @@ import {
   hideVectorBasemapBuildings,
   OPENFREEMAP_STYLE,
 } from '../lib/openFreeMapStyle'
+import { type StateCode, STATE_BOUNDS, STATE_MAP_CENTER } from '../lib/stateConfig'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { type LandCode, STATE_BOUNDS, STATE_MAP_CENTER } from '../lib/stateConfig'
+import { STATE_MATCH_CATEGORIES, type StateMatchCategory } from '../lib/stateMatchCategories'
 import type { OsmStyleMapTriple } from '../lib/useDetailMapParam'
-import type { LandMapBbox } from '../lib/useLandMapBbox'
-import { LandMapBboxToolbar } from './LandMapBboxToolbar'
+import type { StateMapBbox } from '../lib/useStateMapBbox'
 import { MapPointHoverPanel } from './MapPointHoverPanel'
+import { StateMapBboxToolbar } from './StateMapBboxToolbar'
 import type { CircleLayerSpecification } from '@maplibre/maplibre-gl-style-spec'
 import bbox from '@turf/bbox'
 import type { Feature, FeatureCollection, MultiPolygon, Polygon } from 'geojson'
@@ -32,7 +32,7 @@ import MapGL, {
 
 const FIT_PADDING = 48
 const FIT_MAX_ZOOM = 16
-const LAND_MAP_ID = 'land-map'
+const STATE_MAP_ID = 'state-map'
 
 /**
  * Uncontrolled MapGL (`initialViewState` only; no `viewState`) with event-driven URL sync:
@@ -41,8 +41,8 @@ const LAND_MAP_ID = 'land-map'
 const LAYER_MATCH_OVERVIEW_HALO = 'match-overview-halo'
 const BBOX_EPSILON = 0.0001
 
-function isLandMatchCategory(v: unknown): v is LandMatchCategory {
-  return typeof v === 'string' && (LAND_MATCH_CATEGORIES as readonly string[]).includes(v)
+function isStateMatchCategory(v: unknown): v is StateMatchCategory {
+  return typeof v === 'string' && (STATE_MATCH_CATEGORIES as readonly string[]).includes(v)
 }
 
 function lngLatBoundsFromTurfBbox(
@@ -54,7 +54,7 @@ function lngLatBoundsFromTurfBbox(
   ]
 }
 
-function bboxChanged(a: LandMapBbox | null, b: LandMapBbox | null): boolean {
+function bboxChanged(a: StateMapBbox | null, b: StateMapBbox | null): boolean {
   if (!a || !b) return false
   return a.some((v, i) => Math.abs(v - b[i]) > BBOX_EPSILON)
 }
@@ -76,27 +76,27 @@ const landMapCircleCorePaint = {
 const landMapCircleLayout = { 'circle-sort-key': paintMatchCatSortKey }
 
 function matchCategoryFilter(
-  enabled: ReadonlySet<LandMatchCategory>,
+  enabled: ReadonlySet<StateMatchCategory>,
 ): FilterSpecification | undefined {
-  if (enabled.size === LAND_MATCH_CATEGORIES.length) return undefined
+  if (enabled.size === STATE_MATCH_CATEGORIES.length) return undefined
   if (enabled.size === 0) {
     return ['==', ['get', 'matchCat'], '__none__']
   }
   return ['in', ['get', 'matchCat'], ['literal', [...enabled]]]
 }
 
-const landBoundaryLinePaint = {
+const stateBoundaryLinePaint = {
   'line-color': '#000000',
   'line-width': 2,
   'line-opacity': 0.95,
 }
 
-export function LandMap({
+export function StateMap({
   matchPoints,
   height = 420,
   enabledCategories,
-  landCode,
-  landBoundary,
+  stateCode,
+  stateBoundary,
   mapCamera,
   onMapCameraChange,
   bboxFilter,
@@ -107,14 +107,14 @@ export function LandMap({
   /** One Point per Trefferliste row; `matchCat` = category for color. */
   matchPoints: FeatureCollection
   height?: number
-  enabledCategories: ReadonlySet<LandMatchCategory>
-  landCode?: string
+  enabledCategories: ReadonlySet<StateMatchCategory>
+  stateCode?: string
   /** Simplified Bundesland outline (`public/bundesland-boundaries/{code}.geojson`). */
-  landBoundary?: Feature<Polygon | MultiPolygon> | null
+  stateBoundary?: Feature<Polygon | MultiPolygon> | null
   mapCamera?: OsmStyleMapTriple | null
   onMapCameraChange?: (mapCamera: OsmStyleMapTriple | null) => void
-  bboxFilter?: LandMapBbox | null
-  onApplyBboxFilter?: (bboxFilter: LandMapBbox | null) => void
+  bboxFilter?: StateMapBbox | null
+  onApplyBboxFilter?: (bboxFilter: StateMapBbox | null) => void
   onClearBboxFilter?: () => void
   /** When set, halo points are hoverable and clickable (navigate to Schule detail). */
   onSchoolClick?: (matchKey: string) => void
@@ -131,10 +131,10 @@ export function LandMap({
 
   const frameBounds = useMemo((): [[number, number], [number, number]] | null => {
     if (bounds) return lngLatBoundsFromTurfBbox(bounds)
-    const code = landCode as LandCode | undefined
+    const code = stateCode as StateCode | undefined
     if (code && code in STATE_BOUNDS) return lngLatBoundsFromTurfBbox(STATE_BOUNDS[code])
     return null
-  }, [bounds, landCode])
+  }, [bounds, stateCode])
 
   const fitTargetBounds = useMemo((): [[number, number], [number, number]] | null => {
     if (bboxFilter) {
@@ -154,19 +154,19 @@ export function LandMap({
         fitBoundsOptions: { padding: FIT_PADDING, maxZoom: FIT_MAX_ZOOM },
       }
     }
-    const code = landCode as LandCode | undefined
+    const code = stateCode as StateCode | undefined
     if (code && code in STATE_MAP_CENTER) {
       const [lon, lat] = STATE_MAP_CENTER[code]
       const zoom = code === 'BE' || code === 'HH' || code === 'HB' ? 10 : 6.5
       return { longitude: lon, latitude: lat, zoom, pitch: 0, bearing: 0 }
     }
     return { longitude: 10.5, latitude: 51.2, zoom: 5.5, pitch: 0, bearing: 0 }
-  }, [fitTargetBounds, landCode, mapCamera])
+  }, [fitTargetBounds, stateCode, mapCamera])
 
-  const [currentBbox, setCurrentBbox] = useState<LandMapBbox | null>(null)
-  const [baselineBbox, setBaselineBbox] = useState<LandMapBbox | null>(null)
+  const [currentBbox, setCurrentBbox] = useState<StateMapBbox | null>(null)
+  const [baselineBbox, setBaselineBbox] = useState<StateMapBbox | null>(null)
   const [hoveredPointEntries, setHoveredPointEntries] = useState<
-    Array<{ name: string; matchCat: LandMatchCategory }>
+    Array<{ name: string; matchCat: StateMatchCategory }>
   >([])
 
   const hasFilterBbox = bboxFilter != null
@@ -195,7 +195,7 @@ export function LandMap({
     onMapCameraChange([zoom, latitude, longitude])
   }
 
-  function handleApply(b: LandMapBbox) {
+  function handleApply(b: StateMapBbox) {
     if (!onApplyBboxFilter) return
     onApplyBboxFilter(b)
   }
@@ -204,7 +204,7 @@ export function LandMap({
     if (!onSchoolClick) return
     const raw = e.features ?? []
     const seen = new Set<string>()
-    const next: Array<{ name: string; matchCat: LandMatchCategory }> = []
+    const next: Array<{ name: string; matchCat: StateMatchCategory }> = []
     for (const hit of raw) {
       if (hit.geometry.type !== 'Point') continue
       const name = hit.properties?.name
@@ -213,7 +213,7 @@ export function LandMap({
       if (
         typeof name !== 'string' ||
         typeof matchKey !== 'string' ||
-        !isLandMatchCategory(matchCat)
+        !isStateMatchCategory(matchCat)
       ) {
         continue
       }
@@ -252,7 +252,7 @@ export function LandMap({
       style={{ height }}
     >
       <MapGL
-        id={LAND_MAP_ID}
+        id={STATE_MAP_ID}
         initialViewState={initialViewState}
         mapStyle={OPENFREEMAP_STYLE}
         reuseMaps
@@ -273,9 +273,9 @@ export function LandMap({
         onMoveEnd={handleMoveEnd}
         {...schoolInteractionProps}
       >
-        {landBoundary && (
-          <Source id="land-boundary-outline" type="geojson" data={landBoundary}>
-            <Layer id="land-boundary-line" type="line" paint={landBoundaryLinePaint} />
+        {stateBoundary && (
+          <Source id="land-boundary-outline" type="geojson" data={stateBoundary}>
+            <Layer id="land-boundary-line" type="line" paint={stateBoundaryLinePaint} />
           </Source>
         )}
         <Source id="match-overview-points" type="geojson" data={matchPoints}>
@@ -299,12 +299,12 @@ export function LandMap({
         <MapPointHoverPanel
           entries={hoveredPointEntries.map((h) => ({
             name: h.name,
-            categoryLine: de.land.categoryLabel[h.matchCat] ?? h.matchCat,
+            categoryLine: de.state.categoryLabel[h.matchCat] ?? h.matchCat,
           }))}
         />
       ) : null}
       {bboxToolbarEnabled && (
-        <LandMapBboxToolbar
+        <StateMapBboxToolbar
           hasFilterBbox={hasFilterBbox}
           visible={toolbarVisible}
           currentBbox={currentBbox}
