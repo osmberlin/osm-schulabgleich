@@ -988,7 +988,11 @@ export function SchuleDetail() {
         void navigate({
           to: '/bundesland/$code/schule/$matchKey',
           params: { code, matchKey: nextKey },
-          search: true,
+          search: (prev) => ({
+            ...prev,
+            map: undefined,
+            bbox: undefined,
+          }),
         })
       }
       return

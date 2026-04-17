@@ -27,6 +27,7 @@ export function useStateOverviewMapState() {
     bboxFilter,
     setMapCamera: (mapCamera: OsmStyleMapTriple | null) => {
       void navigate({
+        unsafeRelative: 'path',
         replace: true,
         resetScroll: false,
         search: (prev) => ({
@@ -37,6 +38,7 @@ export function useStateOverviewMapState() {
     },
     setBboxFilter: (bboxFilter: StateMapBbox | null) => {
       void navigate({
+        unsafeRelative: 'path',
         replace: true,
         resetScroll: false,
         search: (prev) => ({
@@ -47,6 +49,7 @@ export function useStateOverviewMapState() {
     },
     clearBboxFilter: () => {
       void navigate({
+        unsafeRelative: 'path',
         replace: true,
         resetScroll: false,
         search: (prev) => ({

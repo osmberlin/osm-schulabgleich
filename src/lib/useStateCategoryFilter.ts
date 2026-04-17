@@ -16,6 +16,7 @@ export function useStateCategoryFilter() {
 
   function setCategoryEnabled(c: StateMatchCategory, enabled: boolean) {
     void navigate({
+      unsafeRelative: 'path',
       replace: true,
       search: (prev) => {
         const cur = prev.cats ?? DEFAULT_STATE_MATCH_CATEGORIES

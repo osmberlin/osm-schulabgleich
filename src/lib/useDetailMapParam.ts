@@ -3,15 +3,15 @@ import {
   parseOsmStyleMapSearchParam,
   serializeOsmStyleMapSearchParam,
 } from './osmStyleMapQueryParam'
-import { stateRouteApi } from './stateRouteApi'
+import { stateSchuleRouteApi } from './stateRouteApi'
 import { useNavigate } from '@tanstack/react-router'
 
 /**
  * URL-synced camera for the school detail compare map (`?map=zoom/lat/lon`, OSM hash order).
  */
 export function useDetailMapParam() {
-  const search = stateRouteApi.useSearch()
-  const navigate = useNavigate({ from: '/bundesland/$code' })
+  const search = stateSchuleRouteApi.useSearch()
+  const navigate = useNavigate({ from: '/bundesland/$code/schule/$matchKey' })
   const map = parseOsmStyleMapSearchParam(search.map)
 
   const setMap = (nextMap: OsmStyleMapTriple | null) => {

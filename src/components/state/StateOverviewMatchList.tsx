@@ -72,6 +72,7 @@ export function StateOverviewMatchList({
                   <Link
                     to="/bundesland/$code/schule/$matchKey"
                     params={{ code, matchKey: row.key }}
+                    search={{}}
                     className="relative flex justify-between gap-x-3 px-3 py-2.5 hover:bg-zinc-800/50 sm:gap-x-6 sm:px-5 sm:py-3.5"
                     aria-label={`${de.state.detail}: ${title}`}
                   >

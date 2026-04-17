@@ -17,6 +17,7 @@ export function useStateOverviewExplorerFilter() {
 
   function setExploreQ(nextValue: string) {
     void navigate({
+      unsafeRelative: 'path',
       replace: true,
       search: (prev) => ({
         ...prev,
@@ -27,6 +28,7 @@ export function useStateOverviewExplorerFilter() {
 
   function setNameScope(nextValue: 'both' | 'official' | 'osm') {
     void navigate({
+      unsafeRelative: 'path',
       replace: true,
       search: (prev) => ({
         ...prev,
@@ -37,6 +39,7 @@ export function useStateOverviewExplorerFilter() {
 
   function toggleMatchMode(mode: (typeof STATE_FACET_MATCH_MODES)[number], on: boolean) {
     void navigate({
+      unsafeRelative: 'path',
       replace: true,
       search: (prev) => {
         const cur = prev.lmm ?? []
@@ -54,6 +57,7 @@ export function useStateOverviewExplorerFilter() {
 
   function toggleIscedLevel(level: 'yes' | 'no', on: boolean) {
     void navigate({
+      unsafeRelative: 'path',
       replace: true,
       search: (prev) => {
         const cur = prev.lisc ?? []
@@ -71,6 +75,7 @@ export function useStateOverviewExplorerFilter() {
 
   function toggleGeoBoundaryIssue(v: 'yes' | 'no', on: boolean) {
     void navigate({
+      unsafeRelative: 'path',
       replace: true,
       search: (prev) => {
         const cur = prev.lgeo ?? []
@@ -88,6 +93,7 @@ export function useStateOverviewExplorerFilter() {
 
   function toggleSchoolKind(kind: string, on: boolean) {
     void navigate({
+      unsafeRelative: 'path',
       replace: true,
       search: (prev) => {
         const cur = prev.lsk ?? []
@@ -105,6 +111,7 @@ export function useStateOverviewExplorerFilter() {
 
   function resetExplorer() {
     void navigate({
+      unsafeRelative: 'path',
       replace: true,
       search: (prev) => ({
         ...prev,

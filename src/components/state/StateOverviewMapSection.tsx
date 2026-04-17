@@ -61,6 +61,7 @@ export function StateOverviewMapSection({
             void navigate({
               to: '/bundesland/$code/schule/$matchKey',
               params: { code: stateCode, matchKey },
+              search: {},
             })
           }
         />
