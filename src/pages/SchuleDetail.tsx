@@ -40,6 +40,7 @@ import { osmGeometryCentroidLonLat } from '../lib/osmGeometryCentroid'
 import { comparePropertySections, normalizeAddressCompareString } from '../lib/propertyCompare'
 import { STATE_LABEL_DE, STATE_ORDER, type LandCode } from '../lib/stateConfig'
 import { useDetailMapMask } from '../lib/useDetailMapMask'
+import { useDetailMapParam } from '../lib/useDetailMapParam'
 import type { LandMapBbox } from '../lib/useLandMapBbox'
 import {
   parseErrorOutsideBoundaryFromOfficialProps,
@@ -73,6 +74,27 @@ const DETAIL_MAP_LAYER_CENTROID_CORE = 'c-centroid-core'
 const DETAIL_MAP_LAYER_CENTROID_HALO = 'c-centroid-halo'
 const DETAIL_MAP_LAYER_OFFICIAL_CORE = 'c-official-core'
 const DETAIL_MAP_LAYER_OFFICIAL_HALO = 'c-official-halo'
+
+const DETAIL_MAP_INTERACTIVE_LAYERS_BASE: string[] = [
+  DETAIL_MAP_LAYER_CENTROID_CORE,
+  DETAIL_MAP_LAYER_CENTROID_HALO,
+  DETAIL_MAP_LAYER_OFFICIAL_CORE,
+  DETAIL_MAP_LAYER_OFFICIAL_HALO,
+]
+
+const DETAIL_MAP_INTERACTIVE_LAYERS_WITH_OTHERS: string[] = [
+  ...DETAIL_MAP_INTERACTIVE_LAYERS_BASE,
+  OTHER_SCHOOLS_LAYER_CORE,
+  OTHER_SCHOOLS_LAYER_HALO,
+]
+
+function maplibreWhenLoaded(
+  map: { loaded(): boolean; once(type: 'load', fn: () => void): void },
+  fn: () => void,
+) {
+  if (map.loaded()) fn()
+  else map.once('load', fn)
+}
 
 /** Referenz-OSM: blauer Schein, schwarzer Kern */
 const DETAIL_REF_OSM_HALO_COLOR = 'rgba(59, 130, 246, 0.5)'
@@ -503,7 +525,9 @@ export function SchuleDetail() {
   const navigate = useNavigate()
   const keyDecoded = decodeURIComponent(matchKey)
   const { showMapMask, setShowMapMask } = useDetailMapMask()
+  const { map: detailMapUrl, setMap: setDetailMapUrl } = useDetailMapParam()
   const [detailMapBbox, setDetailMapBbox] = useState<LandMapBbox | null>(null)
+  const detailMapSkipUrlSyncRef = useRef(false)
   const [hoveredMapLabel, setHoveredMapLabel] = useState<HoveredMapLabel | null>(null)
 
   const q = useQuery({
@@ -803,43 +827,58 @@ export function SchuleDetail() {
     }
   }, [detailMapBoundsSourceFc])
 
-  const detailMapBounds = useMemo((): [[number, number], [number, number]] | null => {
-    if (!bounds) return null
-    return [
-      [bounds[0], bounds[1]],
-      [bounds[2], bounds[3]],
-    ]
-  }, [bounds])
-
   const detailInitialViewState = useMemo(() => {
-    if (!detailMapBounds) return { latitude: 51, longitude: 10, zoom: 14, pitch: 0, bearing: 0 }
+    if (detailMapUrl) {
+      const [zoom, lat, lon] = detailMapUrl
+      return { latitude: lat, longitude: lon, zoom, pitch: 0, bearing: 0 }
+    }
+    if (!bounds) return { latitude: 51, longitude: 10, zoom: 14, pitch: 0, bearing: 0 }
     return {
-      bounds: detailMapBounds,
+      bounds: [
+        [bounds[0], bounds[1]],
+        [bounds[2], bounds[3]],
+      ] as [[number, number], [number, number]],
       fitBoundsOptions: {
         padding: DETAIL_MAP_PADDING,
         maxZoom: DETAIL_MAP_MAX_ZOOM,
       },
     }
-  }, [detailMapBounds])
+  }, [bounds, detailMapUrl])
 
   const mapRef = useRef<MapRef>(null)
   useEffect(
-    function fitDetailMapToComputedBounds() {
+    function syncDetailMapCamera() {
       const m = mapRef.current?.getMap()
-      if (!m || !detailMapBounds) return
-      const run = () => {
+      if (!m) return
+
+      if (detailMapUrl) {
+        const [zoom, lat, lon] = detailMapUrl
+        maplibreWhenLoaded(m, () => {
+          m.resize()
+          detailMapSkipUrlSyncRef.current = true
+          m.jumpTo({ center: [lon, lat], zoom })
+          setDetailMapBbox(boundsToBboxParam(m.getBounds()))
+        })
+        return
+      }
+
+      if (!bounds) return
+      const swne: [[number, number], [number, number]] = [
+        [bounds[0], bounds[1]],
+        [bounds[2], bounds[3]],
+      ]
+      maplibreWhenLoaded(m, () => {
         m.resize()
-        m.fitBounds(detailMapBounds, {
+        detailMapSkipUrlSyncRef.current = true
+        m.fitBounds(swne, {
           padding: DETAIL_MAP_PADDING,
           duration: 0,
           maxZoom: DETAIL_MAP_MAX_ZOOM,
         })
         setDetailMapBbox(boundsToBboxParam(m.getBounds()))
-      }
-      if (m.loaded()) run()
-      else m.once('load', run)
+      })
     },
-    [detailMapBounds],
+    [bounds, detailMapUrl, keyDecoded],
   )
 
   const handleDetailMapMove = (e: {
@@ -850,18 +889,21 @@ export function SchuleDetail() {
     setDetailMapBbox(boundsToBboxParam(e.target.getBounds()))
   }
 
-  const detailInteractiveLayerIds = useMemo(() => {
-    const ids = [
-      DETAIL_MAP_LAYER_CENTROID_CORE,
-      DETAIL_MAP_LAYER_CENTROID_HALO,
-      DETAIL_MAP_LAYER_OFFICIAL_CORE,
-      DETAIL_MAP_LAYER_OFFICIAL_HALO,
-    ]
-    if (otherSchoolPointsInViewport.features.length > 0) {
-      ids.push(OTHER_SCHOOLS_LAYER_CORE, OTHER_SCHOOLS_LAYER_HALO)
+  const handleDetailMapMoveEnd = () => {
+    const m = mapRef.current?.getMap()
+    if (!m) return
+    if (detailMapSkipUrlSyncRef.current) {
+      detailMapSkipUrlSyncRef.current = false
+      return
     }
-    return ids
-  }, [otherSchoolPointsInViewport.features.length])
+    const c = m.getCenter()
+    void setDetailMapUrl([m.getZoom(), c.lat, c.lng])
+  }
+
+  const detailInteractiveLayerIds =
+    otherSchoolPointsInViewport.features.length > 0
+      ? DETAIL_MAP_INTERACTIVE_LAYERS_WITH_OTHERS
+      : DETAIL_MAP_INTERACTIVE_LAYERS_BASE
 
   const handleDetailMapMouseMove = (e: MapLayerMouseEvent) => {
     if (!row) {
@@ -1009,6 +1051,7 @@ export function SchuleDetail() {
                 setDetailMapBbox(boundsToBboxParam(e.target.getBounds()))
               }}
               onMove={handleDetailMapMove}
+              onMoveEnd={handleDetailMapMoveEnd}
               onMouseMove={handleDetailMapMouseMove}
               onMouseLeave={handleDetailMapMouseLeave}
               onClick={handleDetailMapClick}

@@ -20,6 +20,16 @@ export const landMapBboxTupleSchema = z
   .tuple([zFinite, zFinite, zFinite, zFinite])
   .refine(([w, s, e, n]) => w < e && s < n)
 
+/**
+ * OSM-style `map=z/lat/lon` (openstreetmap.org hash order): zoom, latitude, longitude.
+ * Used for SchuleDetail compare map URL state.
+ */
+export const osmStyleMapTripleSchema = z
+  .tuple([zFinite, zFinite, zFinite])
+  .refine(([zoom, lat, lon]) => {
+    return zoom >= 0 && zoom <= 24 && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180
+  })
+
 export function parseJedeschuleLonLatFromRecord(
   props: Record<string, unknown> | null | undefined,
 ): [number, number] | null {
