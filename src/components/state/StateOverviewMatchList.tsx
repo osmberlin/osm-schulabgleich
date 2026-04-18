@@ -94,11 +94,13 @@ export function StateOverviewMatchList({
                         )}
                       </div>
                     </div>
-                    <div className="flex shrink-0 items-start gap-x-3 pt-0.5">
+                    <div className="flex min-w-0 shrink-0 items-start gap-x-3 pt-0.5">
                       {(subId !== '' || row.distanceMeters != null) && (
-                        <div className="flex max-w-[min(100%,12rem)] flex-col items-end gap-y-0.5">
+                        <div className="flex min-w-0 max-w-48 flex-col items-end gap-y-0.5">
                           {subId !== '' && (
-                            <p className="text-right font-mono text-xs/5 text-zinc-400">{subId}</p>
+                            <p className="break-all text-right font-mono text-xs/5 text-zinc-400">
+                              {subId}
+                            </p>
                           )}
                           {row.distanceMeters != null && (
                             <p className="text-right text-xs/5 text-zinc-400 tabular-nums">
