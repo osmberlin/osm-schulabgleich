@@ -43,4 +43,8 @@ export default defineConfig({
     /** Use 127.0.0.1 so OSM OAuth redirect can be `http://127.0.0.1:5174/osm-oauth-land.html`. */
     host: '127.0.0.1',
   },
+  build: {
+    /** Emit `.map` files for production debugging and error stack traces. */
+    sourcemap: true,
+  },
 })
