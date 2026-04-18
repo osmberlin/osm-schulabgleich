@@ -111,6 +111,23 @@ describe('spreadOtherSchoolPointsAvoidingDetailPoints', () => {
     const moved = c[0] !== 7 || c[1] !== 51
     expect(moved).toBe(true)
   })
+
+  it('does not treat detail osm centroid as a reference slot for spreading', () => {
+    const detailCentroid = {
+      type: 'Feature' as const,
+      properties: { _mapDetail: 'osmCentroid' },
+      geometry: { type: 'Point' as const, coordinates: [7, 51] },
+    }
+    const other = {
+      type: 'Feature' as const,
+      properties: { schoolKey: 'other', matchCat: 'official_only' },
+      geometry: { type: 'Point' as const, coordinates: [7, 51] },
+    }
+    const out = spreadOtherSchoolPointsAvoidingDetailPoints([detailCentroid], [other])
+    expect(out).toHaveLength(1)
+    const c = (out[0].geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
+    expect(c).toEqual([7, 51])
+  })
 })
 
 describe('filterOtherSchoolPointsForDetailMap', () => {

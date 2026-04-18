@@ -15,13 +15,19 @@ import {
   flatMapGlProps,
   OPENFREEMAP_STYLE,
 } from '../../lib/openFreeMapStyle'
+import {
+  detailMapHoverEntries,
+  parseDetailMapPointHits,
+  primaryHoveredHit,
+  resolveDetailMapClickTarget,
+} from '../../lib/schoolDetailMapInteractions'
 import type { StateMatchCategory } from '../../lib/stateMatchCategories'
 import { useDetailMapMask } from '../../lib/useDetailMapMask'
 import type { StateMapBbox } from '../../lib/useStateMapBbox'
 import { MapPointHoverPanel } from '../MapPointHoverPanel'
 import { featureCollection } from '@turf/helpers'
 import type { Feature } from 'geojson'
-import { Fragment } from 'react'
+import { Fragment, useState } from 'react'
 import MapGL, {
   Layer,
   type MapLayerMouseEvent,
@@ -95,15 +101,6 @@ export type SchoolDetailMapRenderData = {
   otherSchoolPointFeatures: Feature[]
 }
 
-/** Same category line as StateLayout header (`de.state.categoryLabel`). */
-function detailMapPopupCategoryLine(
-  hovered: HoveredMapLabel,
-  currentSchoolCategory: StateMatchCategory,
-): string {
-  const cat = hovered.kind === 'osm-other' ? hovered.matchCat : currentSchoolCategory
-  return de.state.categoryLabel[cat] ?? cat
-}
-
 function DetailMapLegendPointDot({
   haloClassName,
   coreClassName,
@@ -156,54 +153,55 @@ export function SchoolDetailMap({
     otherSchoolPointFeatures.length > 0
       ? DETAIL_MAP_INTERACTIVE_LAYERS_WITH_OTHERS
       : DETAIL_MAP_INTERACTIVE_LAYERS_BASE
+  const [hoverEntries, setHoverEntries] = useState<
+    ReadonlyArray<{ name: string; categoryLine: string }>
+  >([])
+
   const handleMouseMove = (e: MapLayerMouseEvent) => {
-    const hit = e.features?.[0]
-    if (!hit || hit.geometry.type !== 'Point') {
+    const hits = parseDetailMapPointHits({
+      rawFeatures: e.features,
+      pointerLon: e.lngLat.lng,
+      pointerLat: e.lngLat.lat,
+      referenceName: osmReferenceName,
+    })
+    const entries = detailMapHoverEntries({ hits, currentSchoolCategory })
+    setHoverEntries(entries)
+
+    const primary = primaryHoveredHit(hits)
+    if (!primary) {
       onHoveredMapLabelChange(null)
       return
     }
-    const layerId = hit.layer?.id
-    const [lon, lat] = hit.geometry.coordinates
 
-    if (layerId === OTHER_SCHOOLS_LAYER_CORE || layerId === OTHER_SCHOOLS_LAYER_HALO) {
-      const schoolKey = hit.properties?.schoolKey
-      const name = hit.properties?.name
-      const matchCat = hit.properties?.matchCat as StateMatchCategory | undefined
-      if (
-        typeof schoolKey === 'string' &&
-        typeof name === 'string' &&
-        matchCat != null &&
-        (matchCat === 'matched' ||
-          matchCat === 'official_only' ||
-          matchCat === 'osm_only' ||
-          matchCat === 'match_ambiguous' ||
-          matchCat === 'official_no_coord')
-      ) {
-        onHoveredMapLabelChange({ kind: 'osm-other', lon, lat, name, schoolKey, matchCat })
-      } else {
-        onHoveredMapLabelChange(null)
-      }
-      return
-    }
-
-    if (layerId === DETAIL_MAP_LAYER_CENTROID_CORE || layerId === DETAIL_MAP_LAYER_CENTROID_HALO) {
+    if (primary.kind === 'osm-other' && primary.schoolKey && primary.matchCat) {
       onHoveredMapLabelChange({
-        kind: 'osm-reference',
-        lon,
-        lat,
-        name: osmReferenceName,
+        kind: 'osm-other',
+        lon: primary.lon,
+        lat: primary.lat,
+        name: primary.name,
+        schoolKey: primary.schoolKey,
+        matchCat: primary.matchCat,
       })
       return
     }
 
-    if (layerId === DETAIL_MAP_LAYER_OFFICIAL_CORE || layerId === DETAIL_MAP_LAYER_OFFICIAL_HALO) {
-      const pid = hit.properties?.id as string | undefined
-      if (!pid) {
-        onHoveredMapLabelChange(null)
-        return
-      }
-      const name = typeof hit.properties?.name === 'string' ? hit.properties.name : pid
-      onHoveredMapLabelChange({ kind: 'official-current', lon, lat, name })
+    if (primary.kind === 'reference') {
+      onHoveredMapLabelChange({
+        kind: 'osm-reference',
+        lon: primary.lon,
+        lat: primary.lat,
+        name: primary.name,
+      })
+      return
+    }
+
+    if (primary.kind === 'official-current') {
+      onHoveredMapLabelChange({
+        kind: 'official-current',
+        lon: primary.lon,
+        lat: primary.lat,
+        name: primary.name,
+      })
       return
     }
 
@@ -211,25 +209,27 @@ export function SchoolDetailMap({
   }
 
   const handleMouseLeave = () => {
+    setHoverEntries([])
     onHoveredMapLabelChange(null)
   }
 
   const handleClick = (e: MapLayerMouseEvent) => {
-    const hit = e.features?.[0]
-    if (!hit || hit.geometry.type !== 'Point') return
-    const layerId = hit.layer?.id
+    const hits = parseDetailMapPointHits({
+      rawFeatures: e.features,
+      pointerLon: e.lngLat.lng,
+      pointerLat: e.lngLat.lat,
+      referenceName: osmReferenceName,
+    })
+    const target = resolveDetailMapClickTarget(hits)
+    if (!target) return
 
-    if (layerId === OTHER_SCHOOLS_LAYER_CORE || layerId === OTHER_SCHOOLS_LAYER_HALO) {
-      const nextKey = hit.properties?.schoolKey
-      if (typeof nextKey === 'string' && nextKey.length > 0) {
-        onOtherSchoolClick(nextKey)
-      }
+    if (target.kind === 'osm-other') {
+      onOtherSchoolClick(target.schoolKey)
       return
     }
 
-    if (layerId === DETAIL_MAP_LAYER_OFFICIAL_CORE || layerId === DETAIL_MAP_LAYER_OFFICIAL_HALO) {
-      const pid = hit.properties?.id as string | undefined
-      if (pid) onOfficialPointClick(pid)
+    if (target.kind === 'official-current') {
+      onOfficialPointClick(target.officialId)
     }
   }
 
@@ -430,16 +430,7 @@ export function SchoolDetailMap({
           </Source>
         )}
       </MapGL>
-      {hoveredMapLabel ? (
-        <MapPointHoverPanel
-          entries={[
-            {
-              name: hoveredMapLabel.name,
-              categoryLine: detailMapPopupCategoryLine(hoveredMapLabel, currentSchoolCategory),
-            },
-          ]}
-        />
-      ) : null}
+      <MapPointHoverPanel entries={hoverEntries} />
     </Fragment>
   )
 }

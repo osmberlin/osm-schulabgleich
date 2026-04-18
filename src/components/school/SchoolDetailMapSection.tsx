@@ -15,6 +15,7 @@ import {
 import { computeDetailMapFrameState } from '../../lib/schoolDetailMapFrame'
 import { buildSchoolDetailMapLayerFeatures } from '../../lib/schoolDetailMapLayerFeatures'
 import { resolveSchoolMapOsmCentroid } from '../../lib/schoolDetailMapOsmCentroid'
+import { detailMapReferenceName } from '../../lib/schoolDetailMapReference'
 import { useDetailMapParam } from '../../lib/useDetailMapParam'
 import { deriveSchoolDetailMapFeatures } from '../../lib/useSchoolDetailMapFeatures'
 import type { StateMapBbox } from '../../lib/useStateMapBbox'
@@ -93,6 +94,8 @@ export function SchoolDetailMapSection({
   }
 
   const mapOsmCentroid = resolveSchoolMapOsmCentroid(data, matchRow)
+  const currentSchoolCategory = matchRow.matchCategory ?? matchRow.category
+  const detailMapReferenceLabel = detailMapReferenceName(matchRow)
 
   const {
     detailFeatures,
@@ -194,8 +197,8 @@ export function SchoolDetailMapSection({
           <SchoolDetailMap
             initialViewState={detailInitialViewState}
             hoveredMapLabel={hoveredMapLabel}
-            currentSchoolCategory={matchRow.matchCategory ?? matchRow.category}
-            osmReferenceName={matchRow.osmName ?? matchRow.key}
+            currentSchoolCategory={currentSchoolCategory}
+            osmReferenceName={detailMapReferenceLabel}
             renderData={mapRenderData}
             onMapBboxChange={setDetailMapBbox}
             onHoveredMapLabelChange={setHoveredMapLabel}

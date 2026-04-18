@@ -196,6 +196,7 @@ export function spreadOtherSchoolPointsAvoidingDetailPoints(
   const refCounts = new Map<string, number>()
   for (const f of detailPointFeatures) {
     if (f.geometry?.type !== 'Point') continue
+    if (f.properties?._mapDetail === 'osmCentroid') continue
     const [lon, lat] = (f.geometry as Point).coordinates
     const k = mapDisplayCoordGroupKey(lon, lat)
     refCounts.set(k, (refCounts.get(k) ?? 0) + 1)
