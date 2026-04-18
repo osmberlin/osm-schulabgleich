@@ -41,7 +41,7 @@ export function StateOverviewMatchList({
 }) {
   return (
     <>
-      <h2 className="mt-10 mb-2 flex flex-row flex-wrap items-center gap-x-2 gap-y-1.5 sm:flex-nowrap text-lg font-semibold text-zinc-100">
+      <h2 className="mt-10 mb-2 flex flex-row flex-wrap items-center gap-x-2 gap-y-1.5 text-lg font-semibold text-zinc-100 sm:flex-nowrap">
         <span>{de.state.table}</span>
         <span className="inline-flex shrink-0 items-center rounded-full border border-zinc-300/90 bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold text-zinc-700 tabular-nums">
           {formatDeInteger(listMatches.length)}
@@ -77,10 +77,10 @@ export function StateOverviewMatchList({
                       map: undefined,
                       bbox: undefined,
                     })}
-                    className="relative flex justify-between gap-x-3 px-3 py-2.5 hover:bg-zinc-800/50 sm:gap-x-6 sm:px-5 sm:py-3.5"
+                    className="relative flex flex-col gap-y-2.5 px-3 py-2.5 hover:bg-zinc-800/50 sm:flex-row sm:items-start sm:justify-between sm:gap-x-6 sm:gap-y-0 sm:px-5 sm:py-3.5"
                     aria-label={`${de.state.detail}: ${title}`}
                   >
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 w-full sm:flex-1">
                       <p className="text-sm/5 font-semibold text-zinc-100">{title}</p>
                       <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                         <CategoryLegendSwatch category={row.category} />
@@ -94,9 +94,9 @@ export function StateOverviewMatchList({
                         )}
                       </div>
                     </div>
-                    <div className="flex min-w-0 shrink-0 items-start gap-x-3 pt-0.5">
+                    <div className="flex w-full min-w-0 shrink-0 items-start justify-end gap-x-3 sm:w-auto sm:pt-0.5">
                       {(subId !== '' || row.distanceMeters != null) && (
-                        <div className="flex max-w-48 min-w-0 flex-col items-end gap-y-0.5">
+                        <div className="flex min-w-0 max-w-full flex-col items-end gap-y-0.5 sm:max-w-48">
                           {subId !== '' && (
                             <p className="text-right font-mono text-xs/5 break-all text-zinc-400">
                               {subId}
