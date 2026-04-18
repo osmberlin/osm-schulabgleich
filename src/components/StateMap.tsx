@@ -14,7 +14,6 @@ import {
 import {
   applyFlatMapRotationLocks,
   flatMapGlProps,
-  hideVectorBasemapBuildings,
   OPENFREEMAP_STYLE,
 } from '../lib/openFreeMapStyle'
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -251,7 +250,6 @@ export function StateMap({
         onLoad={(e) => {
           const map = e.target
           applyFlatMapRotationLocks(map)
-          hideVectorBasemapBuildings(map)
           setCurrentBbox(boundsToBboxParam(map.getBounds()))
         }}
         onMove={handleMove}
