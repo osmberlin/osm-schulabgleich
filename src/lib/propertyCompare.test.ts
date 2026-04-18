@@ -96,12 +96,10 @@ describe('comparePropertySections grundschule group', () => {
       { school_type: 'Gymnasium' },
       { 'isced:level': '3', school: 'secondary' },
     )
-    expect(res.compareGroups).toHaveLength(0)
-    expect(res.onlyO).toEqual([['school_type', 'Gymnasium']])
-    expect(res.onlyS).toEqual([
-      ['isced:level', '3'],
-      ['school', 'secondary'],
-    ])
+    expect(res.compareGroups).toHaveLength(1)
+    expect(res.compareGroups[0].kind).toBe('secondarySchool')
+    expect(res.onlyO).toEqual([])
+    expect(res.onlyS).toEqual([])
   })
 
   it('creates grundschule group with isEquivalentMatch false when OSM tags do not match', () => {
@@ -133,6 +131,87 @@ describe('comparePropertySections grundschule group', () => {
   })
 })
 
+describe('comparePropertySections secondary school group', () => {
+  it('creates gymnasium group and matches on isced:level=2;3', () => {
+    const res = comparePropertySections(
+      { school_type: 'Gymnasium', name: 'G1' },
+      { name: 'G1', 'isced:level': '2;3' },
+    )
+    expect(res.compareGroups).toHaveLength(1)
+    const g = res.compareGroups[0]
+    expect(g.kind).toBe('secondarySchool')
+    if (g.kind !== 'secondarySchool') throw new Error('expected secondarySchool')
+    expect(g.variant).toBe('gymnasium')
+    expect(g.isEquivalentMatch).toBe(true)
+    expect(g.osmValues['isced:level']).toBe('2;3')
+    expect(g.osmValues.school).toBeNull()
+    expect(res.onlyO).toEqual([])
+    expect(res.onlyS).toEqual([])
+  })
+
+  it('matches gymnasium on school=secondary', () => {
+    const res = comparePropertySections({ school_type: 'Gymnasien' }, { school: 'secondary' })
+    const g = res.compareGroups[0]
+    expect(g.kind).toBe('secondarySchool')
+    if (g.kind !== 'secondarySchool') throw new Error('expected secondarySchool')
+    expect(g.variant).toBe('gymnasium')
+    expect(g.isEquivalentMatch).toBe(true)
+  })
+
+  it('creates gesamtschule group and matches on isced:level=2', () => {
+    const res = comparePropertySections(
+      { school_type: 'Integrierte Gesamtschule' },
+      { 'isced:level': '2' },
+    )
+    const g = res.compareGroups[0]
+    expect(g.kind).toBe('secondarySchool')
+    if (g.kind !== 'secondarySchool') throw new Error('expected secondarySchool')
+    expect(g.variant).toBe('gesamtschule')
+    expect(g.isEquivalentMatch).toBe(true)
+    expect(res.onlyO).toEqual([])
+    expect(res.onlyS).toEqual([])
+  })
+
+  it('creates hauptReal group and matches on isced:level=2', () => {
+    const res = comparePropertySections(
+      { school_type: 'Haupt- und Realschule' },
+      { 'isced:level': '2' },
+    )
+    const g = res.compareGroups[0]
+    expect(g.kind).toBe('secondarySchool')
+    if (g.kind !== 'secondarySchool') throw new Error('expected secondarySchool')
+    expect(g.variant).toBe('hauptReal')
+    expect(g.isEquivalentMatch).toBe(true)
+    expect(res.onlyO).toEqual([])
+    expect(res.onlyS).toEqual([])
+  })
+
+  it('creates secondary group with isEquivalentMatch false when tags do not match', () => {
+    const res = comparePropertySections(
+      { school_type: 'Realschule' },
+      { school: 'primary', 'isced:level': '1' },
+    )
+    const g = res.compareGroups[0]
+    expect(g.kind).toBe('secondarySchool')
+    if (g.kind !== 'secondarySchool') throw new Error('expected secondarySchool')
+    expect(g.variant).toBe('hauptReal')
+    expect(g.isEquivalentMatch).toBe(false)
+    expect(res.onlyO).toEqual([])
+    expect(res.onlyS).toEqual([])
+  })
+
+  it('uses gesamtschule priority over gymnasium when both terms occur', () => {
+    const res = comparePropertySections(
+      { school_type: 'Gesamtschule mit gymnasialer Oberstufe' },
+      { school: 'secondary' },
+    )
+    const g = res.compareGroups[0]
+    expect(g.kind).toBe('secondarySchool')
+    if (g.kind !== 'secondarySchool') throw new Error('expected secondarySchool')
+    expect(g.variant).toBe('gesamtschule')
+  })
+})
+
 describe('comparePropertySections fachschule group', () => {
   it('creates fachschule group, consumes keys, and matches on amenity=college', () => {
     const res = comparePropertySections(
@@ -155,8 +234,9 @@ describe('comparePropertySections fachschule group', () => {
 
   it('does not create fachschule group when school_type has no fachschule substring', () => {
     const res = comparePropertySections({ school_type: 'Gymnasium' }, { amenity: 'college' })
-    expect(res.compareGroups).toHaveLength(0)
-    expect(res.onlyO).toEqual([['school_type', 'Gymnasium']])
+    expect(res.compareGroups).toHaveLength(1)
+    expect(res.compareGroups[0].kind).toBe('secondarySchool')
+    expect(res.onlyO).toEqual([])
     expect(res.onlyS).toEqual([['amenity', 'college']])
   })
 
@@ -170,11 +250,11 @@ describe('comparePropertySections fachschule group', () => {
     expect(res.onlyS).toEqual([])
   })
 
-  it('places address before grundschule before fachschule when all apply', () => {
+  it('places address before grundschule before secondary school before fachschule when all apply', () => {
     const res = comparePropertySections(
       {
         address: 'Hauptstr. 1',
-        school_type: 'Grundschule; Berufsfachschule',
+        school_type: 'Grundschule; Gymnasium; Berufsfachschule',
         name: 'X',
       },
       {
@@ -182,13 +262,15 @@ describe('comparePropertySections fachschule group', () => {
         'addr:street': 'Hauptstraße',
         'addr:housenumber': '1',
         'isced:level': '1',
+        school: 'secondary',
         amenity: 'college',
       },
     )
-    expect(res.compareGroups).toHaveLength(3)
+    expect(res.compareGroups).toHaveLength(4)
     expect(res.compareGroups[0].kind).toBe('address')
     expect(res.compareGroups[1].kind).toBe('grundschule')
-    expect(res.compareGroups[2].kind).toBe('fachschule')
+    expect(res.compareGroups[2].kind).toBe('secondarySchool')
+    expect(res.compareGroups[3].kind).toBe('fachschule')
   })
 
   it('places address before fachschule when grundschule does not apply', () => {

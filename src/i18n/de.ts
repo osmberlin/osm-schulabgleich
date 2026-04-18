@@ -31,6 +31,16 @@ export const de = {
     grundschuleSectionTitle: 'Vorschlag aus amtlichen Daten (Grundschule)',
     grundschuleSectionLead:
       'Für diese Schule deuten die offiziellen Daten auf eine Grundschule hin. Du kannst passende OSM-Tags taggen und im Hauptmenü hochladen.',
+    gymnasiumSectionTitle: 'Vorschlag aus amtlichen Daten (Gymnasium)',
+    gymnasiumSectionLead:
+      'Für diese Schule deuten die offiziellen Daten auf ein Gymnasium hin. Du kannst passende OSM-Tags taggen und im Hauptmenü hochladen.',
+    gesamtschuleSectionTitle: 'Vorschlag aus amtlichen Daten (Gesamtschule)',
+    gesamtschuleSectionLead:
+      'Für diese Schule deuten die offiziellen Daten auf eine Gesamtschule hin. Du kannst passende OSM-Tags taggen und im Hauptmenü hochladen.',
+    hauptRealSectionTitle: 'Vorschlag aus amtlichen Daten (Hauptschule/Realschule)',
+    hauptRealSectionLead:
+      'Für diese Schule deuten die offiziellen Daten auf eine Hauptschule oder Realschule hin. Du kannst passende OSM-Tags taggen und im Hauptmenü hochladen.',
+    schoolTagWikiLead: 'Bitte informiere dich auf den Wiki-Seiten:',
     /** Shown after the monospace tag in Grundschule action buttons. */
     proposeOsmTagVerb: 'taggen',
     tagAlreadySet: 'Bereits gesetzt',

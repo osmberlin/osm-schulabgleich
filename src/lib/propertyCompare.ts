@@ -6,11 +6,16 @@ import {
 } from './compareMatchKeys'
 import { schoolTypeStringIndicatesFachschule } from './officialFachschule'
 import { schoolTypeStringIndicatesGrundschule, tagValueEqualsProposed } from './officialGrundschule'
+import {
+  type SecondarySchoolKind,
+  resolveSecondarySchoolKindFromSchoolType,
+} from './officialSecondarySchool'
 
 type CompareRowBoth = [string, string, string]
 type CompareRowSingle = [string, string]
 type AddressCompareOsmKey = 'street' | 'housenumber'
 type GrundschuleCompareOsmKey = 'isced:level' | 'school'
+type SecondarySchoolCompareOsmKey = 'isced:level' | 'school'
 type FachschuleCompareOsmKey = 'amenity'
 
 export type AddressCompareGroup = {
@@ -33,6 +38,17 @@ export type GrundschuleCompareGroup = {
   consumedKeys: string[]
 }
 
+export type SecondarySchoolCompareGroup = {
+  kind: 'secondarySchool'
+  variant: SecondarySchoolKind
+  officialKey: 'school_type'
+  officialValue: string | null
+  osmKeys: readonly ['isced:level', 'school']
+  osmValues: Record<SecondarySchoolCompareOsmKey, string | null>
+  isEquivalentMatch: boolean
+  consumedKeys: string[]
+}
+
 export type FachschuleCompareGroup = {
   kind: 'fachschule'
   officialKey: 'school_type'
@@ -46,6 +62,7 @@ export type FachschuleCompareGroup = {
 export type PropertyCompareGroup =
   | AddressCompareGroup
   | GrundschuleCompareGroup
+  | SecondarySchoolCompareGroup
   | FachschuleCompareGroup
 
 export { normalizeAddressCompareString } from './compareMatchKeys'
@@ -120,6 +137,37 @@ function buildFachschuleCompareGroup(
   }
 }
 
+function buildSecondarySchoolCompareGroup(
+  offMap: Map<string, string>,
+  osmMap: Map<string, string>,
+): SecondarySchoolCompareGroup | null {
+  const officialValue = offMap.get('school_type') ?? null
+  const variant = resolveSecondarySchoolKindFromSchoolType(officialValue)
+  if (officialValue == null || variant == null) return null
+
+  const isced = osmMap.get('isced:level') ?? null
+  const school = osmMap.get('school') ?? null
+  const hasSecondary = tagValueEqualsProposed(school ?? undefined, 'secondary')
+  const hasIsced23 = tagValueEqualsProposed(isced ?? undefined, '2;3')
+  const hasIsced2 = tagValueEqualsProposed(isced ?? undefined, '2')
+
+  let isEquivalentMatch = false
+  if (variant === 'gymnasium') isEquivalentMatch = hasSecondary || hasIsced23
+  else if (variant === 'gesamtschule') isEquivalentMatch = hasSecondary || hasIsced23 || hasIsced2
+  else isEquivalentMatch = hasSecondary || hasIsced2
+
+  return {
+    kind: 'secondarySchool',
+    variant,
+    officialKey: 'school_type',
+    officialValue,
+    osmKeys: ['isced:level', 'school'],
+    osmValues: { 'isced:level': isced, school },
+    isEquivalentMatch,
+    consumedKeys: ['school_type', 'isced:level', 'school'],
+  }
+}
+
 export function comparePropertySections(
   official: Record<string, unknown> | null | undefined,
   osm: Record<string, string> | null | undefined,
@@ -142,6 +190,11 @@ export function comparePropertySections(
   if (grundschuleGroup) {
     compareGroups.push(grundschuleGroup)
     for (const key of grundschuleGroup.consumedKeys) consumedKeys.add(key)
+  }
+  const secondarySchoolGroup = buildSecondarySchoolCompareGroup(offMap, osmMap)
+  if (secondarySchoolGroup) {
+    compareGroups.push(secondarySchoolGroup)
+    for (const key of secondarySchoolGroup.consumedKeys) consumedKeys.add(key)
   }
   const fachschuleGroup = buildFachschuleCompareGroup(offMap, osmMap)
   if (fachschuleGroup) {

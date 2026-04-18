@@ -11,6 +11,7 @@ import { SchoolDetailCompareBody } from '../components/school/SchoolDetailCompar
 import { SchoolDetailLicenceWarnings } from '../components/school/SchoolDetailLicence'
 import { SchoolDetailMapSection } from '../components/school/SchoolDetailMapSection'
 import { SchoolDetailMatchExplanation } from '../components/school/SchoolDetailMatchExplanation'
+import { SecondarySchoolOsmSuggest } from '../components/school/SecondarySchoolOsmSuggest'
 import { de } from '../i18n/de'
 import { fetchStateOsmAreasLookup } from '../lib/fetchStateOsmAreasLookup'
 import { fetchStateSchoolsBundle } from '../lib/fetchStateSchoolsBundle'
@@ -125,6 +126,11 @@ export function SchoolDetail() {
           <SchoolDetailMatchExplanation row={matchRow} />
 
           <PrimarySchoolOsmSuggest
+            row={matchRow}
+            lon={mapOsmCentroid?.[0] ?? null}
+            lat={mapOsmCentroid?.[1] ?? null}
+          />
+          <SecondarySchoolOsmSuggest
             row={matchRow}
             lon={mapOsmCentroid?.[0] ?? null}
             lat={mapOsmCentroid?.[1] ?? null}
