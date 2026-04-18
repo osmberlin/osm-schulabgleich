@@ -68,3 +68,7 @@ bun run build
 ```
 
 GitHub Actions (`.github/workflows/pages.yml`): `bun run pipeline` → Build (täglicher Schedule, Push `main`, manuell). Schlägt ein Download fehl, bricht die Pipeline ab (kein neuer Deploy aus diesem Lauf).
+
+## See also
+
+* https://community.openstreetmap.org/t/art-der-schulen-uber-isced-level-school-oder-school-de/104643
