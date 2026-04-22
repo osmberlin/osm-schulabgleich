@@ -174,9 +174,18 @@ async function main() {
       ['Metric', 'Value'],
       [
         ['Total schools in CSV', String(schools.length)],
-        ['IDs with parseable `<prefix>-<suffix>` pattern', `${totalParseablePattern} (${pct(totalParseablePattern, schools.length)})`],
-        ['IDs with known Bundesland prefix', `${totalKnownPrefix} (${pct(totalKnownPrefix, schools.length)})`],
-        ['IDs with usable non-empty suffix', `${totalNonEmptySuffix} (${pct(totalNonEmptySuffix, schools.length)})`],
+        [
+          'IDs with parseable `<prefix>-<suffix>` pattern',
+          `${totalParseablePattern} (${pct(totalParseablePattern, schools.length)})`,
+        ],
+        [
+          'IDs with known Bundesland prefix',
+          `${totalKnownPrefix} (${pct(totalKnownPrefix, schools.length)})`,
+        ],
+        [
+          'IDs with usable non-empty suffix',
+          `${totalNonEmptySuffix} (${pct(totalNonEmptySuffix, schools.length)})`,
+        ],
         ['Rows with unknown/invalid state prefix bucket (`??`)', String(unknown.total)],
       ],
     ) +
@@ -201,8 +210,16 @@ async function main() {
       ['Pattern', 'Count', 'Share in BW'],
       [
         ['`BW-<8digits>` (DISCH)', String(bw.bwDisch), pct(bw.bwDisch, bw.total)],
-        ['`BW-FB-*` deterministic fallback (with coordinates)', String(bw.bwFallbackFb), pct(bw.bwFallbackFb, bw.total)],
-        ['`BW-FBA-*` deterministic fallback (without coordinates)', String(bw.bwFallbackFba), pct(bw.bwFallbackFba, bw.total)],
+        [
+          '`BW-FB-*` deterministic fallback (with coordinates)',
+          String(bw.bwFallbackFb),
+          pct(bw.bwFallbackFb, bw.total),
+        ],
+        [
+          '`BW-FBA-*` deterministic fallback (without coordinates)',
+          String(bw.bwFallbackFba),
+          pct(bw.bwFallbackFba, bw.total),
+        ],
         ['`BW-UUID-*` feature UUID fallback', String(bw.bwUuid), pct(bw.bwUuid, bw.total)],
         ['`BW-FB-UNKNOWN`', String(bw.bwUnknown), pct(bw.bwUnknown, bw.total)],
       ],
@@ -216,7 +233,9 @@ async function main() {
 
   const outPath = path.join(OUT_DIR, OUT_FILE)
   await writeFile(outPath, md, 'utf8')
-  console.info(`[analysis:identifier-csv] wrote ${path.relative(ROOT, outPath)} (${schools.length} schools)`)
+  console.info(
+    `[analysis:identifier-csv] wrote ${path.relative(ROOT, outPath)} (${schools.length} schools)`,
+  )
 }
 
 await main()

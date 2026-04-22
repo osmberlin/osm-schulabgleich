@@ -12,13 +12,11 @@ This index bundles the 3-part report package and provides a one-page decision vi
 
 ## Quick Decision Matrix (OSM Referencing)
 
-
 | Decision class                                    | Bundeslaender                      |
 | ------------------------------------------------- | ---------------------------------- |
 | Usable as canonical reference                     | BE, HH, NW, SN, TH                 |
 | Usable with constraints                           | BB, HB, HE, MV, NI, RP, SH, BY, BW |
 | Not reliable as sole key (current implementation) | SL, ST                             |
-
 
 ## Why These Classes
 
@@ -31,4 +29,3 @@ This index bundles the 3-part report package and provides a one-page decision vi
 - Keep per-state matching policy (not one national rule).
 - For constraint states, always combine ID with secondary evidence (name/address/distance).
 - For non-sole-key states, avoid hard identity assertions from ID alone.
-

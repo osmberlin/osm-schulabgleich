@@ -19,7 +19,6 @@ This report uses only the current JedeSchule CSV dump and inspects the `id` fiel
 
 ## Overall
 
-
 | Metric                                               | Value           |
 | ---------------------------------------------------- | --------------- |
 | Total schools in CSV                                 | 55135           |
@@ -28,9 +27,7 @@ This report uses only the current JedeSchule CSV dump and inspects the `id` fiel
 | IDs with usable non-empty suffix                     | 55134 (100.0 %) |
 | Rows with unknown/invalid state prefix bucket (`??`) | 0               |
 
-
 ## Per Bundesland
-
 
 | Code | Bundesland             | Total schools | Usable identifier | Parseable pattern | Known prefix    | ASCII-safe suffix | Suffix has whitespace |
 | ---- | ---------------------- | ------------- | ----------------- | ----------------- | --------------- | ----------------- | --------------------- |
@@ -51,9 +48,7 @@ This report uses only the current JedeSchule CSV dump and inspects the `id` fiel
 | SH   | Schleswig-Holstein     | 2028          | 2028 (100.0 %)    | 2028 (100.0 %)    | 2028 (100.0 %)  | 2028 (100.0 %)    | 0                     |
 | TH   | Thüringen              | 1124          | 1124 (100.0 %)    | 1124 (100.0 %)    | 1124 (100.0 %)  | 1124 (100.0 %)    | 0                     |
 
-
-## Baden-Wuerttemberg identifier mix (`BW-`*)
-
+## Baden-Wuerttemberg identifier mix (`BW-`\*)
 
 | Pattern                                                 | Count | Share in BW |
 | ------------------------------------------------------- | ----- | ----------- |
@@ -62,7 +57,6 @@ This report uses only the current JedeSchule CSV dump and inspects the `id` fiel
 | `BW-FBA-*` deterministic fallback (without coordinates) | 0     | 0.0 %       |
 | `BW-UUID-*` feature UUID fallback                       | 22240 | 81.8 %      |
 | `BW-FB-UNKNOWN`                                         | 0     | 0.0 %       |
-
 
 ## Sample anomalies (first 20)
 
@@ -80,4 +74,3 @@ This report uses only the current JedeSchule CSV dump and inspects the `id` fiel
 - `SL-Bildungscampus (Abt. Ausbildung: Studienseminar für berufliche Schulen) (suffix contains whitespace)`
 - `SL-Montessori-Gemeinschaftsschule ¿Am Hasenfels¿ (suffix contains whitespace)`
 - `SL-Gemeinschaftsschule Saarbrücken-Bruchwiese in Abendform (suffix contains whitespace)`
-
