@@ -14,6 +14,7 @@ import { SchoolDetailMapSection } from '../components/school/SchoolDetailMapSect
 import { SchoolDetailMatchExplanation } from '../components/school/SchoolDetailMatchExplanation'
 import { SecondarySchoolOsmSuggest } from '../components/school/SecondarySchoolOsmSuggest'
 import { de } from '../i18n/de'
+import { findOfficialSchoolFeature } from '../lib/findOfficialSchoolFeature'
 import { formatDeInteger } from '../lib/formatNumber'
 import { schoolMatchRowNeedsOsmAreasFetch } from '../lib/osmSchoolDetailGeometry'
 import { schoolDetailCompareSectionId } from '../lib/schoolDetailCompareSectionIds'
@@ -25,9 +26,45 @@ import {
 } from '../lib/stateDatasetQueries'
 import { deriveSchoolAmbiguousCandidates } from '../lib/useSchoolAmbiguousCandidates'
 import { useSchoolDetailRoute } from '../lib/useSchoolDetailRoute'
-import { parseErrorOutsideBoundaryFromOfficialProps } from '../lib/zodGeo'
+import {
+  parseErrorOutsideBoundaryFromOfficialProps,
+  parseJedeschuleLonLatFromRecord,
+} from '../lib/zodGeo'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
+
+function recordValue(
+  record: Record<string, unknown> | null | undefined,
+  key: string,
+): unknown | undefined {
+  return record && key in record ? record[key] : undefined
+}
+
+function firstRecordValue(
+  record: Record<string, unknown> | null | undefined,
+  keys: string[],
+): unknown | undefined {
+  for (const key of keys) {
+    const value = recordValue(record, key)
+    if (value != null) return value
+  }
+  return undefined
+}
+
+function geometryTypeFromRecord(record: Record<string, unknown> | null | undefined): unknown {
+  const direct = firstRecordValue(record, ['geometry_type', 'geometryType'])
+  if (direct != null) return direct
+  const geometry = recordValue(record, 'geometry')
+  if (
+    geometry &&
+    typeof geometry === 'object' &&
+    'type' in geometry &&
+    (geometry as Record<string, unknown>).type != null
+  ) {
+    return (geometry as Record<string, unknown>).type
+  }
+  return undefined
+}
 
 export function SchoolDetail() {
   const { stateKey, schoolKey, navigate } = useSchoolDetailRoute()
@@ -70,6 +107,19 @@ export function SchoolDetail() {
     matchRow,
     mapOsmCentroid,
   )
+  const officialProps = matchRow?.officialProperties ?? null
+  const officialGeometryType = geometryTypeFromRecord(officialProps)
+  const officialFeature =
+    q.data && matchRow?.officialId
+      ? findOfficialSchoolFeature(q.data.official, matchRow.officialId)
+      : null
+  const officialLonLat: readonly [number, number] | null =
+    officialFeature?.geometry?.type === 'Point'
+      ? ([
+          officialFeature.geometry.coordinates[0],
+          officialFeature.geometry.coordinates[1],
+        ] as const)
+      : parseJedeschuleLonLatFromRecord(officialProps)
 
   return (
     <>
@@ -153,6 +203,8 @@ export function SchoolDetail() {
                   osm={matchRow.osmTags ?? null}
                   osmTypeForHeader={matchRow.osmType}
                   osmIdForHeader={matchRow.osmId}
+                  osmCentroidLat={matchRow.osmCentroidLat}
+                  osmCentroidLon={matchRow.osmCentroidLon}
                 />
               ))}
             </div>
@@ -167,11 +219,30 @@ export function SchoolDetail() {
                 }
               >
                 <SchoolDetailCompareBody
-                  official={matchRow.officialProperties ?? null}
+                  official={officialProps}
                   osm={matchRow.osmTags ?? null}
                   officialIdForHeader={matchRow.officialId}
                   osmTypeForHeader={matchRow.osmType}
                   osmIdForHeader={matchRow.osmId}
+                  officialTechnical={{
+                    lat:
+                      officialLonLat?.[1] ?? firstRecordValue(officialProps, ['latitude', 'lat']),
+                    long:
+                      officialLonLat?.[0] ??
+                      firstRecordValue(officialProps, ['longitude', 'long', 'lon']),
+                    geometryType: officialGeometryType,
+                    id: matchRow.officialId ?? recordValue(officialProps, 'id'),
+                    updatedTimestamp: firstRecordValue(officialProps, [
+                      'updated_timestamp',
+                      'update_timestamp',
+                    ]),
+                  }}
+                  osmTechnical={{
+                    lat: matchRow.osmCentroidLat,
+                    long: matchRow.osmCentroidLon,
+                    geometryType: matchRow.osmType,
+                    id: matchRow.osmId,
+                  }}
                 />
               </div>
             </>

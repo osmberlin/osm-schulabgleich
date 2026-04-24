@@ -7,6 +7,39 @@ import { SchoolDetailCompareBody } from './SchoolDetailCompareBody'
 import { ChevronRightIcon, MapPinIcon } from '@heroicons/react/20/solid'
 import { useLayoutEffect, useRef, type ReactNode } from 'react'
 
+function recordValue(
+  record: Record<string, unknown> | null | undefined,
+  key: string,
+): unknown | undefined {
+  return record && key in record ? record[key] : undefined
+}
+
+function firstRecordValue(
+  record: Record<string, unknown> | null | undefined,
+  keys: string[],
+): unknown | undefined {
+  for (const key of keys) {
+    const value = recordValue(record, key)
+    if (value != null) return value
+  }
+  return undefined
+}
+
+function geometryTypeFromRecord(record: Record<string, unknown> | null | undefined): unknown {
+  const direct = firstRecordValue(record, ['geometry_type', 'geometryType'])
+  if (direct != null) return direct
+  const geometry = recordValue(record, 'geometry')
+  if (
+    geometry &&
+    typeof geometry === 'object' &&
+    'type' in geometry &&
+    (geometry as Record<string, unknown>).type != null
+  ) {
+    return (geometry as Record<string, unknown>).type
+  }
+  return undefined
+}
+
 /** Uncontrolled `<details>` opened on first paint (React’s `DetailsHTMLAttributes` has no `defaultOpen` yet). */
 function DetailsOpenByDefault({
   className,
@@ -35,17 +68,23 @@ export function SchoolDetailAmbiguousCandidateItem({
   osm,
   osmTypeForHeader,
   osmIdForHeader,
+  osmCentroidLat,
+  osmCentroidLon,
 }: {
   candidate: SchoolAmbiguousCandidate
   index: number
   osm: Record<string, string> | null
   osmTypeForHeader: 'way' | 'relation' | 'node' | null
   osmIdForHeader: string | null
+  osmCentroidLat: number
+  osmCentroidLon: number
 }) {
   const latLngTitle =
     candidate.officialLonLat != null
       ? `${candidate.officialLonLat[1].toFixed(6)} / ${candidate.officialLonLat[0].toFixed(6)}`
       : null
+
+  const officialProps = candidate.properties ?? null
 
   return (
     <DetailsOpenByDefault
@@ -109,11 +148,30 @@ export function SchoolDetailAmbiguousCandidateItem({
       </summary>
       <div className="border-t border-zinc-700/80 px-2.5 pt-3 pb-3 sm:px-3 sm:pt-4 sm:pb-4">
         <SchoolDetailCompareBody
-          official={candidate.properties}
+          official={officialProps}
           osm={osm}
           officialIdForHeader={candidate.id}
           osmTypeForHeader={osmTypeForHeader}
           osmIdForHeader={osmIdForHeader}
+          officialTechnical={{
+            lat:
+              candidate.officialLonLat?.[1] ?? firstRecordValue(officialProps, ['latitude', 'lat']),
+            long:
+              candidate.officialLonLat?.[0] ??
+              firstRecordValue(officialProps, ['longitude', 'long', 'lon']),
+            geometryType: geometryTypeFromRecord(officialProps),
+            id: candidate.id ?? recordValue(officialProps, 'id'),
+            updatedTimestamp: firstRecordValue(officialProps, [
+              'updated_timestamp',
+              'update_timestamp',
+            ]),
+          }}
+          osmTechnical={{
+            lat: osmCentroidLat,
+            long: osmCentroidLon,
+            geometryType: osmTypeForHeader,
+            id: osmIdForHeader,
+          }}
         />
       </div>
     </DetailsOpenByDefault>

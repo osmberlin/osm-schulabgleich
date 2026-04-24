@@ -218,6 +218,7 @@ export const de = {
     keysDifferent: 'Unterschiedliche Werte',
     officialOnly: 'Nur in offiziellen Daten',
     osmOnly: 'Nur in OSM',
+    technicalAttributes: 'Technische Attribute',
     /** Landmark für Tastatur-/Screenreader-Sprünge zu den „nur in einer Quelle“-Tabellen. */
     compareExclusiveSectionsNavAria: 'Sprünge zu Attributen nur in einer Quelle',
     editId: 'In iD bearbeiten',
@@ -333,6 +334,16 @@ export const de = {
     runDownloads: 'Downloads im Lauf',
     runsDroppedWarning:
       '{count} ältere oder ungültige Einträge konnten nicht gelesen werden und werden ausgeblendet.',
+    runsDroppedDiagnostics:
+      'Nicht lesbar: {parseErrors} JSONL-Zeilen, {schemaMismatches} Einträge mit ungültigem Schema.',
+    statesCount: '{count} Bundesländer erfasst',
+    statesWithCounts: '{count} mit Kennzahlen',
+    statesMissingOsm: '{count} ohne OSM-Daten',
+    runDetailsSummary: 'Details',
+    stateDiagnosticsSummary: 'State diagnostics',
+    errorPayloadSummary: 'Error payload',
+    gitSha: 'Git SHA',
+    runContextLabel: 'Laufkontext',
     runContextScheduledWeeklyOfficial:
       'Geplanter Nachtlauf (Freitag, inkl. amtlicher Aktualisierung)',
     runContextScheduledDailyReuse: 'Geplanter Nachtlauf (amtliche Daten wiederverwendet)',

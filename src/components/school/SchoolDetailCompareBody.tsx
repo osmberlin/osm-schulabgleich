@@ -4,6 +4,51 @@ import { comparePropertySections } from '../../lib/propertyCompare'
 import type { PropertyCompareGroup } from '../../lib/propertyCompare'
 import type { ReactNode } from 'react'
 
+type TechnicalAttributes = {
+  lat?: unknown
+  long?: unknown
+  geometryType?: unknown
+  id?: unknown
+  updatedTimestamp?: unknown
+}
+
+const technicalSourceKeys = new Set([
+  'id',
+  'lat',
+  'latitude',
+  'lon',
+  'long',
+  'longitude',
+  'geometry_type',
+  'geometry type',
+  'geometrytype',
+  'updated_timestamp',
+  'update_timestamp',
+])
+
+function isTechnicalAttributeKey(key: string): boolean {
+  return technicalSourceKeys.has(key.trim().toLowerCase())
+}
+
+function technicalValue(value: unknown): string | null {
+  if (value == null) return null
+  if (typeof value === 'number') return Number.isFinite(value) ? String(value) : null
+  const text = String(value).trim()
+  return text ? text : null
+}
+
+function technicalEntries(source: TechnicalAttributes | null | undefined): Array<[string, string]> {
+  if (!source) return []
+  const entries: Array<[string, string | null]> = [
+    ['lat (rounded)', technicalValue(source.lat)],
+    ['long (rounded)', technicalValue(source.long)],
+    ['geometry_type', technicalValue(source.geometryType)],
+    ['id', technicalValue(source.id)],
+    ['updated_timestamp', technicalValue(source.updatedTimestamp)],
+  ]
+  return entries.filter((entry): entry is [string, string] => entry[1] != null)
+}
+
 function websiteHref(raw: string): string | null {
   const t = raw.trim()
   if (!t) return null
@@ -72,12 +117,16 @@ export function SchoolDetailCompareBody({
   officialIdForHeader,
   osmTypeForHeader,
   osmIdForHeader,
+  officialTechnical,
+  osmTechnical,
 }: {
   official: Record<string, unknown> | null | undefined
   osm: Record<string, string> | null | undefined
   officialIdForHeader: string | null
   osmTypeForHeader: 'way' | 'relation' | 'node' | null
   osmIdForHeader: string | null
+  officialTechnical?: TechnicalAttributes | null
+  osmTechnical?: TechnicalAttributes | null
 }) {
   const { bothEqual, bothDifferent, onlyO, onlyS, compareGroups } = comparePropertySections(
     officialPropsForCompare(official),
@@ -107,6 +156,13 @@ export function SchoolDetailCompareBody({
   const differentCompareGroups = compareGroups.filter((group) => !isEquivalentCompareGroup(group))
   const osmRefLabel =
     osmTypeForHeader && osmIdForHeader ? `${osmTypeForHeader}/${osmIdForHeader}` : null
+  const officialTechnicalRows = technicalEntries(officialTechnical)
+  const osmTechnicalRows = technicalEntries(osmTechnical)
+  const officialOnlyRows = onlyO.filter(([k]) => !isTechnicalAttributeKey(k))
+  const osmOnlyRows = onlyS.filter(([k]) => !isTechnicalAttributeKey(k))
+  const hasOfficialExclusiveRows = officialOnlyRows.length > 0
+  const hasOsmExclusiveRows = osmOnlyRows.length > 0
+  const hasTechnicalRows = officialTechnicalRows.length > 0 || osmTechnicalRows.length > 0
   const hasCommonRows = equalRows.length > 0 || equalCompareGroups.length > 0
   const hasDifferentRows = differentRows.length > 0 || differentCompareGroups.length > 0
 
@@ -414,11 +470,11 @@ export function SchoolDetailCompareBody({
           >
             {de.detail.officialOnly}
           </h2>
-          {onlyO.length === 0 ? (
+          {!hasOfficialExclusiveRows ? (
             <p className="text-zinc-400">—</p>
           ) : (
             <ul className="m-0 list-none p-0 text-sm">
-              {onlyO.map(([k, v]) => (
+              {officialOnlyRows.map(([k, v]) => (
                 <li key={k} className="m-0 border-b border-zinc-800 py-1.5 sm:py-2">
                   <span className="mr-1.5 inline font-mono text-xs leading-normal text-amber-200">
                     {k}
@@ -439,11 +495,11 @@ export function SchoolDetailCompareBody({
           >
             {de.detail.osmOnly}
           </h2>
-          {onlyS.length === 0 ? (
+          {!hasOsmExclusiveRows ? (
             <p className="text-zinc-400">—</p>
           ) : (
             <ul className="m-0 list-none p-0 text-sm">
-              {onlyS.map(([k, v]) => (
+              {osmOnlyRows.map(([k, v]) => (
                 <li key={k} className="m-0 border-b border-zinc-800 py-1.5 sm:py-2">
                   <span className="mr-1.5 inline font-mono text-xs leading-normal text-blue-300">
                     {k}
@@ -457,6 +513,59 @@ export function SchoolDetailCompareBody({
             </ul>
           )}
         </section>
+      </section>
+
+      <section aria-labelledby="school-detail-compare-technical-heading" className="mt-10">
+        <h2
+          id="school-detail-compare-technical-heading"
+          className="mb-3 font-semibold text-zinc-100"
+        >
+          {de.detail.technicalAttributes}
+        </h2>
+        {!hasTechnicalRows ? (
+          <p className="text-zinc-400">—</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-10">
+            <section aria-label={de.detail.official}>
+              {officialTechnicalRows.length === 0 ? (
+                <p className="text-zinc-400">—</p>
+              ) : (
+                <ul className="m-0 list-none p-0 text-sm">
+                  {officialTechnicalRows.map(([k, v]) => (
+                    <li key={k} className="m-0 border-b border-zinc-800 py-1.5 sm:py-2">
+                      <span className="mr-1.5 inline font-mono text-xs leading-normal text-amber-200">
+                        {k}
+                      </span>
+                      <span className="sr-only">=</span>
+                      <span className="inline min-w-0 text-sm leading-normal break-words text-zinc-200">
+                        {renderTagValueForKey(k, v)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+            <section aria-label={de.detail.osm}>
+              {osmTechnicalRows.length === 0 ? (
+                <p className="text-zinc-400">—</p>
+              ) : (
+                <ul className="m-0 list-none p-0 text-sm">
+                  {osmTechnicalRows.map(([k, v]) => (
+                    <li key={k} className="m-0 border-b border-zinc-800 py-1.5 sm:py-2">
+                      <span className="mr-1.5 inline font-mono text-xs leading-normal text-blue-300">
+                        {k}
+                      </span>
+                      <span className="sr-only">=</span>
+                      <span className="inline min-w-0 text-sm leading-normal break-words text-zinc-200">
+                        {renderTagValueForKey(k, v)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </div>
+        )}
       </section>
     </article>
   )
