@@ -76,8 +76,8 @@ export function SchoolDetailAmbiguousCandidateItem({
   osm: Record<string, string> | null
   osmTypeForHeader: 'way' | 'relation' | 'node' | null
   osmIdForHeader: string | null
-  osmCentroidLat: number
-  osmCentroidLon: number
+  osmCentroidLat: number | null | undefined
+  osmCentroidLon: number | null | undefined
 }) {
   const latLngTitle =
     candidate.officialLonLat != null
