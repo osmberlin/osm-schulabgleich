@@ -4,6 +4,7 @@ export const de = {
   appTitle: 'OSM Schulabgleich',
   navHome: 'Start',
   navStatus: 'Pipeline-Status',
+  navChangelog: 'Changelog',
 
   osm: {
     authLoading: 'OSM …',
@@ -89,6 +90,7 @@ export const de = {
     leadOutro: '). Das Ziel ist eine bessere Datenqualität.',
     githubCodeLinkLabel: 'Code auf GitHub',
     githubIssuesLinkLabel: 'Feedback bitte als GitHub-Issues beitragen',
+    changelogLinkLabel: 'Changelog',
     links: {
       jedeschule: {
         href: 'https://jedeschule.codefor.de/ueber/',
@@ -144,6 +146,12 @@ export const de = {
         yesLicenceOrWaiver: 'Diese Daten dürfen in OSM übernommen werden.',
       },
     },
+  },
+  changelog: {
+    heading: 'Changelog',
+    loading: 'Lade Changelog…',
+    error: 'Changelog konnte nicht geladen werden.',
+    empty: 'Noch keine Changelog-Einträge.',
   },
   licenceSection: {
     heading: 'Datenlizenz und Herkunft ({state})',

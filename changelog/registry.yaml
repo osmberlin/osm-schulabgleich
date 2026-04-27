@@ -1,0 +1,29 @@
+entries:
+  - refs:
+      - '05622a9f231da280eeebcb4d763020a4152d34c5'
+    descriptionMd: |
+      Wir matchen Schulen per `ref` Tag. Dieses Matching wurde verbessern. Außerdem wird der Vergleich von `ref` (OSM) und `id` (Jedeschule) jetzt in der Attribut-Tabelle angezeigt. Und außerdem gibt es einen Button, um die `ref` in OSM zu taggen basierend auf den amtlichen Daten (nur wenn eine solide ID erkannt wurde).
+  - refs:
+      - 'c5f02c450a220faa03369db2a9249abed71002be'
+    descriptionMd: |
+      Die `/status` Seite (siehe Footer) ist überarbeitet und jetzt deutlich hilfreicher. Sie zeigt vor allem die Daten der verschiedenen Datenquellen sowie die letzten Durchläufe des Datenabgleichs.
+  - refs:
+      - '76674a2b5ad12683bf2b643bd4b67cdab1a35528'
+    descriptionMd: |
+      In der Suche auf der Startseite kann man jetzt für "Grundschulen" und "Weiterführende Schulen" verschiedene Filter anweden. Darüber ist es bspw. einfacher solche zu finden, bei denen Tags fehlen. Die Auswahl hat einen Hinweis, welche Handlung vermutlich sinnvoll ist mit den Daten dieser Kategorie.
+  - refs:
+      - '95b09caf9be79b91aa88adc5c9d0e3b8413771cb'
+    descriptionMd: |
+      In der Attribut-Tabelle werden jetzt weitere, eher technisch Attribute in einer eigenen Kategorie aufgeführt. Das hilft vor allem, die Daten besser zu verstehen und den Blick auf die wichtigeren Attribte darüber zu lenken.
+  - refs:
+      - '93642018ff0c10d2c2c64b86da26cee3a026ad6e'
+      - '7e731b3cc0cfa7a518189c83b4ec3df12f8c4481'
+    hide: true
+  - refs:
+      - 'f9fed7b'
+    hide: true
+  - refs:
+      - '3e092f1'
+    descriptionMd: |
+      feat(changelog): add generated changelog workflow and page
+      Add a YAML-backed changelog pipeline with prefill/verify/build scripts, pre-push enforcement, and a new /changelog UI with GitHub commit links so changelog upkeep stays lightweight and consistent.

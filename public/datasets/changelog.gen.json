@@ -1,0 +1,54 @@
+{
+  "generatedAt": "2026-04-27T19:05:08.585Z",
+  "months": [
+    {
+      "month": "2026-04",
+      "entries": [
+        {
+          "refs": [
+            "c5f02c450a220faa03369db2a9249abed71002be"
+          ],
+          "descriptionMd": "Die `/status` Seite (siehe Footer) ist überarbeitet und jetzt deutlich hilfreicher. Sie zeigt vor allem die Daten der verschiedenen Datenquellen sowie die letzten Durchläufe des Datenabgleichs.",
+          "committedAtIso": "2026-04-27T10:44:02+03:00",
+          "committedAtShort": "2026-04-27",
+          "refsDisplay": [
+            "c5f02c4"
+          ]
+        },
+        {
+          "refs": [
+            "05622a9f231da280eeebcb4d763020a4152d34c5"
+          ],
+          "descriptionMd": "Wir matchen Schulen per `ref` Tag. Dieses Matching wurde verbessern. Außerdem wird der Vergleich von `ref` (OSM) und `id` (Jedeschule) jetzt in der Attribut-Tabelle angezeigt. Und außerdem gibt es einen Button, um die `ref` in OSM zu taggen basierend auf den amtlichen Daten (nur wenn eine solide ID erkannt wurde).",
+          "committedAtIso": "2026-04-27T07:58:50+03:00",
+          "committedAtShort": "2026-04-27",
+          "refsDisplay": [
+            "05622a9"
+          ]
+        },
+        {
+          "refs": [
+            "76674a2b5ad12683bf2b643bd4b67cdab1a35528"
+          ],
+          "descriptionMd": "In der Suche auf der Startseite kann man jetzt für \"Grundschulen\" und \"Weiterführende Schulen\" verschiedene Filter anweden. Darüber ist es bspw. einfacher solche zu finden, bei denen Tags fehlen. Die Auswahl hat einen Hinweis, welche Handlung vermutlich sinnvoll ist mit den Daten dieser Kategorie.",
+          "committedAtIso": "2026-04-27T07:32:36+03:00",
+          "committedAtShort": "2026-04-27",
+          "refsDisplay": [
+            "76674a2"
+          ]
+        },
+        {
+          "refs": [
+            "95b09caf9be79b91aa88adc5c9d0e3b8413771cb"
+          ],
+          "descriptionMd": "In der Attribut-Tabelle werden jetzt weitere, eher technisch Attribute in einer eigenen Kategorie aufgeführt. Das hilft vor allem, die Daten besser zu verstehen und den Blick auf die wichtigeren Attribte darüber zu lenken.",
+          "committedAtIso": "2026-04-24T06:52:51+03:00",
+          "committedAtShort": "2026-04-24",
+          "refsDisplay": [
+            "95b09ca"
+          ]
+        }
+      ]
+    }
+  ]
+}

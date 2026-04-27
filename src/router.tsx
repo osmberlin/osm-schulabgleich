@@ -7,6 +7,7 @@ import { resolveStateCodeForLonLat } from './lib/stateCodeForLonLatFromBoundarie
 import { STATE_ORDER } from './lib/stateConfig'
 import { validateStateRouteSearch } from './lib/stateRouteSearch'
 import { AenderungenPage } from './pages/AenderungenPage'
+import { ChangelogPage } from './pages/ChangelogPage'
 import { HomePage } from './pages/HomePage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { SchoolDetail } from './pages/SchoolDetail'
@@ -110,6 +111,12 @@ const aenderungenRoute = createRoute({
   component: AenderungenPage,
 })
 
+const changelogRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/changelog',
+  component: ChangelogPage,
+})
+
 const stateRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/bundesland/$stateKey',
@@ -145,6 +152,7 @@ const routeTree = rootRoute.addChildren([
   indexRoute,
   statusRoute,
   aenderungenRoute,
+  changelogRoute,
   stateRoute.addChildren([stateIndexRoute, schoolRoute]),
 ])
 

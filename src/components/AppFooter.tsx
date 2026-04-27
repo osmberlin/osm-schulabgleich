@@ -79,6 +79,15 @@ export function AppFooter() {
           >
             ·
           </span>
+          <Link to="/changelog" className={endFooterLinkClass}>
+            {de.navChangelog}
+          </Link>
+          <span
+            aria-hidden
+            className="mx-1.5 text-zinc-500 transition-colors duration-150 group-hover/footer:text-emerald-300/70"
+          >
+            ·
+          </span>
           <a href={f.githubHref} className={endFooterLinkClass} target="_blank" rel="noreferrer">
             {f.githubLabel}
           </a>

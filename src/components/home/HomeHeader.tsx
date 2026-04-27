@@ -1,5 +1,6 @@
 import { de } from '../../i18n/de'
 import { GITHUB_REPO_ROOT } from '../../lib/githubRepo'
+import { Link } from '@tanstack/react-router'
 
 const headerLinkClass =
   'font-medium text-emerald-300 underline decoration-emerald-300/30 underline-offset-2 hover:decoration-emerald-400'
@@ -30,22 +31,27 @@ export function HomeHeader() {
         </a>
         {h.leadOutro}
       </p>
-      <p className="mt-2 text-sm text-zinc-400">
-        <a href={GITHUB_REPO_ROOT} className={headerLinkClass} target="_blank" rel="noreferrer">
-          {h.githubCodeLinkLabel}
-        </a>
-        <span aria-hidden className="mx-1.5 text-zinc-500">
-          ·
-        </span>
-        <a
-          href={`${GITHUB_REPO_ROOT}/issues`}
-          className={headerLinkClass}
-          target="_blank"
-          rel="noreferrer"
-        >
-          {h.githubIssuesLinkLabel}
-        </a>
-      </p>
+      <div className="mt-2 flex items-center justify-between gap-4 text-sm text-zinc-400">
+        <p>
+          <a href={GITHUB_REPO_ROOT} className={headerLinkClass} target="_blank" rel="noreferrer">
+            {h.githubCodeLinkLabel}
+          </a>
+          <span aria-hidden className="mx-1.5 text-zinc-500">
+            ·
+          </span>
+          <a
+            href={`${GITHUB_REPO_ROOT}/issues`}
+            className={headerLinkClass}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {h.githubIssuesLinkLabel}
+          </a>
+        </p>
+        <Link to="/changelog" className={headerLinkClass}>
+          {h.changelogLinkLabel}
+        </Link>
+      </div>
     </header>
   )
 }

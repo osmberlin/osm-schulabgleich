@@ -271,6 +271,24 @@ export const pipelineSourceMetaSchema = z.object({
   upstreamDatasetChanged: z.boolean().optional(),
 })
 
+export const changelogEntrySchema = z.object({
+  refs: z.array(z.string().min(1)).min(1),
+  refsDisplay: z.array(z.string().min(1)).min(1),
+  descriptionMd: z.string().min(1),
+  committedAtIso: z.string().min(1),
+  committedAtShort: z.string().min(1),
+})
+
+export const changelogFileSchema = z.object({
+  generatedAt: z.string().min(1),
+  months: z.array(
+    z.object({
+      month: z.string().regex(/^\d{4}-\d{2}$/),
+      entries: z.array(changelogEntrySchema),
+    }),
+  ),
+})
+
 export type PipelineSourceMeta = z.infer<typeof pipelineSourceMetaSchema>
 export type PipelineRunContextKnown = z.infer<typeof pipelineRunContextKnownSchema>
 export type PipelineSourceModeReasonKnown = z.infer<typeof pipelineSourceModeReasonKnownSchema>

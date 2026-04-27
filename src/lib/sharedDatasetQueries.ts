@@ -1,7 +1,14 @@
 import { DATASET_FETCH_INIT, DATASET_QUERY_GC_MS, DATASET_QUERY_STALE_MS } from './cachePolicy'
-import { nationalOfficialMetaUrl, nationalOsmMetaUrl, runsJsonlUrl, summaryJsonUrl } from './paths'
+import {
+  changelogJsonUrl,
+  nationalOfficialMetaUrl,
+  nationalOsmMetaUrl,
+  runsJsonlUrl,
+  summaryJsonUrl,
+} from './paths'
 import { parseRunHistoryFileTextWithDiagnostics } from './runHistoryJsonl'
 import {
+  changelogFileSchema,
   type PipelineSourceMeta,
   pipelineSourceMetaSchema,
   runRecordSchema,
@@ -46,6 +53,20 @@ export function runsQueryOptions() {
           schemaMismatches,
         },
       }
+    },
+    staleTime: DATASET_QUERY_STALE_MS,
+    gcTime: DATASET_QUERY_GC_MS,
+  })
+}
+
+/** Shared TanStack query options for datasets/changelog.gen.json */
+export function changelogQueryOptions() {
+  return queryOptions({
+    queryKey: ['changelog'] as const,
+    queryFn: async () => {
+      const r = await fetch(changelogJsonUrl(), DATASET_FETCH_INIT)
+      if (!r.ok) throw new Error(String(r.status))
+      return changelogFileSchema.parse(await r.json())
     },
     staleTime: DATASET_QUERY_STALE_MS,
     gcTime: DATASET_QUERY_GC_MS,

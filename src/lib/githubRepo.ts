@@ -20,6 +20,11 @@ export function githubBlobUrl(relativePathFromRepoRoot: string): string {
   return `${GITHUB_REPO_ROOT}/blob/${GITHUB_DEFAULT_BRANCH}/${trimmed}`
 }
 
+export function githubCommitUrlOnDefaultBranch(ref: string): string {
+  const trimmed = ref.replace(/^\/+/, '')
+  return `${GITHUB_REPO_ROOT}/commit/${trimmed}?branch=${encodeURIComponent(GITHUB_DEFAULT_BRANCH)}`
+}
+
 export function githubNewIssueLicenseResearchUrl(): string {
   const q = new URLSearchParams({ template: 'license-research.yml' })
   return `${GITHUB_REPO_ROOT}/issues/new?${q.toString()}`
