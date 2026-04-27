@@ -6,7 +6,7 @@
   "scripts": {
     "prepare": "husky",
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "bun run check && rm -rf dist && vite build",
     "preview": "vite preview",
     "pipeline:download:jedeschule": "bun run scripts/pipeline-download-jedeschule.ts",
     "pipeline:download:osm": "bun run scripts/pipeline-download-osm.ts",
@@ -27,7 +27,9 @@
     "changelog:prefill": "bun run scripts/changelog-prefill.ts",
     "changelog:verify": "bun run scripts/changelog-verify.ts",
     "changelog:build": "bun run scripts/changelog-build.ts",
+    "check": "bun run format && bun run lint && bun run typecheck",
     "lint": "oxlint -c oxlint.config.mjs .",
+    "typecheck": "tsc -b",
     "format": "oxfmt -c oxfmt.config.mjs --write .",
     "format:check": "oxfmt -c oxfmt.config.mjs --check .",
     "test": "vitest run",
