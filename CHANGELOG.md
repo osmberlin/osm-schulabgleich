@@ -4,7 +4,7 @@ Automatisch aus `changelog/registry.yaml` erzeugt.
 
 ## 2026-04
 
-### `3caf6cf`, `0e7f530`
+### `3caf6cf`, `0e7f530`, `3691fcb`
 
 Add `/changelog` page and `CHANGELOG.md` file based on a custom changelog registry that monitors git commits to keep the changelog up to date. The changelog is linked from the home page and footer.
 
