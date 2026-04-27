@@ -7,7 +7,7 @@ import {
   resolveCommitRef,
   shortHash,
 } from './lib/changelogRegistry'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
 type RenderableEntry = {
@@ -37,7 +37,7 @@ function renderMarkdown(entriesByMonth: Map<string, RenderableEntry[]>): string 
       b.committedAtIso.localeCompare(a.committedAtIso),
     )
     for (const entry of sortedEntries) {
-      const refsText = entry.refs.map((ref) => `\`${ref}\``).join(', ')
+      const refsText = entry.refs.map((ref) => `\`${shortHash(ref)}\``).join(', ')
       lines.push(`### ${refsText}`)
       lines.push('')
       lines.push(normalizeMarkdownBody(entry.descriptionMd))
@@ -46,6 +46,19 @@ function renderMarkdown(entriesByMonth: Map<string, RenderableEntry[]>): string 
   }
 
   return lines.join('\n').trimEnd() + '\n'
+}
+
+function normalizeGeneratedJsonForComparison(text: string): string | null {
+  try {
+    const parsed = JSON.parse(text) as { generatedAt?: unknown } & Record<string, unknown>
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return null
+    }
+    delete parsed.generatedAt
+    return JSON.stringify(parsed)
+  } catch {
+    return null
+  }
 }
 
 async function main() {
@@ -98,8 +111,34 @@ async function main() {
       return { month, entries }
     }),
   }
-  await writeFile(jsonAbs, `${JSON.stringify(payload, null, 2)}\n`, 'utf8')
-  console.info(`[changelog:build] Wrote ${CHANGELOG_MARKDOWN_PATH} and ${CHANGELOG_JSON_PATH}.`)
+  const nextJsonText = `${JSON.stringify(payload, null, 2)}\n`
+  let shouldWriteJson = true
+  try {
+    const existingJsonText = await readFile(jsonAbs, 'utf8')
+    const existingNormalized = normalizeGeneratedJsonForComparison(existingJsonText)
+    const nextNormalized = normalizeGeneratedJsonForComparison(nextJsonText)
+    if (
+      existingNormalized !== null &&
+      nextNormalized !== null &&
+      existingNormalized === nextNormalized
+    ) {
+      shouldWriteJson = false
+    }
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code
+    if (code !== 'ENOENT') {
+      throw error
+    }
+  }
+
+  if (shouldWriteJson) {
+    await writeFile(jsonAbs, nextJsonText, 'utf8')
+  }
+  console.info(
+    shouldWriteJson
+      ? `[changelog:build] Wrote ${CHANGELOG_MARKDOWN_PATH} and ${CHANGELOG_JSON_PATH}.`
+      : `[changelog:build] Wrote ${CHANGELOG_MARKDOWN_PATH}; kept ${CHANGELOG_JSON_PATH} unchanged (timestamp-only diff).`,
+  )
 }
 
 void main().catch((err) => {
