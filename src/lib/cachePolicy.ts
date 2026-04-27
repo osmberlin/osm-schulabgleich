@@ -6,5 +6,6 @@ export const DATASET_QUERY_STALE_MS = 10 * 60 * 1000
 export const DATASET_QUERY_GC_MS = 30 * 60 * 1000
 
 export const DATASET_FETCH_INIT: RequestInit = {
-  cache: 'force-cache',
+  // Revalidate with server/cache metadata instead of pinning stale local responses.
+  cache: 'no-cache',
 }
