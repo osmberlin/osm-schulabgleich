@@ -1,5 +1,6 @@
 import {
   isChangelogOnlyCommit,
+  isChangelogOptOutCommit,
   listFirstParentHeadHistory,
   readCommitInfo,
   readRegistry,
@@ -70,9 +71,14 @@ async function main() {
   const orderedMissing = [...missingCommits].reverse()
   const missingNonChangelogCommits: string[] = []
   let skippedChangelogOnlyCount = 0
+  let skippedOptOutCount = 0
   for (const hash of orderedMissing) {
     if (await isChangelogOnlyCommit(projectRoot, hash)) {
       skippedChangelogOnlyCount += 1
+      continue
+    }
+    if (await isChangelogOptOutCommit(projectRoot, hash)) {
+      skippedOptOutCount += 1
       continue
     }
     missingNonChangelogCommits.push(hash)
@@ -86,6 +92,11 @@ async function main() {
     if (skippedChangelogOnlyCount > 0) {
       console.info(
         `[changelog:prefill] Skipped ${skippedChangelogOnlyCount} changelog-only commits.`,
+      )
+    }
+    if (skippedOptOutCount > 0) {
+      console.info(
+        `[changelog:prefill] Skipped ${skippedOptOutCount} commits with changelog opt-out terms (no-changelog / no changelog / hide changelog).`,
       )
     }
     return
@@ -121,6 +132,11 @@ async function main() {
   console.info(`[changelog:prefill] Added ${added} entries.`)
   if (skippedChangelogOnlyCount > 0) {
     console.info(`[changelog:prefill] Skipped ${skippedChangelogOnlyCount} changelog-only commits.`)
+  }
+  if (skippedOptOutCount > 0) {
+    console.info(
+      `[changelog:prefill] Skipped ${skippedOptOutCount} commits with changelog opt-out terms (no-changelog / no changelog / hide changelog).`,
+    )
   }
 }
 

@@ -26,7 +26,7 @@ function renderMarkdown(entriesByMonth: Map<string, RenderableEntry[]>): string 
   const lines: string[] = []
   lines.push('# Changelog')
   lines.push('')
-  lines.push('Automatisch aus `changelog/registry.yaml` erzeugt.')
+  lines.push('Automatisch aus `changelog.registry.yaml` erzeugt.')
   lines.push('')
 
   for (const month of monthKeys) {

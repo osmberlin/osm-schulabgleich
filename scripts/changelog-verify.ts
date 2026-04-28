@@ -1,5 +1,6 @@
 import {
   isChangelogOnlyCommit,
+  isChangelogOptOutCommit,
   listFirstParentHeadHistory,
   readCommitInfo,
   readRegistry,
@@ -70,9 +71,14 @@ async function main() {
   const missingCommits = commitsSinceAnchor.filter((hash) => !registeredHashes.has(hash))
   const missingNonChangelogCommits: string[] = []
   let skippedChangelogOnlyCount = 0
+  let skippedOptOutCount = 0
   for (const hash of missingCommits) {
     if (await isChangelogOnlyCommit(projectRoot, hash)) {
       skippedChangelogOnlyCount += 1
+      continue
+    }
+    if (await isChangelogOptOutCommit(projectRoot, hash)) {
+      skippedOptOutCount += 1
       continue
     }
     missingNonChangelogCommits.push(hash)
@@ -96,14 +102,14 @@ async function main() {
   }
 
   const checkedCount = commitsSinceAnchor.length
-  const checkedNonChangelogCount = checkedCount - skippedChangelogOnlyCount
+  const checkedNonChangelogCount = checkedCount - skippedChangelogOnlyCount - skippedOptOutCount
   if (anchorHash) {
     console.info(
-      `[changelog:verify] OK. Checked ${checkedNonChangelogCount} commits since ${shortHash(anchorHash)} (${skippedChangelogOnlyCount} changelog-only commits skipped).`,
+      `[changelog:verify] OK. Checked ${checkedNonChangelogCount} commits since ${shortHash(anchorHash)} (${skippedChangelogOnlyCount} changelog-only commits skipped, ${skippedOptOutCount} opt-out commits skipped).`,
     )
   } else {
     console.info(
-      `[changelog:verify] OK. Checked ${checkedNonChangelogCount} commits from HEAD (${skippedChangelogOnlyCount} changelog-only commits skipped).`,
+      `[changelog:verify] OK. Checked ${checkedNonChangelogCount} commits from HEAD (${skippedChangelogOnlyCount} changelog-only commits skipped, ${skippedOptOutCount} opt-out commits skipped).`,
     )
   }
 }

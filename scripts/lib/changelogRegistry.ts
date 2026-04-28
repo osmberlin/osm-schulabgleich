@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { z } from 'zod'
 
-export const CHANGELOG_REGISTRY_PATH = path.join('changelog', 'registry.yaml')
+export const CHANGELOG_REGISTRY_PATH = 'changelog.registry.yaml'
 export const CHANGELOG_MARKDOWN_PATH = 'CHANGELOG.md'
 export const CHANGELOG_JSON_PATH = path.join('public', 'changelog.gen.json')
 export const CHANGELOG_ONLY_ALLOWED_PATHS = new Set<string>([
@@ -128,6 +128,8 @@ export type CommitInfo = {
   body: string
 }
 
+const CHANGELOG_OPTOUT_PATTERN = /\b(?:no[-\s]+changelog|hide\s+changelog)\b/i
+
 export async function readCommitInfo(projectRoot: string, ref: string): Promise<CommitInfo> {
   const fmt = '%H%x00%cI%x00%s%x00%b'
   const out = await runGit(['show', '-s', `--format=${fmt}`, '--no-patch', ref], {
@@ -138,6 +140,16 @@ export async function readCommitInfo(projectRoot: string, ref: string): Promise<
     throw new Error(`Could not parse commit metadata for ref "${ref}".`)
   }
   return { hash, committedAtIso, subject, body: body.trim() }
+}
+
+export function isChangelogOptOutText(text: string): boolean {
+  return CHANGELOG_OPTOUT_PATTERN.test(text)
+}
+
+export async function isChangelogOptOutCommit(projectRoot: string, ref: string): Promise<boolean> {
+  const commit = await readCommitInfo(projectRoot, ref)
+  const combined = `${commit.subject}\n${commit.body}`
+  return isChangelogOptOutText(combined)
 }
 
 export async function listCommitChangedPaths(projectRoot: string, ref: string): Promise<string[]> {

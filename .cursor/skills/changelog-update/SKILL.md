@@ -13,9 +13,10 @@ Use this short workflow:
 4. Keep visible entries in German, short and user-facing.
 5. Mark technical-only entries with `hide: true` and remove `descriptionMd`.
 6. Run `bun run changelog` until verify/build pass.
+7. Commit generated changelog files and registry updates with `git commit -m "Update changelog" -m "hide changelog"`
 
 Rules:
 
-- Registry file: `changelog/registry.yaml`.
+- Registry file: `changelog.registry.yaml`.
 - Visible entry shape: `refs` + `descriptionMd`.
 - Hidden entry shape: `refs` + `hide: true` (no description).

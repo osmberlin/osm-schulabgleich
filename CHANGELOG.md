@@ -1,6 +1,6 @@
 # Changelog
 
-Automatisch aus `changelog/registry.yaml` erzeugt.
+Automatisch aus `changelog.registry.yaml` erzeugt.
 
 ## 2026-04
 
