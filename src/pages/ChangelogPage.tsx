@@ -2,7 +2,7 @@ import { de } from '../i18n/de'
 import { githubCommitUrlOnDefaultBranch } from '../lib/githubRepo'
 import { changelogQueryOptions } from '../lib/sharedDatasetQueries'
 import { useQuery } from '@tanstack/react-query'
-import { ChangelogList } from '@tordans/changelog-kit'
+import { ChangelogList } from '@tordans/changelog-kit/react'
 
 export function ChangelogPage() {
   const q = useQuery({

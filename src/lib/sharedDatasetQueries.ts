@@ -14,7 +14,7 @@ import {
   summaryFileSchema,
 } from './schemas'
 import { queryOptions } from '@tanstack/react-query'
-import { changelogFileSchema } from '@tordans/changelog-kit'
+import { changelogFileSchema } from '@tordans/changelog-kit/schemas'
 
 /** Shared TanStack query options for datasets/summary.json */
 export function summaryQueryOptions() {
