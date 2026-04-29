@@ -449,6 +449,7 @@ export async function runDownloadOsmNational(projectRoot: string): Promise<void>
   const pathMeta = nationalPath(projectRoot, envScopedJsonFileName(NATIONAL.schoolsOsmMeta))
   const generatedAt = new Date().toISOString()
   await mkdir(path.dirname(pathGeo), { recursive: true })
+  const prevMeta = await readJsonFile<PipelineSourceMeta>(pathMeta)
 
   try {
     console.info('[pipeline:download:osm] Overpass Germany …')
@@ -469,6 +470,28 @@ export async function runDownloadOsmNational(projectRoot: string): Promise<void>
   } catch (e) {
     const err = String(e)
     console.error(`[pipeline:download:osm] FAILED: ${err}`)
+    const cachedGeo = await readJsonFile<FeatureCollection>(pathGeo)
+    const hasReusableCache =
+      cachedGeo?.type === 'FeatureCollection' &&
+      Array.isArray(cachedGeo.features) &&
+      cachedGeo.features.length > 0
+    if (hasReusableCache) {
+      const meta: PipelineSourceMeta = {
+        pipelineStep: 'pipeline:download:osm',
+        generatedAt,
+        ok: true,
+        sourceMode: 'reused',
+        sourceModeReason: 'overpass_fetch_failed',
+        errorMessage: err,
+        overpassResponseTimestamp: prevMeta?.overpassResponseTimestamp,
+        interpreterUrl: prevMeta?.interpreterUrl,
+      }
+      await writeJson(pathMeta, meta)
+      console.warn(
+        `[pipeline:download:osm] reused cached OSM snapshot (${cachedGeo.features.length} features)`,
+      )
+      return
+    }
     const meta: PipelineSourceMeta = {
       pipelineStep: 'pipeline:download:osm',
       generatedAt,
@@ -769,11 +792,18 @@ export async function runStateFirstPipeline(
       rowsStateDetailByKey,
     )
 
+    const osmSource: 'live' | 'cached' | 'missing' =
+      osmMeta?.ok && osmStateFc.features.length > 0
+        ? osmMeta?.sourceMode === 'reused'
+          ? 'cached'
+          : 'live'
+        : 'missing'
+
     const osmMetaState: Record<string, unknown> = {
       overpassQueriedAt: osmMeta?.generatedAt,
       overpassResponseTimestamp: osmMeta?.overpassResponseTimestamp,
       interpreterUrl: osmMeta?.interpreterUrl,
-      osmSource: osmMeta?.ok ? 'live' : 'missing',
+      osmSource,
     }
     await writeJson(
       path.join(datasetsDir(projectRoot), code, 'schools_osm.meta.json'),
@@ -787,9 +817,6 @@ export async function runStateFirstPipeline(
       ambiguous: enriched.filter((r) => r.category === 'match_ambiguous').length,
       official_no_coord: enriched.filter((r) => r.category === 'official_no_coord').length,
     }
-
-    const osmSource: 'live' | 'cached' | 'missing' =
-      osmMeta?.ok && osmStateFc.features.length > 0 ? 'live' : 'missing'
 
     summaryUpdates.set(code, {
       code,

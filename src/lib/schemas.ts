@@ -64,6 +64,7 @@ export const pipelineRunContextKnownSchema = z.enum([
 export const pipelineSourceModeReasonKnownSchema = z.enum([
   'scheduled_non_friday',
   'manual_official_reuse',
+  'overpass_fetch_failed',
 ])
 
 const ambiguousOfficialSnapshotSchema = z.object({

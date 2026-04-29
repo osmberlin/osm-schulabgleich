@@ -44,6 +44,9 @@ type OverpassOk = {
   interpreterUrl: string
 }
 
+const RATE_LIMIT_STATUS = 429
+const INTERPRETER_RETRYABLE_STATUS = new Set([408, 429, 500, 502, 503, 504])
+
 function overpassRequestInit(query: string): BunFetchRequestInit {
   const init: BunFetchRequestInit = {
     method: 'POST',
@@ -60,29 +63,46 @@ function overpassRequestInit(query: string): BunFetchRequestInit {
 }
 
 async function fetchSchoolsOsmOverpassQuery(query: string): Promise<OverpassOk> {
-  let lastErr: Error | null = null
+  const attemptErrors: string[] = []
   for (const url of INTERPRETERS) {
     try {
       const r = await fetch(url, overpassRequestInit(query))
       if (!r.ok) {
-        lastErr = new Error(`Overpass ${url} HTTP ${r.status}`)
+        const retryAfterHeader = r.headers.get('retry-after')
+        const retryAfterSeconds = retryAfterHeader
+          ? Number.parseInt(retryAfterHeader, 10)
+          : Number.NaN
+        const retryAfterMs =
+          Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0 ? retryAfterSeconds * 1000 : 0
+        const shouldBackoff =
+          INTERPRETER_RETRYABLE_STATUS.has(r.status) ||
+          retryAfterMs > 0 ||
+          r.status === RATE_LIMIT_STATUS
+        attemptErrors.push(`Overpass ${url} HTTP ${r.status}`)
+        if (shouldBackoff) {
+          const waitMs = Math.max(retryAfterMs, 2000)
+          console.warn(
+            `[pipeline:download:osm] ${url} HTTP ${r.status}; retrying after ${waitMs}ms`,
+          )
+          await sleep(waitMs)
+        }
         continue
       }
       const raw = await r.json()
       const parsed = overpassJsonSchema.safeParse(raw)
       if (!parsed.success) {
-        lastErr = new Error(`Overpass invalid JSON from ${url}`)
+        attemptErrors.push(`Overpass invalid JSON from ${url}`)
         continue
       }
       const remark = parsed.data.remark
       if (remark && /error/i.test(remark)) {
-        lastErr = new Error(`Overpass remark: ${remark}`)
+        attemptErrors.push(`Overpass ${url} remark: ${remark}`)
         continue
       }
       const converted = osm2geojson(parsed.data as object)
       let gjRaw: FeatureCollection
       if (converted == null) {
-        lastErr = new Error('osm2geojson-ultra returned no data')
+        attemptErrors.push(`Overpass ${url}: osm2geojson-ultra returned no data`)
         continue
       }
       if (converted.type === 'Feature') {
@@ -90,7 +110,7 @@ async function fetchSchoolsOsmOverpassQuery(query: string): Promise<OverpassOk> 
       } else if (converted.type === 'FeatureCollection') {
         gjRaw = converted as FeatureCollection
       } else {
-        lastErr = new Error('osm2geojson-ultra: unexpected GeoJSON root type')
+        attemptErrors.push(`Overpass ${url}: osm2geojson-ultra unexpected GeoJSON root type`)
         continue
       }
       const gj = injectSchoolSiteRelationsFromOverpass(
@@ -109,10 +129,15 @@ async function fetchSchoolsOsmOverpassQuery(query: string): Promise<OverpassOk> 
         interpreterUrl: url,
       }
     } catch (e) {
-      lastErr = e instanceof Error ? e : new Error(String(e))
+      const msg = e instanceof Error ? e.message : String(e)
+      attemptErrors.push(`Overpass ${url}: ${msg}`)
     }
   }
-  throw lastErr ?? new Error('Overpass: all interpreters failed')
+  throw new Error(
+    attemptErrors.length > 0
+      ? `Overpass: all interpreters failed (${attemptErrors.join(' | ')})`
+      : 'Overpass: all interpreters failed',
+  )
 }
 
 async function fetchSchoolsOsmOverpassGermany(): Promise<OverpassOk> {

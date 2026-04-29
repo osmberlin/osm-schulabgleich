@@ -40,17 +40,34 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
           OVERPASS_FETCH_RELAX_TLS: 'true'
 
+      - name: Check OSM source metadata
+        id: osm-meta-precheck
+        run: bun run pipeline:ci:osm-meta-precheck
+
+      - name: Download previous datasets artifact for OSM fallback
+        if: steps.osm-meta-precheck.outputs.osm_ok != 'true'
+        uses: dawidd6/action-download-artifact@v11
+        with:
+          workflow: data-refresh.yml
+          branch: main
+          name: ${{ env.DATASET_ARTIFACT_NAME }}
+          search_artifacts: true
+          path: .artifact-restore
+          if_no_artifact_found: warn
+
+      - name: Restore only OSM cache inputs from artifact
+        if: steps.osm-meta-precheck.outputs.osm_ok != 'true'
+        run: bun run pipeline:ci:restore-osm-cache
+
+      - name: Retry OSM source after cache restore
+        if: steps.osm-meta-precheck.outputs.osm_ok != 'true'
+        run: bun run pipeline:download:osm
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          OVERPASS_FETCH_RELAX_TLS: 'true'
+
       - name: Validate source metadata before rebuild
-        run: |
-          set -euo pipefail
-          test -f public/datasets/schools_official_de.meta.json
-          test -f public/datasets/schools_osm_de.meta.json
-          bun --eval '
-            const official = await Bun.file("public/datasets/schools_official_de.meta.json").json()
-            const osm = await Bun.file("public/datasets/schools_osm_de.meta.json").json()
-            if (official?.ok !== true) throw new Error("official meta not ok")
-            if (osm?.ok !== true) throw new Error("osm meta not ok")
-          '
+        run: bun run pipeline:ci:validate-source-meta
 
       - name: Rebuild derived datasets
         run: bun run pipeline:rebuild
@@ -59,12 +76,7 @@ jobs:
           PIPELINE_RUN_CONTEXT: ${{ github.event_name == 'workflow_dispatch' && 'refresh_manual_nightly' || 'refresh_scheduled_nightly' }}
 
       - name: Validate rebuilt snapshot
-        run: |
-          test -f public/datasets/summary.json
-          test -f public/datasets/status/runs.jsonl
-          test -f public/datasets/schools_official_de.meta.json
-          test -f public/datasets/schools_osm_de.meta.json
-          test -f public/datasets/jedeschule_stats.json
+        run: bun run pipeline:ci:validate-rebuilt-snapshot
 
       - name: Upload reusable dataset artifact
         uses: actions/upload-artifact@v4

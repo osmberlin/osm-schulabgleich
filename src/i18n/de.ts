@@ -405,6 +405,8 @@ export const de = {
     sourceModeReasonScheduledNonFriday:
       'Wöchentliche Amtlich-Aktualisierung erfolgt am Freitag; heute wird der vorige Stand genutzt.',
     sourceModeReasonManualReuse: 'Manueller Lauf ohne neuen Amtlich-Abruf.',
+    sourceModeReasonOverpassFetchFailed:
+      'Overpass-Abruf fehlgeschlagen; letzter verfügbarer OSM-Snapshot wird weiterverwendet.',
     jedeschuleHttpLastModified: 'HTTP Last-Modified (Quelle)',
     jedeschuleCsvMaxUpdate: 'Max. update_timestamp (CSV-Zeilen)',
     jedeschuleUpstreamChanged: 'Neuer Datenstand ggü. letztem Lauf',
