@@ -6,8 +6,10 @@ import { STATE_MATCH_CATEGORIES, type StateMatchCategory } from './stateMatchCat
 import {
   STATE_FACET_MATCH_MODES,
   STATE_FACET_OSM_AMENITY,
+  STATE_FACET_REF_STATUS,
   type StateFacetMatchMode,
   type StateFacetOsmAmenity,
+  type StateFacetRefStatus,
   STATE_FACET_SCHOOL_FORM_COMBO,
   STATE_FACET_SCHOOL_FORM_FAMILY,
   type StateFacetSchoolFormCombo,
@@ -43,6 +45,8 @@ type StateRouteSearch = {
   lsfam?: StateFacetSchoolFormFamily[]
   /** Facet: school-form status (`missing_osm`, `only_osm`, ...). */
   lscombo?: StateFacetSchoolFormCombo[]
+  /** Facet: ref completeness status (usable-official-ref cases). */
+  lref?: StateFacetRefStatus[]
   mask?: boolean
 }
 
@@ -123,6 +127,9 @@ export function validateStateRouteSearch(search: Record<string, unknown>): State
 
   const lscombo = normalizeEnumArray(stringList(search.lscombo), STATE_FACET_SCHOOL_FORM_COMBO)
   if (lscombo.length > 0) out.lscombo = lscombo
+
+  const lref = normalizeEnumArray(stringList(search.lref), STATE_FACET_REF_STATUS)
+  if (lref.length > 0) out.lref = lref
 
   return out
 }

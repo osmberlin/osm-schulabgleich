@@ -4,12 +4,14 @@ import { formatDeInteger } from '../../lib/formatNumber'
 import {
   STATE_FACET_MATCH_MODES,
   STATE_FACET_OSM_AMENITY,
+  STATE_FACET_REF_STATUS,
   STATE_FACET_SCHOOL_FORM_COMBO,
   STATE_FACET_SCHOOL_FORM_FAMILY,
   STATE_MATCH_FACET_MATCH_MODE_NONE,
   STATE_MATCH_FACET_SCHOOL_KIND_NONE,
   type StateFacetMatchMode,
   type StateFacetOsmAmenity,
+  type StateFacetRefStatus,
   type StateFacetSchoolFormCombo,
   type StateFacetSchoolFormFamily,
 } from '../../lib/stateOverviewItemsSearch'
@@ -90,6 +92,8 @@ export function StateOverviewFiltersDisclosure({
   setSchoolFormFamilies,
   schoolFormCombos,
   setSchoolFormCombos,
+  refStatuses,
+  toggleRefStatus,
   resetExplorer,
   aggregations,
   filteredCount,
@@ -113,6 +117,8 @@ export function StateOverviewFiltersDisclosure({
   setSchoolFormFamilies: (v: StateFacetSchoolFormFamily[]) => void
   schoolFormCombos: string[]
   setSchoolFormCombos: (v: StateFacetSchoolFormCombo[]) => void
+  refStatuses: string[]
+  toggleRefStatus: (v: StateFacetRefStatus, on: boolean) => void
   resetExplorer: () => void
   aggregations: Aggregations | undefined
   filteredCount: number
@@ -140,6 +146,7 @@ export function StateOverviewFiltersDisclosure({
   const osmAmenityBuckets = aggregations?.osmAmenity?.buckets ?? []
   const schoolFormFamilyBuckets = aggregations?.schoolFormFamily?.buckets ?? []
   const schoolFormComboBuckets = aggregations?.schoolFormCombo?.buckets ?? []
+  const refStatusBuckets = aggregations?.refStatus?.buckets ?? []
 
   const hasActiveExplorer =
     exploreQ.trim() !== '' ||
@@ -150,7 +157,8 @@ export function StateOverviewFiltersDisclosure({
     schoolKinds.length > 0 ||
     osmAmenities.length > 0 ||
     schoolFormFamilies.length > 0 ||
-    schoolFormCombos.length > 0
+    schoolFormCombos.length > 0 ||
+    refStatuses.length > 0
   const summaryCountLabel = bboxFilterActive
     ? de.state.explorer.summaryCountsInBbox
     : de.state.explorer.summaryCountsTotal
@@ -339,6 +347,38 @@ export function StateOverviewFiltersDisclosure({
                         : de.state.explorer.iscedNo}
                   </span>
                   <span className="text-zinc-400 tabular-nums">{formatDeInteger(count)}</span>
+                </label>
+              )
+            })}
+          </div>
+        </fieldset>
+
+        <fieldset className="mb-5">
+          <legend className="mb-2 text-xs font-medium text-zinc-300">
+            {de.state.explorer.refHeading}
+          </legend>
+          <div className="flex flex-col gap-2">
+            {STATE_FACET_REF_STATUS.map((v) => {
+              const bucket = refStatusBuckets.find((b) => String(b.key) === v)
+              const count = bucket?.doc_count ?? 0
+              const checked = refStatuses.includes(v)
+              return (
+                <label
+                  key={v}
+                  className="flex cursor-pointer items-center justify-between gap-3 rounded-md border border-zinc-700/80 bg-zinc-950/60 px-3 py-2 text-xs has-[:checked]:border-emerald-800"
+                >
+                  <span className="inline-flex min-w-0 items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => toggleRefStatus(v, e.target.checked)}
+                      className="rounded border-zinc-500 text-emerald-600 focus:ring-emerald-500"
+                    />
+                    <span className="truncate">{de.state.explorer.refMissingPossible}</span>
+                  </span>
+                  <span className="shrink-0 text-zinc-400 tabular-nums">
+                    {formatDeInteger(count)}
+                  </span>
                 </label>
               )
             })}

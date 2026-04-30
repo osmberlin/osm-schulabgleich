@@ -49,7 +49,8 @@ export function StateOverview() {
     explorer.schoolKinds.length > 0 ||
     explorer.osmAmenities.length > 0 ||
     explorer.schoolFormFamilies.length > 0 ||
-    explorer.schoolFormCombos.length > 0
+    explorer.schoolFormCombos.length > 0 ||
+    explorer.refStatuses.length > 0
   const [listSearchRequested, setListSearchRequested] = useState(false)
   const showSearch = listSearchRequested || hasExplorerSearchParams
   const showList = listSearchRequested
@@ -103,6 +104,7 @@ export function StateOverview() {
           osmAmenities: explorer.osmAmenities,
           schoolFormFamilies: explorer.schoolFormFamilies,
           schoolFormCombos: explorer.schoolFormCombos,
+          refStatuses: explorer.refStatuses,
         })
   const explorerIds = exploreResult ? collectFilteredIdsFromSearchResult(exploreResult) : null
 
@@ -198,6 +200,8 @@ export function StateOverview() {
               setSchoolFormFamilies={explorer.setSchoolFormFamilies}
               schoolFormCombos={explorer.schoolFormCombos}
               setSchoolFormCombos={explorer.setSchoolFormCombos}
+              refStatuses={explorer.refStatuses}
+              toggleRefStatus={explorer.toggleRefStatus}
               resetExplorer={explorer.resetExplorer}
               aggregations={exploreResult?.data.aggregations}
               filteredCount={listSearchMatchesAfterExplorer.length}

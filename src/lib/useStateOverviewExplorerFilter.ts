@@ -1,6 +1,7 @@
 import {
   STATE_FACET_MATCH_MODES,
   STATE_FACET_OSM_AMENITY,
+  STATE_FACET_REF_STATUS,
   STATE_FACET_SCHOOL_FORM_COMBO,
   STATE_FACET_SCHOOL_FORM_FAMILY,
 } from './stateOverviewItemsSearch'
@@ -22,6 +23,7 @@ export function useStateOverviewExplorerFilter() {
   const osmAmenities = search.loa ?? []
   const schoolFormFamilies = search.lsfam ?? []
   const schoolFormCombos = search.lscombo ?? []
+  const refStatuses = search.lref ?? []
 
   function setExploreQ(nextValue: string) {
     void navigate({
@@ -175,6 +177,27 @@ export function useStateOverviewExplorerFilter() {
     })
   }
 
+  function toggleRefStatus(v: (typeof STATE_FACET_REF_STATUS)[number], on: boolean) {
+    void navigate({
+      unsafeRelative: 'path',
+      replace: true,
+      resetScroll: false,
+      search: (prev) => {
+        const cur = prev.lref ?? []
+        const next = new Set(cur)
+        if (on) next.add(v)
+        else next.delete(v)
+        const arr = [...next].filter((x): x is (typeof STATE_FACET_REF_STATUS)[number] =>
+          STATE_FACET_REF_STATUS.includes(x as (typeof STATE_FACET_REF_STATUS)[number]),
+        )
+        return {
+          ...prev,
+          lref: arr.length === 0 ? undefined : arr,
+        }
+      },
+    })
+  }
+
   function resetExplorer() {
     void navigate({
       unsafeRelative: 'path',
@@ -191,6 +214,7 @@ export function useStateOverviewExplorerFilter() {
         loa: undefined,
         lsfam: undefined,
         lscombo: undefined,
+        lref: undefined,
       }),
     })
   }
@@ -214,6 +238,8 @@ export function useStateOverviewExplorerFilter() {
     setSchoolFormFamilies,
     schoolFormCombos,
     setSchoolFormCombos,
+    refStatuses,
+    toggleRefStatus,
     resetExplorer,
   }
 }

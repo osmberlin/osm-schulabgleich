@@ -1,3 +1,4 @@
+import { officialRefCandidateFromSchoolId } from './officialRefCandidate'
 import { schoolsMatchRowSchema } from './schemas'
 import itemsjs from 'itemsjs'
 import type { z } from 'zod'
@@ -24,6 +25,8 @@ export type StateFacetMatchMode = (typeof STATE_FACET_MATCH_MODES)[number]
 export const STATE_FACET_OSM_AMENITY = ['school', 'college', 'none'] as const
 
 export type StateFacetOsmAmenity = (typeof STATE_FACET_OSM_AMENITY)[number]
+export const STATE_FACET_REF_STATUS = ['missing_possible_ref'] as const
+export type StateFacetRefStatus = (typeof STATE_FACET_REF_STATUS)[number]
 
 export const STATE_FACET_SCHOOL_FORM_FAMILY = ['grundschule', 'weiterfuehrend'] as const
 export type StateFacetSchoolFormFamily = (typeof STATE_FACET_SCHOOL_FORM_FAMILY)[number]
@@ -97,6 +100,12 @@ export function matchRowToItemsJsDoc(row: StateMatchRow) {
     row.category === 'matched' ? (toNonEmptyString(row.schoolFormFamily) ?? 'none') : 'none'
   const schoolFormCombo =
     row.category === 'matched' ? (toNonEmptyString(row.schoolFormCombo) ?? 'none') : 'none'
+  const refCandidate = officialRefCandidateFromSchoolId(row.officialId)
+  const hasOsmRef = toNonEmptyString(row.osmTags?.ref) != null
+  const refStatus =
+    row.category === 'matched' && refCandidate != null && !hasOsmRef
+      ? 'missing_possible_ref'
+      : 'other'
 
   return {
     id: row.key,
@@ -111,6 +120,7 @@ export function matchRowToItemsJsDoc(row: StateMatchRow) {
     schoolFormRule,
     schoolFormFamily,
     schoolFormCombo,
+    refStatus,
   }
 }
 
@@ -136,6 +146,11 @@ export function createStateMatchItemsJsEngine(rows: StateMatchRow[]) {
       schoolFormRule: { title: 'Schulform-Regel', size: 6 },
       schoolFormFamily: { title: 'Schulform-Familie', size: 4 },
       schoolFormCombo: { title: 'Schulform-Status', size: 6 },
+      refStatus: {
+        title: 'Ref-Status',
+        size: 3,
+        hide_zero_doc_count: true,
+      },
     },
   })
 }
@@ -150,6 +165,7 @@ export type ExplorerFilterState = {
   osmAmenities: string[]
   schoolFormFamilies: string[]
   schoolFormCombos: string[]
+  refStatuses: string[]
 }
 
 export function searchStateMatchesWithExplorer(
@@ -164,6 +180,7 @@ export function searchStateMatchesWithExplorer(
   if (state.osmAmenities.length > 0) filters.osmAmenity = state.osmAmenities
   if (state.schoolFormFamilies.length > 0) filters.schoolFormFamily = state.schoolFormFamilies
   if (state.schoolFormCombos.length > 0) filters.schoolFormCombo = state.schoolFormCombos
+  if (state.refStatuses.length > 0) filters.refStatus = state.refStatuses
 
   return engine.search({
     query: state.query.trim() || undefined,

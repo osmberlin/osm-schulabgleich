@@ -240,6 +240,8 @@ export const de = {
       schoolFormComboMatchingTagsWeiterfuehrend: 'Abgleich erfolgt, Tags vorhanden – OK',
       schoolFormComboMatchingButLackingTagsWeiterfuehrend:
         'Abgleich erfolgt, aber Tags sind unvollständig – Tags präzisieren (`school` oder `isced:level`)',
+      refHeading: 'OSM-Tag ref',
+      refMissingPossible: 'Fehlt in OSM, aber aus amtlicher ID ableitbar (nur nutzbare IDs)',
       reset: 'Zurücksetzen',
       openHint: 'Filter wirken auf Kennzahlen, Karte und Trefferliste.',
     },
