@@ -4,6 +4,10 @@ Automatisch aus `changelog.registry.yaml` erzeugt.
 
 ## 2026-04
 
+### `9c3458f`
+
+Neuer Filter: fehlender `ref`-Tag in OSM, aber erkennbare ID aus den amtlichen Daten (sinnvoll zum Nachtaggern).
+
 ### `3caf6cf`, `0e7f530`, `3691fcb`
 
 Add `/changelog` page and `CHANGELOG.md` file based on a custom changelog registry that monitors git commits to keep the changelog up to date. The changelog is linked from the home page and footer.

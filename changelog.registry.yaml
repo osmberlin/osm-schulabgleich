@@ -40,4 +40,9 @@ entries:
       - '4029c1f'
       - 'e31f524'
       - 'de36e97'
+      - '0390ef9'
     hide: true
+  - refs:
+      - '9c3458f'
+    descriptionMd: |
+      Neuer Filter: fehlender `ref`-Tag in OSM, aber erkennbare ID aus den amtlichen Daten (sinnvoll zum Nachtaggern).

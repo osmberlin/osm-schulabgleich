@@ -1,9 +1,20 @@
 {
-  "generatedAt": "2026-04-30T04:29:01.269Z",
+  "generatedAt": "2026-04-30T05:01:43.643Z",
   "months": [
     {
       "month": "2026-04",
       "entries": [
+        {
+          "refs": [
+            "9c3458f"
+          ],
+          "descriptionMd": "Neuer Filter: fehlender `ref`-Tag in OSM, aber erkennbare ID aus den amtlichen Daten (sinnvoll zum Nachtaggern).",
+          "committedAtIso": "2026-04-30T08:00:32+03:00",
+          "committedAtShort": "2026-04-30",
+          "refsDisplay": [
+            "9c3458f"
+          ]
+        },
         {
           "refs": [
             "3caf6cf",
