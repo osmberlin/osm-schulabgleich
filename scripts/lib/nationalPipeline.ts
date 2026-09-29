@@ -446,6 +446,26 @@ export async function runDownloadJedeschuleNational(projectRoot: string): Promis
   } catch (e) {
     const err = String(e)
     console.error(`[pipeline:download:jedeschule] FAILED: ${err}`)
+    const cachedCsv = Bun.file(outCsv)
+    if ((await cachedCsv.exists()) && cachedCsv.size > 0 && prevMeta?.csvSha256) {
+      const meta: PipelineSourceMeta = {
+        pipelineStep: 'pipeline:download:jedeschule',
+        generatedAt,
+        sourceUrl: JEDESCHULE_WEEKLY_CSV_URL,
+        ok: true,
+        sourceMode: 'reused',
+        sourceModeReason: 'jedeschule_fetch_failed',
+        errorMessage: err,
+        httpLastModified: prevMeta.httpLastModified,
+        httpEtag: prevMeta.httpEtag,
+        csvSha256: prevMeta.csvSha256,
+        csvMaxUpdateTimestamp: prevMeta.csvMaxUpdateTimestamp,
+        upstreamDatasetChanged: false,
+      }
+      await writeJson(pathMeta, meta)
+      console.warn('[pipeline:download:jedeschule] reused cached JedeSchule CSV')
+      return
+    }
     const meta: PipelineSourceMeta = {
       pipelineStep: 'pipeline:download:jedeschule',
       generatedAt,

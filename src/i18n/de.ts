@@ -522,6 +522,8 @@ export const de = {
     sourceModeReasonManualReuse: 'Manueller Lauf ohne neuen Amtlich-Abruf.',
     sourceModeReasonOverpassFetchFailed:
       'Overpass-Abruf fehlgeschlagen; letzter verfügbarer OSM-Snapshot wird weiterverwendet.',
+    sourceModeReasonJedeschuleFetchFailed:
+      'JedeSchule-Abruf fehlgeschlagen; letzter verfügbarer Amtlich-Stand wird weiterverwendet.',
     jedeschuleHttpLastModified: 'HTTP Last-Modified (Quelle)',
     jedeschuleCsvMaxUpdate: 'Max. update_timestamp (CSV-Zeilen)',
     jedeschuleUpstreamChanged: 'Neuer Datenstand ggü. letztem Lauf',

@@ -27,6 +27,7 @@ const SOURCE_MODE_REASON_LABELS: Record<PipelineSourceModeReasonKnown, string> =
   scheduled_non_friday: de.status.sourceModeReasonScheduledNonFriday,
   manual_official_reuse: de.status.sourceModeReasonManualReuse,
   overpass_fetch_failed: de.status.sourceModeReasonOverpassFetchFailed,
+  jedeschule_fetch_failed: de.status.sourceModeReasonJedeschuleFetchFailed,
 }
 
 function renderSourceMode(mode?: 'fresh' | 'reused' | 'failed') {
