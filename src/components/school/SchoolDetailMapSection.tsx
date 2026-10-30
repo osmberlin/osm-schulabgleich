@@ -1,3 +1,4 @@
+import '../../lib/maplibreWorker'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useQuery } from '@tanstack/react-query'
 import { point } from '@turf/helpers'

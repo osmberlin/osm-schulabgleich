@@ -1,3 +1,4 @@
+import '../lib/maplibreWorker'
 import type { CircleLayerSpecification } from '@maplibre/maplibre-gl-style-spec'
 import bbox from '@turf/bbox'
 import type { Feature, FeatureCollection, MultiPolygon, Polygon } from 'geojson'

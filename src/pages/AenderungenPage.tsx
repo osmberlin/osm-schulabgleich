@@ -1,3 +1,4 @@
+import '../lib/maplibreWorker'
 import { XMarkIcon } from '@heroicons/react/20/solid'
 import { Link } from '@tanstack/react-router'
 import bbox from '@turf/bbox'
