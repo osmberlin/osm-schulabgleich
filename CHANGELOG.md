@@ -2,6 +2,19 @@
 
 Automatisch aus `changelog.registry.yaml` erzeugt.
 
+## 2026-11
+
+### `45a3e5f`
+
+Die Schuldetailseite zeigt jetzt deutlich sichtbar den Abstand zwischen amtlichem Punkt und OSM-Objekt, auch bei Zuordnungen über Name, Website oder Adresse.
+Über 400 m gibt es einen blauen Hinweis, über 1 km einen roten Fehler, jeweils mit Begründung. Bei einer eindeutigen Zuordnung über `ref` und einer OSM-Bearbeitung in den letzten 2 Jahren bleibt ein größerer Abstand ohne Warnung.
+Die Liste im Land färbt die Abstände entsprechend, die CSV hat die neuen Spalten `distance_check` und `osm_last_edited_at`.
+
+### `b188120`
+
+Neue Prüfdatei auf [`/download`](/download): alle Schulen mit auffälligem Abstand als GeoJSON, mit amtlichem Punkt, OSM-Punkt, Verbindungslinie und Begründung. Die Datei lässt sich direkt in iD öffnen, oder in JOSM als gesperrte Ebene, die nicht hochgeladen werden kann.
+MapRoulette schlägt für Zuordnungen mit rotem Fehler keine amtlichen Daten mehr vor.
+
 ## 2026-09
 
 ### `36b6d75`
@@ -35,7 +48,6 @@ Nominatim-Treffer, die mehr als 2 km von einem bestehenden Namens-, Website- ode
 ### `6142c3f`
 
 MapRoulette-Aufgaben sind übersichtlicher formuliert:
-
 - Tag-Fix aus amtlichen Daten: kompakter Text (Name und Land, kurzer Hinweis, Links zur Schul-Website und Detailseite, Tags in Codeblöcken); bei `ref` ein eigener Abschnitt mit kurzer Begründung, warum die Referenz hilft.
 - Neu: Challenge für fehlende Schulen in BE, BB und SH — amtliche Schulen ohne OSM-Zuordnung (`official_only`) als Create-Aufgaben mit vorgeschlagenem Tag-Paket; der Aufgabentext folgt dem gleichen kompakten Aufbau.
 
@@ -47,7 +59,6 @@ Bei den Schulform-Filtern kann man zusätzlich eingrenzen, ob das Schulform-Sign
 ### `6220d1d`, `d7da64f`, `951d759`
 
 MapRoulette Tag-Fix für Schulen: Vorschläge werden als GeoJSON-Feed erzeugt und nach dem Pages-Deploy neu aufgebaut.
-
 - Für OSM-lizenzkompatible Länder (BE, BB, SH) gibt es Aufgaben aus amtlichen Daten zu Schulform, `ref` und Betreiber; Übersicht und Schuldetail verlinken MapRoulette, die Startseite kennzeichnet diese Länder.
 - Bundesweit kommen zusätzliche Aufgaben nur aus vorhandenen OSM-Daten (Name, Website-URL, `school:de` oder unvollständige `school`/`isced:level`-Tags) — ohne amtliche Lizenz und ohne `ref`/Betreiber-Vorschläge; kombinierte Campus-Namen (z. B. Grund- und Hauptschule) werden ausgelassen.
 - In den Aufgaben erscheint unter Hilfsmittel ein Link zur Schul-Website, wenn amtliche oder OSM-Daten eine URL haben.

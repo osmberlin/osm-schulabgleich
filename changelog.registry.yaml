@@ -190,3 +190,20 @@ entries:
   - refs:
       - '9feee48'
     hide: true
+  - refs:
+      - 'dc776fcd3fd6fe01a96d1502fb4267b88bea3ca4'
+    hide: true
+  - refs:
+      - '45a3e5f4f9a379bd805b7c9b506df72d0b95164d'
+    descriptionMd: |
+      Die Schuldetailseite zeigt jetzt deutlich sichtbar den Abstand zwischen amtlichem Punkt und OSM-Objekt, auch bei Zuordnungen über Name, Website oder Adresse.
+      Über 400 m gibt es einen blauen Hinweis, über 1 km einen roten Fehler, jeweils mit Begründung. Bei einer eindeutigen Zuordnung über `ref` und einer OSM-Bearbeitung in den letzten 2 Jahren bleibt ein größerer Abstand ohne Warnung.
+      Die Liste im Land färbt die Abstände entsprechend, die CSV hat die neuen Spalten `distance_check` und `osm_last_edited_at`.
+  - refs:
+      - 'acdc2d2ae3cef548583d66f80c37bc7fcbbf382c'
+    hide: true
+  - refs:
+      - 'b18812084916212940245ce9a30c9279f347dcd9'
+    descriptionMd: |
+      Neue Prüfdatei auf [`/download`](/download): alle Schulen mit auffälligem Abstand als GeoJSON, mit amtlichem Punkt, OSM-Punkt, Verbindungslinie und Begründung. Die Datei lässt sich direkt in iD öffnen, oder in JOSM als gesperrte Ebene, die nicht hochgeladen werden kann.
+      MapRoulette schlägt für Zuordnungen mit rotem Fehler keine amtlichen Daten mehr vor.
