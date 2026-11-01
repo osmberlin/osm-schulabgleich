@@ -26,6 +26,8 @@ export const stateMatchesMapUrl = (code: string) =>
 export const stateMatchesDetailUrl = (code: string) =>
   datasetsUrl(`/datasets/${code}/schools_matches_detail.json`)
 export const germanyMatchesCsvUrl = () => datasetsUrl('/datasets/schools_matches.csv')
+export const germanyMatchesReviewGeojsonUrl = () =>
+  datasetsUrl('/datasets/schools_matches_review.geojson')
 export const stateOfficialPointsUrl = (code: string) =>
   datasetsUrl(`/datasets/${code}/schools_official_points.json`)
 

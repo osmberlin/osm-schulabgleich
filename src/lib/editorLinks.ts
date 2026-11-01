@@ -126,3 +126,19 @@ export function buildOsmBrowseUrl(
   if (!osmType || !osmId) return null
   return `https://www.openstreetmap.org/${osmType}/${encodeURIComponent(osmId)}`
 }
+
+/**
+ * iD with a GeoJSON file from a public URL. iD has no `data` param; `gpx` loads any URL
+ * and picks the parser from the file extension.
+ */
+export function buildIdUrlForGeojson(url: string) {
+  return `https://www.openstreetmap.org/edit?editor=id#gpx=${encodeURIComponent(url)}`
+}
+
+/**
+ * JOSM remote control: import a file URL as a new, locked layer that cannot be uploaded.
+ * `url` stays the last parameter.
+ */
+export function buildJosmImportUrl(url: string, layerName: string) {
+  return `${JOSM}/import?new_layer=true&layer_name=${encodeURIComponent(layerName)}&upload_policy=never&layer_locked=true&url=${encodeURIComponent(url)}`
+}

@@ -232,6 +232,17 @@ export const de = {
     filesSnapshot: 'Datenstand',
     filesRows: 'Zeilen',
     csvLink: 'CSV herunterladen',
+    reviewHeading: 'Prüfdatei für JOSM und iD',
+    reviewLead:
+      'Alle Schulen, deren Abstand zwischen amtlichem Punkt und OSM-Objekt auffällt, als GeoJSON: amtlicher Punkt, OSM-Punkt und eine Verbindungslinie. Prüfstufe, Begründung und Link zur Detailseite stehen in den Attributen jedes Objekts.',
+    reviewNote:
+      'Die Datei dient nur zum Prüfen und hat dieselbe unklare Lizenzlage wie die CSV. Über „In JOSM öffnen“ ist das Hochladen der Ebene gesperrt. Lädst du die Datei von Hand, warnt JOSM nur davor: Lade sie nicht hoch und übernimm keine amtlichen Daten aus Ländern ohne OSM-kompatible Lizenz.',
+    reviewJosmHint:
+      'Für „In JOSM öffnen“ muss in JOSM die Fernsteuerung (Remote Control) aktiviert sein.',
+    reviewDownloadLink: 'GeoJSON herunterladen',
+    reviewIdLink: 'In iD öffnen',
+    reviewJosmLink: 'In JOSM öffnen',
+    reviewJosmLayerName: 'Schulabgleich Prüfung',
     loading: 'Lade Übersicht…',
     error: 'Übersicht konnte nicht geladen werden.',
     overviewLink: 'CSV herunterladen',

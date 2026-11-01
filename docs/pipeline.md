@@ -45,7 +45,7 @@ flowchart TB
 ## Ausgaben
 
 - **Pro Land:** `public/datasets/{code}/schools_official.geojson`, `schools_osm_areas.json` (volle Umriss-Geometrien, keyed `way/id` …), `schools_matches_map.json`, `schools_matches_detail.json`, `schools_official_points.json`, `schools_osm.meta.json`
-- **Gesamt:** `public/datasets/summary.json` (`pipelineVersion`, `jedeschuleCsvSource: jedeschule-latest.csv`), `public/datasets/schools_matches.csv` (eine CSV für Deutschland, alle Kategorien)
+- **Gesamt:** `public/datasets/summary.json` (`pipelineVersion`, `jedeschuleCsvSource: jedeschule-latest.csv`), `public/datasets/schools_matches.csv` (eine CSV für Deutschland, alle Kategorien), `public/datasets/schools_matches_review.geojson` (Prüfdatei für JOSM und iD: amtlicher Punkt, OSM-Punkt und Verbindungslinie aller gematchten Schulen mit auffälligem Abstand)
 - **Intern (nicht im Pages-Build):** `public/datasets/.pipeline/schools_osm_de.geojson` (CI entfernt vor `vite build`)
 
 Siehe auch: [matchSchools – Abgleichslogik](match-schools.md).

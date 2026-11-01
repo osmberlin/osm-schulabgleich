@@ -109,7 +109,7 @@ export const schoolsMatchRowSchema = z
     /** Letzte Bearbeitung des OSM-Objekts (ISO). Fehlt in älteren Datenständen: dann unbekannt. */
     osmLastEditedAt: z.string().nullable().optional(),
     /** Bewertung des Abstands (Pipeline, Referenzzeit = OSM-Snapshot). */
-    distanceCheck: z.object({ level: z.enum(MATCH_DISTANCE_LEVELS) }).optional(),
+    distanceCheck: z.enum(MATCH_DISTANCE_LEVELS).optional(),
     osmName: z.string().nullable(),
     osmTags: z.record(z.string(), z.string()).nullable().optional(),
     ambiguousOfficialIds: z.array(z.string()).optional(),

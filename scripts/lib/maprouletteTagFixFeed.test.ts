@@ -28,6 +28,19 @@ describe('pickMaprouletteTagFixTaskFromRow', () => {
     expect(task?.cooperativeWork.operations[0]!.data.operations[0]!.data.ref).toBe('03P11')
   })
 
+  it('never suggests official data for a match rated error', () => {
+    const task = pickMaprouletteTagFixTaskFromRow({
+      ...base,
+      licenceOk: true,
+      category: 'matched',
+      stateKey: 'BE',
+      distanceCheck: 'error',
+      officialProperties: { school_type: 'Grundschule' },
+      osmTags: { amenity: 'school', name: 'Peter-Pan-Grundschule' },
+    })
+    expect(task?.cooperativeWork.operations[0]!.data.operations[0]!.data.ref).toBeUndefined()
+  })
+
   it('uses OSM-only for osm_only rows even in a licence-OK Land', () => {
     const task = pickMaprouletteTagFixTaskFromRow({
       ...base,

@@ -20,7 +20,7 @@ function level(
     matchMode,
     osmLastEditedAt,
     referenceDate: REF,
-  }).level
+  })
 }
 
 describe('classifyMatchDistance', () => {

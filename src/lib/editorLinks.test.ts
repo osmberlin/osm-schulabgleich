@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildIdUrl,
+  buildIdUrlForGeojson,
+  buildJosmImportUrl,
   buildJosmLoadObject,
   buildMaprouletteBrowseUrl,
   buildMaprouletteCreatesBrowseUrl,
@@ -113,5 +115,28 @@ describe('buildJosmLoadObject', () => {
     expect(url).toBe(
       'http://127.0.0.1:8111/zoom?left=13.4&right=13.44&top=52.51&bottom=52.49&changeset_hashtags=%23schulabgleich',
     )
+  })
+})
+
+describe('buildIdUrlForGeojson', () => {
+  it('passes the encoded file URL as gpx hash param', () => {
+    expect(
+      buildIdUrlForGeojson('https://example.org/datasets/schools_matches_review.geojson'),
+    ).toBe(
+      'https://www.openstreetmap.org/edit?editor=id#gpx=https%3A%2F%2Fexample.org%2Fdatasets%2Fschools_matches_review.geojson',
+    )
+  })
+})
+
+describe('buildJosmImportUrl', () => {
+  it('imports a locked, non-uploadable layer with url as last parameter', () => {
+    const fileUrl = 'https://example.org/datasets/review.geojson?a=1&b=2'
+    const url = buildJosmImportUrl(fileUrl, 'Schulabgleich Prüfung')
+    expect(url).toBe(
+      'http://127.0.0.1:8111/import?new_layer=true&layer_name=Schulabgleich%20Pr%C3%BCfung&upload_policy=never&layer_locked=true&url=https%3A%2F%2Fexample.org%2Fdatasets%2Freview.geojson%3Fa%3D1%26b%3D2',
+    )
+    const params = [...new URL(url).searchParams.keys()]
+    expect(params.at(-1)).toBe('url')
+    expect(new URL(url).searchParams.get('url')).toBe(fileUrl)
   })
 })

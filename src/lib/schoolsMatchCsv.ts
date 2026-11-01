@@ -342,7 +342,7 @@ export function mapSchoolsMatchRowToCsvRecord(
     category: row.category,
     match_mode: csvCell(row.matchMode),
     distance_meters: csvCell(row.distanceMeters),
-    distance_check: csvCell(row.distanceCheck?.level),
+    distance_check: csvCell(row.distanceCheck),
     osm_last_edited_at: csvCell(row.osmLastEditedAt),
     key: row.key,
     detail_url: schoolsMatchDetailUrl(parsedOptions.bundesland, row.key),

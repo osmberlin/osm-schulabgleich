@@ -11,7 +11,7 @@ Die zentrale CSV kommt von [jedeschule.codefor.de](https://jedeschule.codefor.de
 
 ## Daten-Pipeline (Download → Abgleich pro Bundesland)
 
-Nach dem Download liegen die JedeSchule-CSV und das OSM-GeoJSON (nur für den Match-Schritt, unter `public/datasets/.pipeline/`, nicht im statischen Build). Der Abgleich läuft **pro Bundesland** (Gate → Dedupe → `matchSchools`) und schreibt direkt `public/datasets/{code}/…` sowie `summary.json`.
+Nach dem Download liegen die JedeSchule-CSV und das OSM-GeoJSON (nur für den Match-Schritt, unter `public/datasets/.pipeline/`, nicht im statischen Build). Der Abgleich läuft **pro Bundesland** (Gate → Dedupe → `matchSchools`) und schreibt direkt `public/datasets/{code}/…` sowie `summary.json`, danach die bundesweiten Downloads `schools_matches.csv` und `schools_matches_review.geojson` (Prüfdatei für JOSM und iD mit den Treffern, deren Abstand auffällt).
 
 | Skript                         | Aufgabe                                                                                                                                                                                                                                              |
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -9,15 +9,10 @@ export const MATCH_DISTANCE_ERROR_M = 1000
 export const TRUSTED_OSM_EDIT_MAX_AGE_YEARS = 2
 
 /** Match modes that identify one school without any distance (add `wikidata` here once it exists). */
-export const UNAMBIGUOUS_MATCH_MODES: readonly string[] = ['ref']
+const UNAMBIGUOUS_MATCH_MODES: readonly string[] = ['ref']
 
 export const MATCH_DISTANCE_LEVELS = ['ok', 'accepted', 'hint', 'error'] as const
 export type MatchDistanceLevel = (typeof MATCH_DISTANCE_LEVELS)[number]
-export type MatchDistanceCheck = { level: MatchDistanceLevel }
-
-export function isUnambiguousMatchMode(matchMode: string | null | undefined): boolean {
-  return matchMode != null && UNAMBIGUOUS_MATCH_MODES.includes(matchMode)
-}
 
 /** `true` if `osmLastEditedAt` is at most {@link TRUSTED_OSM_EDIT_MAX_AGE_YEARS} before `referenceDate`. */
 export function isOsmEditRecent(
@@ -41,16 +36,17 @@ export function classifyMatchDistance(opts: {
   matchMode: string | null | undefined
   osmLastEditedAt: string | null | undefined
   referenceDate: Date
-}): MatchDistanceCheck {
+}): MatchDistanceLevel {
   const { distanceMeters } = opts
-  if (distanceMeters == null || !Number.isFinite(distanceMeters)) return { level: 'ok' }
-  if (distanceMeters <= MATCH_DISTANCE_HINT_M) return { level: 'ok' }
+  if (distanceMeters == null || !Number.isFinite(distanceMeters)) return 'ok'
+  if (distanceMeters <= MATCH_DISTANCE_HINT_M) return 'ok'
   if (
-    isUnambiguousMatchMode(opts.matchMode) &&
+    opts.matchMode != null &&
+    UNAMBIGUOUS_MATCH_MODES.includes(opts.matchMode) &&
     isOsmEditRecent(opts.osmLastEditedAt, opts.referenceDate)
   ) {
-    return { level: 'accepted' }
+    return 'accepted'
   }
-  if (distanceMeters > MATCH_DISTANCE_ERROR_M) return { level: 'error' }
-  return { level: 'hint' }
+  if (distanceMeters > MATCH_DISTANCE_ERROR_M) return 'error'
+  return 'hint'
 }

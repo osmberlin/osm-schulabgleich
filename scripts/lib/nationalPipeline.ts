@@ -54,7 +54,7 @@ import {
 } from './pipelineCommon'
 import { jedeschuleUpstreamDatasetChanged } from './pipelineFreshness'
 import type { PipelineSourceMeta } from './pipelineMeta'
-import { writeGermanySchoolsMatchCsv } from './writeGermanySchoolsMatchCsv'
+import { writeGermanySchoolsMatchFiles } from './writeGermanySchoolsMatchFiles'
 
 function envScopedJsonFileName(fileName: string): string {
   if (process.env.GITHUB_ACTIONS === 'true') return fileName
@@ -913,7 +913,7 @@ export async function runStateFirstPipeline(
     `[pipeline:match] jedeschule dedupe (summiert über ${codesToProcess.length} Länder): −${dedupeRemovedTotal} with-coord Duplikate entfernt`,
   )
 
-  await writeGermanySchoolsMatchCsv(projectRoot)
+  await writeGermanySchoolsMatchFiles(projectRoot)
 
   let merged: SummaryFileOut
   if (codesToProcess.length === STATE_ORDER.length) {

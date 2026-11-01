@@ -38,6 +38,7 @@ export const ROOT_DATASET_SNAPSHOT_FILES = [
   'schools_osm_de.meta.json',
   'jedeschule_stats.json',
   'schools_matches.csv',
+  'schools_matches_review.geojson',
 ] as const
 
 export const ROOT_DATASET_SNAPSHOT_EXTRA = ['status/runs.jsonl'] as const

@@ -27,7 +27,7 @@ type ListMatchRow = {
     | 'address'
     | 'ref'
   distanceMeters: number | null
-  distanceCheck?: { level: MatchDistanceLevel }
+  distanceCheck?: MatchDistanceLevel
 }
 
 const DISTANCE_CLASS_BY_LEVEL: Record<MatchDistanceLevel, string> = {
@@ -121,7 +121,7 @@ export function StateOverviewMatchList({
                           )}
                           {row.distanceMeters != null && (
                             <p
-                              className={`text-right text-xs/5 tabular-nums ${DISTANCE_CLASS_BY_LEVEL[row.distanceCheck?.level ?? 'ok']}`}
+                              className={`text-right text-xs/5 tabular-nums ${DISTANCE_CLASS_BY_LEVEL[row.distanceCheck ?? 'ok']}`}
                             >
                               {de.state.tableDistanceAway.replace(
                                 '{distance}',

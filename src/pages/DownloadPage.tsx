@@ -4,13 +4,15 @@ import { Link } from '@tanstack/react-router'
 import { CategoryLegendSwatch } from '../components/CategoryLegendSwatch'
 import { HomeOfficialSourcesSection } from '../components/home/HomeOfficialSourcesSection'
 import { de } from '../i18n/de'
+import { buildIdUrlForGeojson, buildJosmImportUrl } from '../lib/editorLinks'
 import { formatDeInteger } from '../lib/formatNumber'
 import { JEDESCHULE_WEEKLY_CSV_URL } from '../lib/jedeschuleUrls'
-import { germanyMatchesCsvUrl } from '../lib/paths'
+import { germanyMatchesCsvUrl, germanyMatchesReviewGeojsonUrl } from '../lib/paths'
 import {
   SCHOOLS_MATCH_CSV_COLUMNS,
   SCHOOLS_MATCH_CSV_DOWNLOAD_FILE_NAME,
 } from '../lib/schoolsMatchCsv'
+import { SCHOOLS_MATCH_REVIEW_GEOJSON_DOWNLOAD_FILE_NAME } from '../lib/schoolsMatchReviewGeojson'
 import { summaryQueryOptions } from '../lib/sharedDatasetQueries'
 import { STATE_MATCH_CATEGORIES } from '../lib/stateMatchCategories'
 import { StatusDateTime } from '../lib/statusDateTime'
@@ -52,6 +54,8 @@ export function DownloadPage() {
     retry: 1,
   })
   const rowCount = q.data?.states ? germanyRowCount(q.data.states) : null
+  // Editors fetch the file themselves, so they need an absolute URL.
+  const reviewFileUrl = new URL(germanyMatchesReviewGeojsonUrl(), window.location.origin).toString()
 
   return (
     <div className="mx-auto max-w-5xl px-4 pt-6 pb-16">
@@ -89,6 +93,40 @@ export function DownloadPage() {
             className={csvButtonClass}
           >
             {t.csvLink}
+          </a>
+        </p>
+      </section>
+
+      <section className="mt-10" aria-labelledby="download-review-heading">
+        <h2 id="download-review-heading" className={headingClass}>
+          {t.reviewHeading}
+        </h2>
+        <p className={sectionLeadClass}>{t.reviewLead}</p>
+        <p className={sectionLeadClass}>{t.reviewNote}</p>
+        <p className={sectionLeadClass}>{t.reviewJosmHint}</p>
+        <p className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+          <a
+            href={germanyMatchesReviewGeojsonUrl()}
+            download={SCHOOLS_MATCH_REVIEW_GEOJSON_DOWNLOAD_FILE_NAME}
+            className={csvButtonClass}
+          >
+            {t.reviewDownloadLink}
+          </a>
+          <a
+            href={buildIdUrlForGeojson(reviewFileUrl)}
+            className={bodyLinkClass}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {t.reviewIdLink}
+          </a>
+          <a
+            href={buildJosmImportUrl(reviewFileUrl, t.reviewJosmLayerName)}
+            className={bodyLinkClass}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {t.reviewJosmLink}
           </a>
         </p>
       </section>

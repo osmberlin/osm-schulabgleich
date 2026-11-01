@@ -9,14 +9,19 @@ import {
   stringifySchoolsMatchCsvBatches,
   type SchoolsMatchCsvBatch,
 } from '../../src/lib/schoolsMatchCsv'
+import {
+  SCHOOLS_MATCH_REVIEW_GEOJSON_FILE_NAME,
+  buildSchoolsMatchReviewGeojson,
+} from '../../src/lib/schoolsMatchReviewGeojson'
 import { STATE_ORDER } from '../../src/lib/stateConfig'
 import { datasetsDir } from './pipelineCommon'
 
 /**
- * Build `public/datasets/schools_matches.csv` from every Land's match JSON.
+ * Build the Germany-wide `public/datasets/schools_matches.csv` and `schools_matches_review.geojson`
+ * from every Land's match JSON (each detail file is read once).
  * Also deletes leftover per-Land CSV files from earlier pipeline versions.
  */
-export async function writeGermanySchoolsMatchCsv(projectRoot: string): Promise<void> {
+export async function writeGermanySchoolsMatchFiles(projectRoot: string): Promise<void> {
   const root = datasetsDir(projectRoot)
   const batches: SchoolsMatchCsvBatch[] = []
 
@@ -42,5 +47,9 @@ export async function writeGermanySchoolsMatchCsv(projectRoot: string): Promise<
   await Bun.write(
     path.join(root, SCHOOLS_MATCH_CSV_FILE_NAME),
     stringifySchoolsMatchCsvBatches(batches),
+  )
+  await Bun.write(
+    path.join(root, SCHOOLS_MATCH_REVIEW_GEOJSON_FILE_NAME),
+    JSON.stringify(buildSchoolsMatchReviewGeojson(batches)),
   )
 }

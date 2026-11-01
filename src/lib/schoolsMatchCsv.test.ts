@@ -52,7 +52,7 @@ describe('mapSchoolsMatchRowToCsvRecord', () => {
     const row = parseRow({
       matchMode: 'distance_and_name',
       distanceMeters: 32,
-      distanceCheck: { level: 'ok' },
+      distanceCheck: 'ok',
       osmLastEditedAt: '2025-03-04T10:11:12Z',
       hasArea: true,
       osmCentroidLon: 13.4,

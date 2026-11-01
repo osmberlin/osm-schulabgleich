@@ -3,6 +3,7 @@ import path from 'node:path'
 import { BUNDESLAND_OFFICIAL_SOURCES } from '../../src/lib/bundeslandOfficialSources'
 import { isOsmLicenceCompatibleForTagFix } from '../../src/lib/maprouletteAvailability'
 import { maprouletteTagFixesPublicUrl } from '../../src/lib/maprouletteIds.const'
+import type { MatchDistanceLevel } from '../../src/lib/matchDistanceCheck'
 import { schoolsMatchRowSchema, schoolsMatchesDetailEnvelopeSchema } from '../../src/lib/schemas'
 import { type StateCode, STATE_ORDER } from '../../src/lib/stateConfig'
 import {
@@ -45,6 +46,7 @@ export function pickMaprouletteTagFixTaskFromRow(input: {
   osmTags: Record<string, string> | null | undefined
   osmCentroidLon?: number | null
   osmCentroidLat?: number | null
+  distanceCheck?: MatchDistanceLevel
   taskUpdatedAt: string
 }): MaprouletteTagFixTaskFeatureCollection | null {
   const category = input.category ?? null
@@ -54,7 +56,8 @@ export function pickMaprouletteTagFixTaskFromRow(input: {
     osmCentroidLat: input.osmCentroidLat,
   }
 
-  if (input.licenceOk && category === 'matched') {
+  // A match rated `error` is probably wrong: never suggest official data for that OSM object.
+  if (input.licenceOk && category === 'matched' && input.distanceCheck !== 'error') {
     const point = maprouletteTaskPointLonLat(pointRow)
     if (point) {
       const official = buildMaprouletteTagFixTask({
@@ -148,6 +151,7 @@ export async function writeMaprouletteSchoolTagFixes(
         osmTags: row.osmTags ?? null,
         osmCentroidLon: row.osmCentroidLon,
         osmCentroidLat: row.osmCentroidLat,
+        distanceCheck: row.distanceCheck,
         taskUpdatedAt,
       })
       if (!task) continue
