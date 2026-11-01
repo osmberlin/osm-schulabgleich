@@ -1,6 +1,6 @@
 # OSM Schulabgleich
 
-Vergleicht pro Bundesland Schulstammdaten von [jedeschule.codefor.de](https://jedeschule.codefor.de) mit OSM (`amenity=school`, `education=school`, `amenity=college` und `education=college`; je **Knoten**, **Weg** und **Relation** in einem Overpass-Lauf mit `out geom`).
+Vergleicht pro Bundesland Schulstammdaten von [jedeschule.codefor.de](https://jedeschule.codefor.de) mit OSM (`amenity=school`, `education=school`, `amenity=college` und `education=college`; je **Knoten**, **Weg** und **Relation** in einem Overpass-Lauf mit `out meta geom`).
 
 Die zentrale CSV kommt von [jedeschule.codefor.de](https://jedeschule.codefor.de) ([Projekt](https://codefor.de/projekte/jedeschule-2/), [csv-data](https://jedeschule.codefor.de/csv-data/)); die CI trennt **Daten-Refresh** und **Deploy**:
 
@@ -30,6 +30,16 @@ bun run pipeline
 CSV-URL: `scripts/lib/jedeschuleDumpConfig.ts`. Optional lokal: `public/datasets/jedeschule-latest.csv` (`.gitignore`). Meta in `schools_official_de.meta.json` u. a. `generatedAt`, HTTP-Header, SHA-256, `update_timestamp`, `upstreamDatasetChanged`.
 
 Download-Orchestrierung: `Bun.spawn` (beide Quellen parallel); der Parent prüft danach beide Meta-Dateien.
+
+### Abstandsprüfung gematchter Schulen
+
+Für jede gematchte Zeile mit amtlichem Punkt wird der Abstand zum OSM-Schwerpunkt berechnet (`distanceMeters`, in allen Match-Modi). Die Pipeline bewertet ihn und speichert das Ergebnis als `distanceCheck.level` an der Zeile (`src/lib/matchDistanceCheck.ts`):
+
+- `ok`: bis 400 m (oder kein Abstand). Das liegt über der Größe eines einzelnen Schulgeländes: Bei 99,9 % der OSM-Schulflächen (Wege) sind es höchstens 353 m vom Schwerpunkt zum Rand.
+- `accepted`: über 400 m, aber die Zuordnung ist über `ref` eindeutig und das OSM-Objekt wurde höchstens 2 Jahre vor dem OSM-Snapshot zuletzt bearbeitet.
+- `hint`: über 400 m bis 1 km, `error`: über 1 km.
+
+Das Bearbeitungsdatum (`osmLastEditedAt`) kommt aus dem Overpass-Zeitstempel des Elements (`out meta geom`, als `_pipelineOsmTimestamp`). Andere Metadaten (Nutzer, UID, Changeset, Version) werden nicht gespeichert. Ältere gecachte GeoJSON-Stände ohne Zeitstempel gelten als „unbekannt“. Bezugszeit ist `overpassResponseTimestamp`, nicht die aktuelle Uhrzeit.
 
 ## Bundesland-Grenzen
 

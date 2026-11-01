@@ -52,6 +52,8 @@ describe('mapSchoolsMatchRowToCsvRecord', () => {
     const row = parseRow({
       matchMode: 'distance_and_name',
       distanceMeters: 32,
+      distanceCheck: { level: 'ok' },
+      osmLastEditedAt: '2025-03-04T10:11:12Z',
       hasArea: true,
       osmCentroidLon: 13.4,
       osmCentroidLat: 52.5,
@@ -98,6 +100,8 @@ describe('mapSchoolsMatchRowToCsvRecord', () => {
     expect(rec.category).toBe('matched')
     expect(rec.match_mode).toBe('distance_and_name')
     expect(rec.distance_meters).toBe('32')
+    expect(rec.distance_check).toBe('ok')
+    expect(rec.osm_last_edited_at).toBe('2025-03-04T10:11:12Z')
     expect(rec.key).toBe('match-BE-03P11')
     expect(rec.detail_url).toBe(`${GITHUB_PAGES_SITE_ROOT}/bundesland/BE/schule/match-BE-03P11`)
     expect(rec.official_id).toBe('BE-03P11')

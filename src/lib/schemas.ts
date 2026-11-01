@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { MATCH_DISTANCE_LEVELS } from './matchDistanceCheck'
 import { OSM_SCHOOL_NAME_TAGS_IN_ORDER } from './osmNameMatchTags'
 
 const schoolKindDeSourceSchema = z.enum([
@@ -105,6 +106,10 @@ export const schoolsMatchRowSchema = z
     osmCentroidLon: z.number().nullable().optional(),
     osmCentroidLat: z.number().nullable().optional(),
     distanceMeters: z.number().nullable(),
+    /** Letzte Bearbeitung des OSM-Objekts (ISO). Fehlt in älteren Datenständen: dann unbekannt. */
+    osmLastEditedAt: z.string().nullable().optional(),
+    /** Bewertung des Abstands (Pipeline, Referenzzeit = OSM-Snapshot). */
+    distanceCheck: z.object({ level: z.enum(MATCH_DISTANCE_LEVELS) }).optional(),
     osmName: z.string().nullable(),
     osmTags: z.record(z.string(), z.string()).nullable().optional(),
     ambiguousOfficialIds: z.array(z.string()).optional(),

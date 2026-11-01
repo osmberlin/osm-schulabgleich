@@ -1,8 +1,9 @@
 import { ChevronRightIcon } from '@heroicons/react/20/solid'
 import { Link } from '@tanstack/react-router'
 import { de } from '../../i18n/de'
-import { formatDeInteger } from '../../lib/formatNumber'
+import { formatDeInteger, formatDistanceDe } from '../../lib/formatNumber'
 import { formatMatchRowListId } from '../../lib/formatOsmRef'
+import type { MatchDistanceLevel } from '../../lib/matchDistanceCheck'
 import { matchRowDisplayName } from '../../lib/matchRowInBbox'
 import type { StateMatchCategory } from '../../lib/stateMatchCategories'
 import { CategoryLegendSwatch } from '../CategoryLegendSwatch'
@@ -26,6 +27,14 @@ type ListMatchRow = {
     | 'address'
     | 'ref'
   distanceMeters: number | null
+  distanceCheck?: { level: MatchDistanceLevel }
+}
+
+const DISTANCE_CLASS_BY_LEVEL: Record<MatchDistanceLevel, string> = {
+  ok: 'text-zinc-400',
+  accepted: 'text-zinc-400',
+  hint: 'text-sky-300',
+  error: 'font-medium text-red-300',
 }
 
 export function StateOverviewMatchList({
@@ -111,10 +120,12 @@ export function StateOverviewMatchList({
                             </p>
                           )}
                           {row.distanceMeters != null && (
-                            <p className="text-right text-xs/5 text-zinc-400 tabular-nums">
+                            <p
+                              className={`text-right text-xs/5 tabular-nums ${DISTANCE_CLASS_BY_LEVEL[row.distanceCheck?.level ?? 'ok']}`}
+                            >
                               {de.state.tableDistanceAway.replace(
-                                '{meters}',
-                                formatDeInteger(row.distanceMeters),
+                                '{distance}',
+                                formatDistanceDe(row.distanceMeters),
                               )}
                             </p>
                           )}

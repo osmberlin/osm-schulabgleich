@@ -10,6 +10,7 @@ import {
   matchSchools as matchSchoolsRaw,
   normalizeSchoolNameForMatch,
   normalizedOsmNameVariantMap,
+  buildOsmSchoolsFromGeoJson,
   osmDisplayNameCandidatesFromTags,
   primaryOsmDisplayNameFromTags,
   type OfficialInput,
@@ -196,7 +197,9 @@ describe('matchSchools', () => {
     expect(m).toHaveLength(1)
     expect(m[0]!.officialId).toBe('BE-a')
     expect(m[0]!.matchMode).toBe('name')
-    expect(m[0]!.distanceMeters).toBeNull()
+    // Outside the radius, but the official record has coordinates: distance is still filled by the post-pass.
+    expect(m[0]!.distanceMeters).toBeGreaterThan(30_000)
+    expect(m[0]!.distanceMeters).toBeLessThan(40_000)
     expect(MATCH_RADIUS_KM).toBe(0.15)
   })
 
@@ -1032,5 +1035,126 @@ describe('normalizeSchoolNameForMatch', () => {
   it('returns empty for nullish', () => {
     expect(normalizeSchoolNameForMatch(null)).toBe('')
     expect(normalizeSchoolNameForMatch(undefined)).toBe('')
+  })
+})
+
+describe('matchSchools distance and OSM edit date post-pass', () => {
+  const officialFar: OfficialInput = {
+    id: 'BE-far',
+    name: 'Weit Weg Schule',
+    lon: 13.4,
+    lat: 52.52,
+    properties: { id: 'BE-far', website: 'https://weit-weg.example' },
+  }
+  const osmBase: OsmSchoolInput = {
+    osmType: 'way',
+    osmId: '900',
+    name: 'Weit Weg Schule',
+    tags: { amenity: 'school', name: 'Weit Weg Schule' },
+    geometry: { type: 'Point', coordinates: [13.43, 52.52] },
+    // ~2 km east of the official point: far outside the 150 m radius
+    centroid: [13.43, 52.52],
+  }
+
+  it('fills distanceMeters for a name match outside the radius when the official has coordinates', () => {
+    const { rows } = matchSchools([officialFar], [osmBase], landOpts(osmBase, 'BE'))
+    const m = rows.filter((r) => r.category === 'matched')
+    expect(m).toHaveLength(1)
+    expect(m[0]!.matchMode).toBe('name')
+    expect(m[0]!.distanceMeters).toBeGreaterThan(1900)
+    expect(m[0]!.distanceMeters).toBeLessThan(2100)
+    expect(Number.isInteger(m[0]!.distanceMeters)).toBe(true)
+  })
+
+  it('fills distanceMeters for a website match with coordinates', () => {
+    const osmWebsite: OsmSchoolInput = {
+      ...osmBase,
+      name: 'Ganz Anders',
+      tags: { amenity: 'school', name: 'Ganz Anders', website: 'https://weit-weg.example' },
+    }
+    const { rows } = matchSchools([officialFar], [osmWebsite], landOpts(osmWebsite, 'BE'))
+    const m = rows.filter((r) => r.category === 'matched')
+    expect(m).toHaveLength(1)
+    expect(m[0]!.matchMode).toBe('website')
+    expect(m[0]!.distanceMeters).toBeGreaterThan(1900)
+  })
+
+  it('keeps distanceMeters null when the official record has no coordinates', () => {
+    const noCoord: OfficialInput = {
+      ...officialFar,
+      lon: Number.NaN,
+      lat: Number.NaN,
+    }
+    const { rows } = matchSchools([noCoord], [osmBase], landOpts(osmBase, 'BE'))
+    const m = rows.filter((r) => r.category === 'matched')
+    expect(m).toHaveLength(1)
+    expect(m[0]!.distanceMeters).toBeNull()
+  })
+
+  it('keeps the distance computed by the distance and ref passes', () => {
+    const near: OsmSchoolInput = {
+      ...osmBase,
+      centroid: [13.4005, 52.52],
+      geometry: { type: 'Point', coordinates: [13.4005, 52.52] },
+    }
+    const { rows } = matchSchools([officialFar], [near], landOpts(near, 'BE'))
+    const m = rows.filter((r) => r.category === 'matched')
+    expect(m[0]!.matchMode).toBe('distance')
+    expect(m[0]!.distanceMeters).toBeLessThan(50)
+  })
+
+  it('copies the OSM edit date to rows with an OSM object, null when unknown', () => {
+    const edited: OsmSchoolInput = { ...osmBase, lastEditedAt: '2025-03-04T10:11:12Z' }
+    const unknown: OsmSchoolInput = {
+      ...osmBase,
+      osmId: '901',
+      name: 'Nur OSM',
+      tags: { amenity: 'school', name: 'Nur OSM' },
+      centroid: [8.0, 50.0],
+      geometry: { type: 'Point', coordinates: [8.0, 50.0] },
+    }
+    const osmStateByKey = new Map<string, StateCode>([
+      ['way/900', 'BE'],
+      ['way/901', 'BE'],
+    ])
+    const lonely: OfficialInput = {
+      id: 'BE-lonely',
+      name: 'Nur Amtlich',
+      lon: 13.9,
+      lat: 52.9,
+      properties: { id: 'BE-lonely' },
+    }
+    const { rows } = matchSchools([officialFar, lonely], [edited, unknown], { osmStateByKey })
+    expect(rows.find((r) => r.osmId === '900')?.osmLastEditedAt).toBe('2025-03-04T10:11:12Z')
+    expect(rows.find((r) => r.osmId === '901')?.osmLastEditedAt).toBeNull()
+    expect(rows.find((r) => r.category === 'official_only')?.osmLastEditedAt).toBeUndefined()
+  })
+})
+
+describe('buildOsmSchoolsFromGeoJson', () => {
+  const feature = (properties: Record<string, unknown>) => ({
+    type: 'Feature' as const,
+    id: 'way/5',
+    properties,
+    geometry: { type: 'Point' as const, coordinates: [13.4, 52.5] },
+  })
+
+  it('reads lastEditedAt from _pipelineOsmTimestamp and keeps it out of the tags', () => {
+    const [o] = buildOsmSchoolsFromGeoJson({
+      type: 'FeatureCollection',
+      features: [
+        feature({ amenity: 'school', name: 'A', _pipelineOsmTimestamp: '2025-03-04T10:11:12Z' }),
+      ],
+    })
+    expect(o!.lastEditedAt).toBe('2025-03-04T10:11:12Z')
+    expect(o!.tags).toEqual({ amenity: 'school', name: 'A' })
+  })
+
+  it('treats old cached GeoJSON without a timestamp as unknown', () => {
+    const [o] = buildOsmSchoolsFromGeoJson({
+      type: 'FeatureCollection',
+      features: [feature({ amenity: 'school', name: 'A' })],
+    })
+    expect(o!.lastEditedAt).toBeNull()
   })
 })

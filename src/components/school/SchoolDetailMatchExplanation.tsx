@@ -128,15 +128,5 @@ function matchExplanationBody(row: StateSchoolsMatchRow): ReactNode {
 export function SchoolDetailMatchExplanation({ row }: { row: StateSchoolsMatchRow }) {
   if (row.category !== 'matched') return null
 
-  return (
-    <p className="mb-6 text-sm leading-relaxed text-zinc-400">
-      {matchExplanationBody(row)}
-      {row.distanceMeters != null && row.matchMode !== 'distance' && (
-        <>
-          {' \u00B7 '}
-          {de.detail.abstand}: {formatDeInteger(row.distanceMeters)} m
-        </>
-      )}
-    </p>
-  )
+  return <p className="mb-6 text-sm leading-relaxed text-zinc-400">{matchExplanationBody(row)}</p>
 }

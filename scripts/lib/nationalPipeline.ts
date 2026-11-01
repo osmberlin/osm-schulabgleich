@@ -5,6 +5,7 @@ import { feature, featureCollection, point } from '@turf/helpers'
 import simplify from '@turf/simplify'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import { berlinCalendarDateKey } from '../../src/lib/berlinCalendarDateKey'
+import { classifyMatchDistance } from '../../src/lib/matchDistanceCheck'
 import { promoteClosedLineStringsToPolygons } from '../../src/lib/osmClosedRingsToPolygons'
 import { centroidFromOsmGeometry } from '../../src/lib/osmGeometryCentroid'
 import { parseRunHistoryFileText, stringifyRunHistoryJsonl } from '../../src/lib/runHistoryJsonl'
@@ -349,6 +350,23 @@ function enrichRowsWithPipelineState(
     }
     return state ? { ...r, pipelineState: state } : { ...r }
   })
+}
+
+/** Rates the official ↔ OSM distance of matched rows against the OSM snapshot time (not the clock at render time). */
+function enrichRowsWithDistanceCheck(rows: MatchRowOut[], referenceDate: Date): MatchRowOut[] {
+  return rows.map((row) =>
+    row.category === 'matched' && row.distanceMeters != null
+      ? {
+          ...row,
+          distanceCheck: classifyMatchDistance({
+            distanceMeters: row.distanceMeters,
+            matchMode: row.matchMode,
+            osmLastEditedAt: row.osmLastEditedAt,
+            referenceDate,
+          }),
+        }
+      : row,
+  )
 }
 
 function enrichRowsWithSchoolFormClassification(rows: MatchRowOut[]): MatchRowOut[] {
@@ -730,6 +748,11 @@ export async function runStateFirstPipeline(
   }
 
   const overlay = await loadOfficialGeocodeOverlay(projectRoot)
+  // "Recently edited" is measured against the OSM snapshot, so a rebuild on cached data stays reproducible.
+  const snapshotDate = new Date(osmMeta?.overpassResponseTimestamp ?? Number.NaN)
+  const distanceCheckReferenceDate = Number.isNaN(snapshotDate.getTime())
+    ? new Date()
+    : snapshotDate
 
   for (const code of codesToProcess) {
     const officialFcState = officialGeojsonForState(schools, code)
@@ -746,7 +769,10 @@ export async function runStateFirstPipeline(
     const osmStateByKey = buildOsmStateMap(osmStateFc)
     const { rows } = matchSchools(deduped.officials, osmSchools, { osmStateByKey })
     const enriched = enrichRowsWithSchoolFormClassification(
-      enrichRowsWithPipelineState(rows, osmStateByKey),
+      enrichRowsWithDistanceCheck(
+        enrichRowsWithPipelineState(rows, osmStateByKey),
+        distanceCheckReferenceDate,
+      ),
     )
 
     const canonicalOfficialIds = new Set(deduped.officials.map((o) => o.id))

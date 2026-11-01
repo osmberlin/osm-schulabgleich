@@ -23,6 +23,7 @@ import type {
 } from '../../src/lib/schoolFormRules'
 import type { StateCode } from '../../src/lib/stateConfig'
 import { officialStateCode } from '../../src/lib/stateConfig'
+import { OSM_TIMESTAMP_PIPELINE_PROP } from './osmOverpassMeta'
 
 export { centroidFromOsmGeometry } from '../../src/lib/osmGeometryCentroid'
 export { MATCH_RADIUS_KM }
@@ -112,6 +113,8 @@ export type OsmSchoolInput = {
   tags: Record<string, string>
   geometry: Geometry | null
   centroid: [number, number]
+  /** OSM element `timestamp` (last edit). `null`/missing = unknown (older cached GeoJSON has none). */
+  lastEditedAt?: string | null
 }
 
 /** Official record snapshot per ambiguous candidate (stored with the match; even if the ID is absent from state GeoJSON). */
@@ -143,7 +146,10 @@ export type MatchRowOut = {
   /** OSM geometry centroid [lon, lat]; distance vs official data uses this point. */
   osmCentroidLon: number | null
   osmCentroidLat: number | null
+  /** Official point ↔ OSM centroid; set for every `matched` row whose official record has coordinates. */
   distanceMeters: number | null
+  /** Last edit of the OSM object (ISO); `null` when unknown. Only on rows that have an OSM object. */
+  osmLastEditedAt?: string | null
   osmName: string | null
   osmTags: Record<string, string> | null
   /** Canonical German Schulart from `school` / `school:de` (see `canonicalSchoolKindDe`). */
@@ -339,6 +345,7 @@ export function buildOsmSchoolsFromGeoJson(fc: FeatureCollection): OsmSchoolInpu
     const c = centroidFromOsmGeometry(f.geometry)
     if (!osmId && p.id != null) osmId = String(p.id)
     if (!osmId) continue
+    const editedRaw = p[OSM_TIMESTAMP_PIPELINE_PROP]
     out.push({
       osmType,
       osmId,
@@ -346,6 +353,7 @@ export function buildOsmSchoolsFromGeoJson(fc: FeatureCollection): OsmSchoolInpu
       tags,
       geometry: f.geometry,
       centroid: c,
+      lastEditedAt: typeof editedRaw === 'string' && editedRaw !== '' ? editedRaw : null,
     })
   }
   return out
@@ -460,6 +468,34 @@ function extractRefMatches(
   }
 
   return { refRows, consumedOsmKeys, reservedOfficialIds }
+}
+
+/**
+ * One post-pass for all match modes: `distanceMeters` for every `matched` row whose official record has
+ * coordinates (name/website/address fallbacks have none from the pass itself), and `osmLastEditedAt` on rows with an OSM object.
+ */
+function fillMatchedDistancesAndOsmEditDates(
+  rows: MatchRowOut[],
+  withCoord: OfficialInput[],
+  osmSchools: OsmSchoolInput[],
+) {
+  const officialById = new Map(withCoord.map((off) => [off.id, off] as const))
+  const lastEditedByOsmKey = new Map(
+    osmSchools.map((o) => [osmSchoolInputKey(o), o.lastEditedAt ?? null] as const),
+  )
+  for (const row of rows) {
+    if (row.osmType != null && row.osmId != null) {
+      row.osmLastEditedAt = lastEditedByOsmKey.get(`${row.osmType}/${row.osmId}`) ?? null
+    }
+    if (row.category !== 'matched' || row.distanceMeters != null) continue
+    const off = row.officialId != null ? officialById.get(row.officialId) : undefined
+    if (!off || row.osmCentroidLon == null || row.osmCentroidLat == null) continue
+    row.distanceMeters = Math.round(
+      distance(point([off.lon, off.lat]), point([row.osmCentroidLon, row.osmCentroidLat]), {
+        units: 'kilometers',
+      }) * 1000,
+    )
+  }
 }
 
 export function matchSchools(
@@ -1090,6 +1126,8 @@ export function matchSchools(
       ...schoolKindFromOsmTags(null),
     })
   }
+
+  fillMatchedDistancesAndOsmEditDates(rows, withCoord, osmSchools)
 
   const officialNoCoordCount = rows.filter((r) => r.category === 'official_no_coord').length
   return { rows, officialNoCoordCount }

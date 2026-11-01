@@ -121,7 +121,17 @@ export const SCHOOLS_MATCH_CSV_COLUMNS = [
   {
     header: 'distance_meters',
     descriptionDe:
-      'Abstand in Metern zwischen amtlichem Punkt und OSM-Schwerpunkt. Nur bei gematchten Zeilen.',
+      'Abstand in Metern zwischen amtlichem Punkt und OSM-Schwerpunkt. Nur bei gematchten Zeilen, bei denen beide Punkte bekannt sind.',
+  },
+  {
+    header: 'distance_check',
+    descriptionDe:
+      'Bewertung des Abstands: ok (bis 400 m), accepted (über 400 m, aber eindeutig über ref zugeordnet und das OSM-Objekt wurde in den letzten 2 Jahren vor dem OSM-Stand bearbeitet), hint (über 400 m bis 1 km) oder error (über 1 km). Leer ohne Abstand.',
+  },
+  {
+    header: 'osm_last_edited_at',
+    descriptionDe:
+      'Zeitpunkt der letzten Bearbeitung des OSM-Objekts (ISO 8601, UTC). Leer, wenn die Zeile kein OSM-Objekt hat oder der Zeitpunkt unbekannt ist.',
   },
   {
     header: 'key',
@@ -332,6 +342,8 @@ export function mapSchoolsMatchRowToCsvRecord(
     category: row.category,
     match_mode: csvCell(row.matchMode),
     distance_meters: csvCell(row.distanceMeters),
+    distance_check: csvCell(row.distanceCheck?.level),
+    osm_last_edited_at: csvCell(row.osmLastEditedAt),
     key: row.key,
     detail_url: schoolsMatchDetailUrl(parsedOptions.bundesland, row.key),
     official_id: csvCell(row.officialId),

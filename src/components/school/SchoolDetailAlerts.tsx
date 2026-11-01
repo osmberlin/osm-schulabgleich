@@ -115,6 +115,47 @@ export function SchoolDetailNominatimCoordAlert({
   )
 }
 
+/** `hint` = sky, `error` = red; `reason` explains why the distance is not accepted as is. */
+export function SchoolDetailDistanceAlert({
+  level,
+  distanceLabel,
+  reason,
+}: {
+  level: 'hint' | 'error'
+  distanceLabel: string
+  reason: string
+}) {
+  const isError = level === 'error'
+  return (
+    <SchoolDetailAlertCard
+      toneClassName={
+        isError ? 'bg-red-500/10 outline-red-500/25' : 'bg-sky-500/10 outline-sky-500/25'
+      }
+      titleId="school-detail-distance-alert-title"
+      title={isError ? de.detail.distanceErrorTitle : de.detail.distanceHintTitle}
+      icon={
+        isError ? (
+          <ExclamationTriangleIcon aria-hidden className="size-5 text-red-400" />
+        ) : (
+          <InformationCircleIcon aria-hidden className="size-5 text-sky-400" />
+        )
+      }
+    >
+      <div className={`mt-2 text-sm ${isError ? 'text-red-100/85' : 'text-sky-100/85'}`}>
+        <p className="leading-relaxed">
+          {(isError ? de.detail.distanceErrorBody : de.detail.distanceHintBody).replace(
+            '{distance}',
+            distanceLabel,
+          )}
+        </p>
+        <p className="mt-2 leading-relaxed">
+          <InlineMarkdown>{reason}</InlineMarkdown>
+        </p>
+      </div>
+    </SchoolDetailAlertCard>
+  )
+}
+
 export function SchoolDetailMaprouletteCreateAlert({
   stateKey,
   category,

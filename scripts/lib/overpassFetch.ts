@@ -2,6 +2,7 @@ import { featureCollection } from '@turf/helpers'
 import type { Feature, FeatureCollection } from 'geojson'
 import osm2geojson from 'osm2geojson-ultra'
 import { z } from 'zod'
+import { attachOsmTimestampsFromOverpass } from './osmOverpassMeta'
 import { injectSchoolSiteRelationsFromOverpass } from './osmOverpassSchoolSites'
 
 const INTERPRETERS = [
@@ -40,7 +41,7 @@ area(${aid})->.de;
   way["education"="college"](area.de);
   relation["education"="college"](area.de);
 );
-out geom;
+out meta geom;
 `.trim()
 }
 
@@ -126,9 +127,14 @@ async function fetchSchoolsOsmOverpassQuery(query: string): Promise<OverpassOk> 
         attemptErrors.push(`Overpass ${url}: osm2geojson-ultra unexpected GeoJSON root type`)
         continue
       }
-      const gj = injectSchoolSiteRelationsFromOverpass(
+      // `out meta` adds user/uid/changeset/version: keep only the timestamp (before site relations are injected).
+      const gjWithTimestamps = attachOsmTimestampsFromOverpass(
         parsed.data as { elements?: unknown[] },
         gjRaw,
+      )
+      const gj = injectSchoolSiteRelationsFromOverpass(
+        parsed.data as { elements?: unknown[] },
+        gjWithTimestamps,
       )
       const ts =
         typeof raw === 'object' && raw != null && 'osm3s' in raw

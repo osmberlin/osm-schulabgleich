@@ -13,6 +13,7 @@ import { SchoolDetailAmbiguousCandidateItem } from '../components/school/SchoolD
 import { SchoolDetailCompareBody } from '../components/school/SchoolDetailCompareBody'
 import { SchoolDetailLicenceWarnings } from '../components/school/SchoolDetailLicence'
 import { SchoolDetailMapSection } from '../components/school/SchoolDetailMapSection'
+import { SchoolDetailMatchDistance } from '../components/school/SchoolDetailMatchDistance'
 import { SchoolDetailMatchExplanation } from '../components/school/SchoolDetailMatchExplanation'
 import { SchoolOsmSuggestBlocks } from '../components/school/SchoolOsmSuggestBlocks'
 import { de } from '../i18n/de'
@@ -176,6 +177,8 @@ export function SchoolDetail() {
           <SchoolDetailJedeschuleDuplicateGroupNote
             officialProperties={matchRow.officialProperties ?? null}
           />
+
+          <SchoolDetailMatchDistance row={matchRow} />
 
           <SchoolOsmSuggestBlocks
             row={matchRow}

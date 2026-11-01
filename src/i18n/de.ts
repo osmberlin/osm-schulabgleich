@@ -270,7 +270,8 @@ export const de = {
     name: 'Name',
     distance: 'Entfernung (m)',
     detail: 'Details',
-    tableDistanceAway: '{meters} m entfernt',
+    /** `{distance}` z. B. `36 m` oder `2,4 km` */
+    tableDistanceAway: '{distance} entfernt',
     legendRowAria: 'Kategorien — Legende und Kartenfilter',
     mapNoVisibleCategories:
       'Keine Kategorie ausgewählt. Aktiviere mindestens eine Kategorie in der Legende oben.',
@@ -397,6 +398,24 @@ export const de = {
     licenceResearchOnlyDisclaimer:
       'Dieser Abgleich darf daher nur als Basis für eine eigene Recherche genutzt werden.',
     abstand: 'Abstand',
+    distanceLabel: 'Abstand amtlicher Punkt – OSM',
+    /** `{date}` z. B. `4.3.2025` */
+    distanceAcceptedNote:
+      'Größerer Abstand, für uns in Ordnung: Die Zuordnung ist über `ref` eindeutig und das OSM-Objekt wurde zuletzt am {date} bearbeitet, also innerhalb der letzten 2 Jahre.',
+    distanceHintTitle: 'Abstand über 400 m',
+    /** `{distance}` z. B. `2,4 km` */
+    distanceHintBody:
+      'Amtlicher Punkt und OSM-Objekt liegen {distance} auseinander. Das kommt vor, zum Beispiel bei mehreren Standorten oder großen Geländen. Prüfe die Zuordnung, wenn du hier mappst.',
+    distanceErrorTitle: 'Abstand über 1 km: bitte prüfen',
+    distanceErrorBody:
+      'Amtlicher Punkt und OSM-Objekt liegen {distance} auseinander. Wahrscheinlich stimmt hier etwas nicht: Zuordnung, Koordinaten oder eines der beiden Objekte.',
+    /** `{modeLabel}` aus `matchModeLabel` */
+    distanceReasonNotRef:
+      'Größere Abstände akzeptieren wir nur bei einer eindeutigen Zuordnung über `ref`. Diese Zuordnung beruht auf {modeLabel}.',
+    distanceReasonRefOld:
+      'Die Zuordnung über `ref` ist eindeutig, aber das OSM-Objekt wurde zuletzt am {date} bearbeitet, also vor mehr als 2 Jahren.',
+    distanceReasonRefUnknown:
+      'Die Zuordnung über `ref` ist eindeutig, aber das letzte Bearbeitungsdatum des OSM-Objekts ist nicht bekannt.',
     officialCoordsMissing: 'Koordinaten fehlen',
     officialCoordsOutsideBoundaryTitle: 'Amtliche Geoposition außerhalb des Bundeslandes',
     officialCoordsOutsideBoundaryBody:
