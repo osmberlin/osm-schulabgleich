@@ -33,11 +33,17 @@ export default defineConfig({
   /** Custom domain is subdomain root (`schulabgleich.osm-verkehrswende.org`), not `/repo/`. */
   base: '/',
   plugins: [tailwindcss(), viteReact({ compiler: true }), spaGithubPages404()],
+  /**
+   * Always 127.0.0.1, never localhost: the OSM OAuth redirect is
+   * `http://127.0.0.1:5174/osm-oauth-land.html` and the login works on that origin only.
+   * HMR is pinned to the same host so the page and its websocket never end up on localhost.
+   */
+  preview: { host: '127.0.0.1', port: 5174, strictPort: true },
   server: {
     port: 5174,
     strictPort: true,
-    /** Use 127.0.0.1 so OSM OAuth redirect can be `http://127.0.0.1:5174/osm-oauth-land.html`. */
     host: '127.0.0.1',
+    hmr: { protocol: 'ws', host: '127.0.0.1', port: 5174, clientPort: 5174 },
     fs: {
       // Bun globalStore realpaths packages into ~/.bun/install/cache/links (Fontsource woff2).
       // Extend defaults — do not replace the workspace root.
