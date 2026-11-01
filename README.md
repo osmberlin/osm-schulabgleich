@@ -75,7 +75,7 @@ GitHub Actions:
 - `.github/workflows/ci.yml`: PR-Verify (`check-ci` + Dependency Review).
 - `.github/workflows/data-refresh.yml`: geplanter/manueller Daten-Refresh, schreibt `datasets-last-good` (Artifact).
 - `.github/workflows/pages-deploy.yml`: Push-Deploy aus `datasets-last-good` + `pipeline:rebuild` + Pages-Deploy.
-- `.github/workflows/maproulette-rebuild.yml`: MapRoulette-Aufgaben neu aufbauen **nur** nach einem vollen Refresh Datasets (sobald Pages die neuen Feeds veröffentlicht hat). Code-Push- oder manuelle Pages-Deploys werden übersprungen (klare Skip-Meldung im Action-Log); `workflow_dispatch` bleibt für einen manuellen Rebuild.
+- `.github/workflows/maproulette-rebuild.yml`: MapRoulette-Aufgaben neu aufbauen **nur** nach einem vollen Refresh Datasets (sobald Pages die neuen Feeds veröffentlicht hat). Code-Push- oder manuelle Pages-Deploys werden übersprungen (klare Skip-Meldung im Action-Log); `workflow_dispatch` bleibt für einen manuellen Rebuild. **Pausiert:** MapRoulette hat API-Keys abgeschaltet, der automatische Trigger ist deaktiviert, bis es [Personal Access Tokens](https://github.com/maproulette/maproulette-backend/issues/1288) gibt; bis dahin werden die Kampagnen manuell auf maproulette.org aktualisiert.
 
 ## See also
 

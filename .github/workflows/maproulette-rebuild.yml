@@ -6,9 +6,12 @@ on:
   # We still listen to Deploy GitHub Pages, but only rebuild after a full
   # Refresh Datasets run (Pages triggered by workflow_run). Code-push and
   # manual Pages deploys skip — see skip-unless-full-refresh.
-  workflow_run:
-    workflows: ['Deploy GitHub Pages']
-    types: [completed]
+  # PAUSED: MapRoulette disabled API keys, so rebuilds fail with HTTP 401.
+  # Restore this trigger once personal access tokens exist:
+  # https://github.com/maproulette/maproulette-backend/issues/1288
+  # workflow_run:
+  #   workflows: ['Deploy GitHub Pages']
+  #   types: [completed]
 
 permissions:
   contents: read
