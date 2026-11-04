@@ -481,6 +481,17 @@ export async function runDownloadJedeschuleNational(projectRoot: string): Promis
         upstreamDatasetChanged: false,
       }
       await writeJson(pathMeta, meta)
+      // The stats file is not part of the restored inputs, so rebuild it from the cached CSV.
+      const { schools: cachedSchools } = filterJedeschuleSchoolsByRecency(
+        parseSchoolsFromCsvText(await cachedCsv.text(), 'jedeschule'),
+      )
+      await Bun.write(
+        pathStats,
+        serializeJedeschuleStatsCompact(
+          prevMeta.generatedAt ?? generatedAt,
+          buildJedeschuleStatsFromDump(cachedSchools),
+        ),
+      )
       console.warn('[pipeline:download:jedeschule] reused cached JedeSchule CSV')
       return
     }
