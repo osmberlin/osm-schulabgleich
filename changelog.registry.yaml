@@ -207,3 +207,7 @@ entries:
     descriptionMd: |
       Neue Prüfdatei auf [`/download`](/download): alle Schulen mit auffälligem Abstand als GeoJSON, mit amtlichem Punkt, OSM-Punkt, Verbindungslinie und Begründung. Die Datei lässt sich direkt in iD öffnen, oder in JOSM als gesperrte Ebene, die nicht hochgeladen werden kann.
       MapRoulette schlägt für Zuordnungen mit rotem Fehler keine amtlichen Daten mehr vor.
+  - refs:
+      - '94c27c77fa6df3967aa5981f808a1456da88ac50'
+    descriptionMd: |
+      Der nächtliche Datenabgleich läuft jetzt auch dann durch, wenn JedeSchule nicht erreichbar ist: Er nutzt die zuletzt geladenen amtlichen Daten weiter, statt abzubrechen.
