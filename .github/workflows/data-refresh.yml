@@ -55,7 +55,7 @@ jobs:
 
       - name: Download previous datasets artifact for source fallback
         if: steps.osm-meta-precheck.outputs.osm_ok != 'true' || steps.osm-meta-precheck.outputs.official_ok != 'true'
-        uses: dawidd6/action-download-artifact@v21
+        uses: dawidd6/action-download-artifact@v28
         with:
           workflow: data-refresh.yml
           branch: main
