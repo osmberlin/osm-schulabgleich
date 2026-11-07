@@ -211,3 +211,9 @@ entries:
       - '94c27c77fa6df3967aa5981f808a1456da88ac50'
     descriptionMd: |
       Der nächtliche Datenabgleich läuft jetzt auch dann durch, wenn JedeSchule nicht erreichbar ist: Er nutzt die zuletzt geladenen amtlichen Daten weiter, statt abzubrechen.
+  - refs:
+      - 'e96431e'
+    hide: true
+  - refs:
+      - '0f3bdf3'
+    hide: true
