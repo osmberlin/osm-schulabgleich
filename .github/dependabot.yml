@@ -1,5 +1,5 @@
 # FMC Dependabot defaults — https://github.com/FixMyBerlin/fixmyskills (skills/tech-stack)
-# Schedule: first Friday of each month at 07:00 Europe/Berlin (cron FRI#1).
+# Schedule: first Thursday of each month at 07:00 Europe/Berlin (cron THU#1).
 # Private-OSS / osmberlin cadence (same as osm-boundary-checker-germany), not FixMyCity weekly Monday.
 # Keep groups, cooldown, and open-pull-requests-limit: 1 from the template.
 version: 2
@@ -9,7 +9,7 @@ updates:
       - /
     schedule:
       interval: cron
-      cronjob: '0 7 * * FRI#1'
+      cronjob: '0 7 * * THU#1'
       timezone: Europe/Berlin
     cooldown:
       default-days: 5
@@ -104,7 +104,7 @@ updates:
     directory: /
     schedule:
       interval: cron
-      cronjob: '0 7 * * FRI#1'
+      cronjob: '0 7 * * THU#1'
       timezone: Europe/Berlin
     cooldown:
       default-days: 5
